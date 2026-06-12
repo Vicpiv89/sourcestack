@@ -7,6 +7,7 @@ export interface Treatment {
   safety: string[];
   issueSlugs: string[];
   vendorIds: string[];
+  vendorProductUrls?: Record<string, string>;
 }
 
 export const treatments: Treatment[] = [
@@ -33,6 +34,12 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["thin-brows", "beard-growth", "hair-loss"],
     vendorIds: ["kirkland-costco", "foligain", "shoppers-drug-mart", "amazon-ca"],
+    vendorProductUrls: {
+      "kirkland-costco": "https://www.costco.ca/rogaine-men%27s-hair-regrowth-foam-with-5%25-minoxidil%2C-6-x-60-g.product.100513970.html",
+      "foligain": "https://www.foligain.com/products/foligain-minoxidil-5-hair-regrowth-treatment-for-men-3-month-supply-3-month-supply",
+      "shoppers-drug-mart": "https://www.shoppersdrugmart.ca/rogaine-men-s-5-minoxidil-foam-hair-loss-and-thinning-trea/p/BB_062600962348",
+      "amazon-ca": "https://www.amazon.ca/Kirkland-Minoxidil-Strength-Regrowth-wLCqOt/dp/B0719S59PW",
+    },
   },
 
   // ── HAIR LOSS ──────────────────────────────────────────────────────────────
@@ -58,6 +65,10 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hair-loss"],
     vendorIds: ["chemyo", "pure-rawz"],
+    vendorProductUrls: {
+      "chemyo": "https://www.chemyo.com/ru58841/",
+      "pure-rawz": "https://purerawz.co/product/ru58841/",
+    },
   },
   {
     slug: "pyrilutamide",
@@ -81,6 +92,10 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hair-loss"],
     vendorIds: ["chemyo", "pure-rawz"],
+    vendorProductUrls: {
+      "chemyo": "https://www.chemyo.com/pyrilutamide/",
+      "pure-rawz": "https://purerawz.co/product/pyrilutamide/",
+    },
   },
   {
     slug: "ketoconazole-shampoo",
@@ -104,6 +119,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hair-loss"],
     vendorIds: ["shoppers-drug-mart", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "amazon-ca": "https://www.amazon.ca/Nizoral-Ketoconazole-Percent-Anti-dandruff-Shampoo/dp/B0FV52GFBX",
+    },
   },
   {
     slug: "rosemary-oil",
@@ -275,7 +293,11 @@ export const treatments: Treatment[] = [
       "Source from vendors with COA — purity matters for injectables",
     ],
     issueSlugs: ["thin-brows", "under-eye-hollows", "hair-loss", "skin-clarity"],
-    vendorIds: ["pure-rawz", "peptide-sciences", "cosmic-peptides"],
+    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorProductUrls: {
+      "pure-rawz": "https://purerawz.co/product/bpc-157/",
+      "cosmic-peptides": "https://cosmicpeptides.com/products/bpc-157",
+    },
   },
   {
     slug: "bpc-157",
@@ -295,7 +317,11 @@ export const treatments: Treatment[] = [
       "Store lyophilized at -20°C, reconstituted at 4°C, use within 30 days",
     ],
     issueSlugs: ["recovery", "muscle-mass"],
-    vendorIds: ["pure-rawz", "peptide-sciences", "cosmic-peptides", "chemyo"],
+    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorProductUrls: {
+      "pure-rawz": "https://purerawz.co/product/bpc-157/",
+      "cosmic-peptides": "https://cosmicpeptides.com/products/bpc-157",
+    },
   },
   {
     slug: "tb-500",
@@ -314,7 +340,11 @@ export const treatments: Treatment[] = [
       "No significant side effects at standard doses in healthy individuals",
     ],
     issueSlugs: ["recovery"],
-    vendorIds: ["pure-rawz", "peptide-sciences", "cosmic-peptides", "chemyo"],
+    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorProductUrls: {
+      "pure-rawz": "https://purerawz.co/product/tb-500/",
+      "cosmic-peptides": "https://cosmicpeptides.com/products/tb-500",
+    },
   },
   {
     slug: "ipamorelin-cjc",
@@ -335,7 +365,11 @@ export const treatments: Treatment[] = [
       "Can cause insulin resistance at very high doses — stay in range",
     ],
     issueSlugs: ["muscle-mass", "recovery", "poor-sleep"],
-    vendorIds: ["pure-rawz", "cosmic-peptides", "chemyo"],
+    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorProductUrls: {
+      "pure-rawz": "https://purerawz.co/product/ipamorelin/",
+      "cosmic-peptides": "https://cosmicpeptides.com/products/ipamorelin-cjc-1295",
+    },
   },
   {
     slug: "epithalon",
@@ -354,7 +388,11 @@ export const treatments: Treatment[] = [
       "Theoretical concern with telomerase activation in cancer cells — avoid if cancer history",
     ],
     issueSlugs: ["skin-clarity", "poor-sleep", "longevity"],
-    vendorIds: ["pure-rawz", "cosmic-peptides", "chemyo"],
+    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorProductUrls: {
+      "pure-rawz": "https://purerawz.co/product/epithalon/",
+      "cosmic-peptides": "https://cosmicpeptides.com/products/epithalon",
+    },
   },
 
   // ── EYELASH / MECHANICAL ───────────────────────────────────────────────────
@@ -579,6 +617,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["skin-clarity", "oily-skin"],
     vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "paulas-choice": "https://www.paulaschoice.com/skin-perfecting-2pct-bha-liquid-exfoliant/201.html",
+    },
   },
   {
     slug: "glycolic-acid",
@@ -601,6 +642,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hyperpigmentation", "skin-clarity", "oily-skin"],
     vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "paulas-choice": "https://www.paulaschoice.com/skin-perfecting-25pct-aha-and-2pct-bha-exfoliant-peel/9560.html",
+    },
   },
   {
     slug: "alpha-arbutin",
@@ -624,6 +668,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hyperpigmentation", "skin-clarity"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "the-ordinary": "https://theordinary.com/en-us/alpha-arbutin-2-ha-serum-100401.html",
+    },
   },
   {
     slug: "tranexamic-acid",
@@ -687,6 +734,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["skin-clarity", "oily-skin", "hyperpigmentation"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "the-ordinary": "https://theordinary.com/en-ca/niacinamide-10-zinc-1-serum-100436.html",
+    },
   },
   {
     slug: "vitamin-c-serum",
@@ -707,6 +757,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "the-ordinary": "https://theordinary.com/en-ca/aha-30-bha-2-peeling-solution-exfoliator-100400.html",
+    },
   },
   {
     slug: "hyaluronic-acid",
@@ -725,6 +778,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["under-eye-hollows", "skin-clarity"],
     vendorIds: ["the-ordinary", "cosrx", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "the-ordinary": "https://theordinary.com/en-ca/hyaluronic-acid-2-b5-serum-with-ceramides-100637.html",
+    },
   },
   {
     slug: "azelaic-acid",
@@ -743,7 +799,10 @@ export const treatments: Treatment[] = [
       "Higher concentrations require prescription in some regions",
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin"],
-    vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
+    vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "the-ordinary": "https://theordinary.com/en-us/azelaic-acid-suspension-10-exfoliator-100407.html",
+    },
   },
   {
     slug: "snail-mucin",
@@ -764,6 +823,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation"],
     vendorIds: ["cosrx", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "cosrx": "https://www.cosrx.com/products/advanced-snail-96-mucin-power-essence",
+    },
   },
   {
     slug: "centella-asiatica",
@@ -784,6 +846,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["skin-clarity"],
     vendorIds: ["cosrx", "iherb", "amazon-ca"],
+    vendorProductUrls: {
+      "cosrx": "https://www.cosrx.com/products/bha-blackhead-power-liquid",
+    },
   },
 
   // ── SUPPLEMENTS ────────────────────────────────────────────────────────────
@@ -805,6 +870,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["muscle-mass", "jawline-definition"],
     vendorIds: ["bulk-supplements", "swanson", "amazon-ca"],
+    vendorProductUrls: {
+      "bulk-supplements": "https://www.bulksupplements.com/products/creatine-monohydrate",
+    },
   },
   {
     slug: "collagen-peptides",
@@ -861,6 +929,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["skin-clarity", "hair-loss", "hormonal-optimization"],
     vendorIds: ["iherb", "thorne"],
+    vendorProductUrls: {
+      "iherb": "https://www.iherb.com/pr/now-foods-zinc-picolinate-50-mg-120-veg-capsules/878",
+    },
   },
   {
     slug: "vitamin-d3",
@@ -880,6 +951,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hormonal-optimization", "muscle-mass"],
     vendorIds: ["iherb", "thorne"],
+    vendorProductUrls: {
+      "iherb": "https://www.iherb.com/pr/now-foods-vitamin-d-3-high-potency-125-mcg-5-000-iu-120-softgels/10421",
+    },
   },
   {
     slug: "omega-3",
@@ -918,6 +992,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["poor-sleep", "muscle-mass", "recovery"],
     vendorIds: ["bulk-supplements", "thorne"],
+    vendorProductUrls: {
+      "bulk-supplements": "https://www.bulksupplements.com/products/magnesium-glycinate-powder",
+    },
   },
   {
     slug: "ashwagandha",
@@ -938,6 +1015,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hormonal-optimization", "poor-sleep"],
     vendorIds: ["nootropics-depot", "iherb"],
+    vendorProductUrls: {
+      "nootropics-depot": "https://nootropicsdepot.com/ksm-66-ashwagandha-extract-300mg-capsules",
+    },
   },
   {
     slug: "tongkat-ali",
@@ -957,6 +1037,9 @@ export const treatments: Treatment[] = [
     ],
     issueSlugs: ["hormonal-optimization"],
     vendorIds: ["nootropics-depot"],
+    vendorProductUrls: {
+      "nootropics-depot": "https://nootropicsdepot.com/tongkat-ali-extract-tablets-10-eurycomanone/",
+    },
   },
   {
     slug: "fadogia-agrestis",

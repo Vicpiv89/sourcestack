@@ -133,7 +133,7 @@ export default function IssueDetail() {
                     {isPro ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {treatment.vendorIds.map((id) => (
-                          <VendorCard key={id} vendorId={id} />
+                          <VendorCard key={id} vendorId={id} productUrl={treatment.vendorProductUrls?.[id]} />
                         ))}
                       </div>
                     ) : (

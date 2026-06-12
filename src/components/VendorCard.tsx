@@ -2,6 +2,7 @@ import { vendors, type VendorType } from "../data/vendors";
 
 interface Props {
   vendorId: string;
+  productUrl?: string;
 }
 
 const TYPE_STYLES: Record<VendorType, { label: string; classes: string }> = {
@@ -13,11 +14,12 @@ const TYPE_STYLES: Record<VendorType, { label: string; classes: string }> = {
   "supplement-store": { label: "Supplement Store", classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
 };
 
-export default function VendorCard({ vendorId }: Props) {
+export default function VendorCard({ vendorId, productUrl }: Props) {
   const vendor = vendors.find((v) => v.id === vendorId);
   if (!vendor) return null;
 
   const typeStyle = TYPE_STYLES[vendor.type];
+  const linkUrl = productUrl ?? vendor.url;
 
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-xl p-5 flex flex-col gap-3 hover:border-white/20 transition-colors">
@@ -56,12 +58,12 @@ export default function VendorCard({ vendorId }: Props) {
       )}
 
       <a
-        href={vendor.url}
+        href={linkUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs text-white/40 hover:text-white transition-colors mt-auto flex items-center gap-1"
       >
-        Visit {vendor.name} →
+        {productUrl ? "View product →" : `Visit ${vendor.name} →`}
       </a>
     </div>
   );
