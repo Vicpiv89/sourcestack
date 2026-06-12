@@ -19,6 +19,7 @@ const FEATURES = [
 export default function UpgradeModal({ onClose }: Props) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showAuth, setShowAuth] = useState(false);
 
   async function handleSubscribe() {
@@ -27,14 +28,17 @@ export default function UpgradeModal({ onClose }: Props) {
       return;
     }
     setLoading(true);
+    setError("");
     try {
-      const { data, error } = await supabase.functions.invoke(
+      const { data, error: fnError } = await supabase.functions.invoke(
         "create-checkout-session",
         { body: { userId: user.id, email: user.email } }
       );
-      if (error) throw error;
+      if (fnError) throw new Error(fnError.message);
+      if (!data?.url) throw new Error("No checkout URL returned");
       window.location.href = data.url;
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
     }
   }
@@ -93,9 +97,10 @@ export default function UpgradeModal({ onClose }: Props) {
             disabled={loading}
             className="w-full bg-white text-black font-semibold py-3.5 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-50 mb-3"
           >
-            {loading ? "Redirecting..." : user ? "Get full access" : "Create account to subscribe"}
+            {loading ? "Redirecting to Stripe..." : user ? "Get full access" : "Create account to subscribe"}
           </button>
-          {user && (
+          {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+          {user && !error && (
             <p className="text-white/25 text-xs text-center">
               Cancel anytime. No hidden fees.
             </p>
