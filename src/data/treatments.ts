@@ -32,7 +32,7 @@ export const treatments: Treatment[] = [
       "Shedding in weeks 2–8 is normal (telogen effluvium) — don't stop",
     ],
     issueSlugs: ["thin-brows", "beard-growth", "hair-loss"],
-    vendorIds: ["kirkland-costco"],
+    vendorIds: ["kirkland-costco", "foligain", "shoppers-drug-mart", "amazon-ca"],
   },
 
   // ── HAIR LOSS ──────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ export const treatments: Treatment[] = [
       "Sourcing risk is high — purity varies wildly; only use vendors with third-party lab COAs",
     ],
     issueSlugs: ["hair-loss"],
-    vendorIds: ["chemyo"],
+    vendorIds: ["chemyo", "pure-rawz"],
   },
   {
     slug: "pyrilutamide",
@@ -80,7 +80,7 @@ export const treatments: Treatment[] = [
       "Gray-market solutions may be mislabeled — purity verification is essential",
     ],
     issueSlugs: ["hair-loss"],
-    vendorIds: ["chemyo"],
+    vendorIds: ["chemyo", "pure-rawz"],
   },
   {
     slug: "ketoconazole-shampoo",
@@ -103,7 +103,7 @@ export const treatments: Treatment[] = [
       "Not a standalone treatment; clinical significance is as an adjunct to minoxidil or 5AR inhibitors",
     ],
     issueSlugs: ["hair-loss"],
-    vendorIds: ["iherb"],
+    vendorIds: ["shoppers-drug-mart", "iherb", "amazon-ca"],
   },
   {
     slug: "rosemary-oil",
@@ -126,7 +126,7 @@ export const treatments: Treatment[] = [
       "No significant systemic risks at topical doses",
     ],
     issueSlugs: ["hair-loss", "thin-brows"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "saw-palmetto",
@@ -208,7 +208,7 @@ export const treatments: Treatment[] = [
       "Can interfere with thyroid and cardiac biomarker lab tests at high doses — inform your doctor",
     ],
     issueSlugs: ["hair-loss", "thin-brows"],
-    vendorIds: ["iherb", "swanson"],
+    vendorIds: ["iherb", "swanson", "amazon-ca"],
   },
 
   // ── EYELASH / BROW ─────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ export const treatments: Treatment[] = [
       "Source from vendors with COA — purity matters for injectables",
     ],
     issueSlugs: ["thin-brows", "under-eye-hollows", "hair-loss", "skin-clarity"],
-    vendorIds: ["pure-rawz", "peptide-sciences"],
+    vendorIds: ["pure-rawz", "peptide-sciences", "cosmic-peptides"],
   },
   {
     slug: "bpc-157",
@@ -295,7 +295,7 @@ export const treatments: Treatment[] = [
       "Store lyophilized at -20°C, reconstituted at 4°C, use within 30 days",
     ],
     issueSlugs: ["recovery", "muscle-mass"],
-    vendorIds: ["pure-rawz", "peptide-sciences", "chemyo"],
+    vendorIds: ["pure-rawz", "peptide-sciences", "cosmic-peptides", "chemyo"],
   },
   {
     slug: "tb-500",
@@ -314,7 +314,7 @@ export const treatments: Treatment[] = [
       "No significant side effects at standard doses in healthy individuals",
     ],
     issueSlugs: ["recovery"],
-    vendorIds: ["pure-rawz", "peptide-sciences", "chemyo"],
+    vendorIds: ["pure-rawz", "peptide-sciences", "cosmic-peptides", "chemyo"],
   },
   {
     slug: "ipamorelin-cjc",
@@ -335,7 +335,7 @@ export const treatments: Treatment[] = [
       "Can cause insulin resistance at very high doses — stay in range",
     ],
     issueSlugs: ["muscle-mass", "recovery", "poor-sleep"],
-    vendorIds: ["pure-rawz", "chemyo"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "chemyo"],
   },
   {
     slug: "epithalon",
@@ -354,7 +354,7 @@ export const treatments: Treatment[] = [
       "Theoretical concern with telomerase activation in cancer cells — avoid if cancer history",
     ],
     issueSlugs: ["skin-clarity", "poor-sleep", "longevity"],
-    vendorIds: ["pure-rawz", "chemyo"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "chemyo"],
   },
 
   // ── EYELASH / MECHANICAL ───────────────────────────────────────────────────
@@ -379,7 +379,7 @@ export const treatments: Treatment[] = [
       "Apply retinoids or vitamin C the day AFTER needling, not immediately post-session (exception: minoxidil for scalp)",
     ],
     issueSlugs: ["hair-loss", "thin-brows", "skin-clarity", "hyperpigmentation"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "falim-gum",
@@ -402,7 +402,7 @@ export const treatments: Treatment[] = [
       "Build up to mastic over weeks — don't start there if you have no gum-chewing baseline",
     ],
     issueSlugs: ["jawline-definition"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "gua-sha",
@@ -446,7 +446,7 @@ export const treatments: Treatment[] = [
       "Look for formulas with hyaluronic acid or peptides for added benefit",
     ],
     issueSlugs: ["under-eye-hollows", "facial-puffiness"],
-    vendorIds: ["iherb"],
+    vendorIds: ["the-ordinary", "cosrx", "iherb", "amazon-ca"],
   },
   {
     slug: "adapalene",
@@ -469,7 +469,7 @@ export const treatments: Treatment[] = [
       "Avoid combining with AHAs/BHAs on the same night during first 3 months",
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "tazarotene",
@@ -559,7 +559,7 @@ export const treatments: Treatment[] = [
       "Avoid hair and eyebrows — bleaches on direct contact",
     ],
     issueSlugs: ["skin-clarity", "oily-skin"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "salicylic-acid",
@@ -578,7 +578,7 @@ export const treatments: Treatment[] = [
       "SPF non-negotiable when using any exfoliant",
     ],
     issueSlugs: ["skin-clarity", "oily-skin"],
-    vendorIds: ["iherb"],
+    vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
   },
   {
     slug: "glycolic-acid",
@@ -600,7 +600,7 @@ export const treatments: Treatment[] = [
       "Stinging that builds to burning during a peel = rinse immediately",
     ],
     issueSlugs: ["hyperpigmentation", "skin-clarity", "oily-skin"],
-    vendorIds: ["iherb"],
+    vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
   },
   {
     slug: "alpha-arbutin",
@@ -623,7 +623,7 @@ export const treatments: Treatment[] = [
       "Can destabilize in low-pH environments — don't layer directly over AHAs without wait time",
     ],
     issueSlugs: ["hyperpigmentation", "skin-clarity"],
-    vendorIds: ["iherb"],
+    vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
   },
   {
     slug: "tranexamic-acid",
@@ -644,7 +644,7 @@ export const treatments: Treatment[] = [
       "GI upset (nausea, cramping) is the most common oral side effect",
     ],
     issueSlugs: ["hyperpigmentation"],
-    vendorIds: ["iherb"],
+    vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
   },
   {
     slug: "kojic-acid",
@@ -667,7 +667,7 @@ export const treatments: Treatment[] = [
       "Avoid pairing with high-concentration AHAs or retinoids on same night until fully acclimatized",
     ],
     issueSlugs: ["hyperpigmentation"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "niacinamide",
@@ -686,7 +686,7 @@ export const treatments: Treatment[] = [
       "Avoid combining with pure vitamin C (L-ascorbic acid) in same step — reduces efficacy of both",
     ],
     issueSlugs: ["skin-clarity", "oily-skin", "hyperpigmentation"],
-    vendorIds: ["iherb"],
+    vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
   },
   {
     slug: "vitamin-c-serum",
@@ -706,7 +706,7 @@ export const treatments: Treatment[] = [
       "Do not layer with niacinamide in same step",
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation"],
-    vendorIds: ["iherb"],
+    vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
   },
   {
     slug: "hyaluronic-acid",
@@ -724,7 +724,7 @@ export const treatments: Treatment[] = [
       "In dry environments, apply over a hydrating mist or it can pull moisture from the skin",
     ],
     issueSlugs: ["under-eye-hollows", "skin-clarity"],
-    vendorIds: ["iherb"],
+    vendorIds: ["the-ordinary", "cosrx", "iherb", "amazon-ca"],
   },
   {
     slug: "azelaic-acid",
@@ -743,7 +743,7 @@ export const treatments: Treatment[] = [
       "Higher concentrations require prescription in some regions",
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin"],
-    vendorIds: ["iherb"],
+    vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
   },
   {
     slug: "snail-mucin",
@@ -763,7 +763,7 @@ export const treatments: Treatment[] = [
       "Pure mucin is non-comedogenic; check full formula if acne-prone",
     ],
     issueSlugs: ["skin-clarity", "hyperpigmentation"],
-    vendorIds: ["iherb"],
+    vendorIds: ["cosrx", "iherb", "amazon-ca"],
   },
   {
     slug: "centella-asiatica",
@@ -783,7 +783,7 @@ export const treatments: Treatment[] = [
       "Oral Centella supplements are hepatotoxic at high doses — distinct from topical use",
     ],
     issueSlugs: ["skin-clarity"],
-    vendorIds: ["iherb"],
+    vendorIds: ["cosrx", "iherb", "amazon-ca"],
   },
 
   // ── SUPPLEMENTS ────────────────────────────────────────────────────────────
@@ -804,7 +804,7 @@ export const treatments: Treatment[] = [
       "Ensure adequate hydration (extra 500mL/day)",
     ],
     issueSlugs: ["muscle-mass", "jawline-definition"],
-    vendorIds: ["bulk-supplements", "swanson"],
+    vendorIds: ["bulk-supplements", "swanson", "amazon-ca"],
   },
   {
     slug: "collagen-peptides",
@@ -841,7 +841,7 @@ export const treatments: Treatment[] = [
       "Avoid if TMJ issues",
     ],
     issueSlugs: ["jawline-definition"],
-    vendorIds: ["iherb"],
+    vendorIds: ["iherb", "amazon-ca"],
   },
   {
     slug: "zinc-picolinate",
