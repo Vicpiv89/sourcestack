@@ -117,7 +117,7 @@ export const treatments: Treatment[] = [
       "Mild contact dermatitis in a small percentage of users — discontinue if persistent",
       "Not a standalone treatment; clinical significance is as an adjunct to minoxidil or 5AR inhibitors",
     ],
-    issueSlugs: ["hair-loss"],
+    issueSlugs: ["hair-loss", "dandruff"],
     vendorIds: ["shoppers-drug-mart", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "amazon-ca": "https://www.amazon.ca/Nizoral-Ketoconazole-Percent-Anti-dandruff-Shampoo/dp/B0FV52GFBX",
@@ -166,7 +166,7 @@ export const treatments: Treatment[] = [
       "Potentiates anticoagulants (warfarin, aspirin) — increased bleeding risk; avoid pre-surgery",
       "Supplement quality varies enormously — use products standardized to fatty acid content",
     ],
-    issueSlugs: ["hair-loss"],
+    issueSlugs: ["hair-loss", "androgenic-acne"],
     vendorIds: ["nootropics-depot", "iherb"],
   },
   {
@@ -416,7 +416,7 @@ export const treatments: Treatment[] = [
       "Hyperpigmentation risk for darker skin tones (Fitzpatrick IV–VI) at deeper needle lengths — stay at 0.5–1.0mm",
       "Apply retinoids or vitamin C the day AFTER needling, not immediately post-session (exception: minoxidil for scalp)",
     ],
-    issueSlugs: ["hair-loss", "thin-brows", "skin-clarity", "hyperpigmentation"],
+    issueSlugs: ["hair-loss", "thin-brows", "skin-clarity", "hyperpigmentation", "acne-scarring", "skin-texture"],
     vendorIds: ["iherb", "amazon-ca"],
   },
   {
@@ -483,7 +483,7 @@ export const treatments: Treatment[] = [
       "Avoid direct contact with eyes",
       "Look for formulas with hyaluronic acid or peptides for added benefit",
     ],
-    issueSlugs: ["under-eye-hollows", "facial-puffiness"],
+    issueSlugs: ["under-eye-hollows", "facial-puffiness", "dark-circles"],
     vendorIds: ["the-ordinary", "cosrx", "iherb", "amazon-ca"],
   },
   {
@@ -506,7 +506,7 @@ export const treatments: Treatment[] = [
       "Do not combine with benzoyl peroxide in the same application — BP oxidizes adapalene, inactivating it; use BP AM and adapalene PM",
       "Avoid combining with AHAs/BHAs on the same night during first 3 months",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin"],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin", "acne-scarring", "enlarged-pores", "razor-bumps", "androgenic-acne"],
     vendorIds: ["iherb", "amazon-ca"],
   },
   {
@@ -550,7 +550,7 @@ export const treatments: Treatment[] = [
       "Avoid on broken skin or active eczema",
       "Purging (initial breakout) is expected — not a reaction",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation"],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "acne-scarring", "enlarged-pores", "razor-bumps", "skin-texture"],
     vendorIds: [],
   },
   {
@@ -573,7 +573,7 @@ export const treatments: Treatment[] = [
       "Musculoskeletal pain is common — reduce high-impact exercise during treatment",
       "Initial purge in weeks 1–4 is real and can be severe at high starting doses — start at 0.5mg/kg",
     ],
-    issueSlugs: ["skin-clarity"],
+    issueSlugs: ["skin-clarity", "androgenic-acne"],
     vendorIds: [],
   },
   {
@@ -596,7 +596,7 @@ export const treatments: Treatment[] = [
       "Contact allergy (true sensitization) in ~1–2% of users — if hives or spreading redness, discontinue permanently",
       "Avoid hair and eyebrows — bleaches on direct contact",
     ],
-    issueSlugs: ["skin-clarity", "oily-skin"],
+    issueSlugs: ["skin-clarity", "oily-skin", "razor-bumps", "androgenic-acne"],
     vendorIds: ["iherb", "amazon-ca"],
   },
   {
@@ -615,7 +615,7 @@ export const treatments: Treatment[] = [
       "Avoid combining with other strong exfoliants (AHA) in same routine",
       "SPF non-negotiable when using any exfoliant",
     ],
-    issueSlugs: ["skin-clarity", "oily-skin"],
+    issueSlugs: ["skin-clarity", "oily-skin", "enlarged-pores", "razor-bumps", "androgenic-acne", "skin-texture"],
     vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "paulas-choice": "https://www.paulaschoice.com/skin-perfecting-2pct-bha-liquid-exfoliant/201.html",
@@ -640,7 +640,7 @@ export const treatments: Treatment[] = [
       "Darker skin tones (Fitzpatrick IV–VI) higher risk of post-inflammatory hyperpigmentation from over-exfoliation — start conservatively",
       "Stinging that builds to burning during a peel = rinse immediately",
     ],
-    issueSlugs: ["hyperpigmentation", "skin-clarity", "oily-skin"],
+    issueSlugs: ["hyperpigmentation", "skin-clarity", "oily-skin", "acne-scarring", "razor-bumps", "skin-texture"],
     vendorIds: ["paulas-choice", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "paulas-choice": "https://www.paulaschoice.com/skin-perfecting-25pct-aha-and-2pct-bha-exfoliant-peel/9560.html",
@@ -666,7 +666,7 @@ export const treatments: Treatment[] = [
       "Pregnancy safety not well established — defer to OB-GYN",
       "Can destabilize in low-pH environments — don't layer directly over AHAs without wait time",
     ],
-    issueSlugs: ["hyperpigmentation", "skin-clarity"],
+    issueSlugs: ["hyperpigmentation", "skin-clarity", "dark-circles", "melasma"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "the-ordinary": "https://theordinary.com/en-us/alpha-arbutin-2-ha-serum-100401.html",
@@ -690,7 +690,7 @@ export const treatments: Treatment[] = [
       "Not suitable during pregnancy",
       "GI upset (nausea, cramping) is the most common oral side effect",
     ],
-    issueSlugs: ["hyperpigmentation"],
+    issueSlugs: ["hyperpigmentation", "dark-circles", "melasma"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
   },
   {
@@ -713,7 +713,7 @@ export const treatments: Treatment[] = [
       "Unstable in light and air — dark glass packaging indicates better formulation quality",
       "Avoid pairing with high-concentration AHAs or retinoids on same night until fully acclimatized",
     ],
-    issueSlugs: ["hyperpigmentation"],
+    issueSlugs: ["hyperpigmentation", "melasma"],
     vendorIds: ["iherb", "amazon-ca"],
   },
   {
@@ -732,7 +732,7 @@ export const treatments: Treatment[] = [
       "High concentrations (>20%) may cause flushing in some",
       "Avoid combining with pure vitamin C (L-ascorbic acid) in same step — reduces efficacy of both",
     ],
-    issueSlugs: ["skin-clarity", "oily-skin", "hyperpigmentation"],
+    issueSlugs: ["skin-clarity", "oily-skin", "hyperpigmentation", "acne-scarring", "dark-circles", "enlarged-pores", "skin-texture"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "the-ordinary": "https://theordinary.com/en-ca/niacinamide-10-zinc-1-serum-100436.html",
@@ -755,7 +755,7 @@ export const treatments: Treatment[] = [
       "Oxidized (orange/brown) serum loses efficacy — discard",
       "Do not layer with niacinamide in same step",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation"],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "acne-scarring", "dark-circles", "melasma"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "the-ordinary": "https://theordinary.com/en-ca/aha-30-bha-2-peeling-solution-exfoliator-100400.html",
@@ -798,7 +798,7 @@ export const treatments: Treatment[] = [
       "One of the safest actives — suitable for use during pregnancy",
       "Higher concentrations require prescription in some regions",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin"],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "oily-skin", "acne-scarring", "melasma"],
     vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "the-ordinary": "https://theordinary.com/en-us/azelaic-acid-suspension-10-exfoliator-100407.html",
@@ -821,7 +821,7 @@ export const treatments: Treatment[] = [
       "Rare allergic reactions in those with shellfish or mollusc hypersensitivity — patch test",
       "Pure mucin is non-comedogenic; check full formula if acne-prone",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation"],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "skin-texture"],
     vendorIds: ["cosrx", "iherb", "amazon-ca"],
     vendorProductUrls: {
       "cosrx": "https://www.cosrx.com/products/advanced-snail-96-mucin-power-essence",
@@ -927,7 +927,7 @@ export const treatments: Treatment[] = [
       "High doses deplete copper — consider 1–2mg copper if using >30mg long-term",
       "Take with food — fasted zinc causes nausea",
     ],
-    issueSlugs: ["skin-clarity", "hair-loss", "hormonal-optimization"],
+    issueSlugs: ["skin-clarity", "hair-loss", "hormonal-optimization", "dandruff", "androgenic-acne"],
     vendorIds: ["iherb", "thorne"],
     vendorProductUrls: {
       "iherb": "https://www.iherb.com/pr/now-foods-zinc-picolinate-50-mg-120-veg-capsules/878",
@@ -971,7 +971,7 @@ export const treatments: Treatment[] = [
       "Can cause fishy burps — try enteric-coated or freeze the capsules",
       "Potential drug interaction with blood thinners",
     ],
-    issueSlugs: ["skin-clarity", "muscle-mass", "hormonal-optimization"],
+    issueSlugs: ["skin-clarity", "muscle-mass", "hormonal-optimization", "dandruff"],
     vendorIds: ["iherb", "thorne"],
   },
   {

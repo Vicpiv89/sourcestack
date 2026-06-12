@@ -161,4 +161,60 @@ export const issues: Issue[] = [
       "Achieving a tan — either for aesthetics or the appearance of lower body fat. Includes legitimate methods and research compounds with significant risk profiles.",
     treatmentSlugs: ["melanotan-ii"],
   },
+  {
+    slug: "acne-scarring",
+    name: "Acne Scarring",
+    description:
+      "Post-inflammatory marks and textural scarring from acne. Ice-pick, boxcar, and rolling scars respond differently — most require a combination of resurfacing and collagen-stimulating actives.",
+    treatmentSlugs: ["dermaroller", "tretinoin", "adapalene", "glycolic-acid", "vitamin-c-serum", "niacinamide", "azelaic-acid"],
+  },
+  {
+    slug: "dark-circles",
+    name: "Dark Circles",
+    description:
+      "Discoloration under the eyes from pigmentation, vascular pooling, or thin skin. One of the most aging features on a face — protocol depends on root cause.",
+    treatmentSlugs: ["caffeine-eye-cream", "vitamin-c-serum", "niacinamide", "tranexamic-acid", "alpha-arbutin"],
+  },
+  {
+    slug: "enlarged-pores",
+    name: "Enlarged Pores",
+    description:
+      "Visibly large pores, typically on the nose and cheeks. Caused by excess sebum, sun damage, and loss of skin elasticity. Cannot be permanently shrunk but can be significantly minimized.",
+    treatmentSlugs: ["salicylic-acid", "niacinamide", "adapalene", "glycolic-acid", "tretinoin"],
+  },
+  {
+    slug: "razor-bumps",
+    name: "Razor Bumps / Ingrown Hairs",
+    description:
+      "Pseudofolliculitis barbae — ingrown hairs causing inflammation and bumps after shaving. More common with coarser, curlier hair. Requires both acute treatment and prevention protocol.",
+    treatmentSlugs: ["salicylic-acid", "glycolic-acid", "benzoyl-peroxide", "adapalene", "tretinoin"],
+  },
+  {
+    slug: "melasma",
+    name: "Melasma / Pigmentation Patches",
+    description:
+      "Symmetrical hyperpigmentation patches, common on forehead, cheeks, and upper lip. Triggered by UV exposure and hormones. One of the harder pigmentation conditions to treat — requires layered actives and strict sun protection.",
+    treatmentSlugs: ["tranexamic-acid", "azelaic-acid", "kojic-acid", "alpha-arbutin", "vitamin-c-serum"],
+  },
+  {
+    slug: "dandruff",
+    name: "Dandruff / Seborrheic Dermatitis",
+    description:
+      "Flaking and scalp irritation from Malassezia yeast overgrowth. Highly treatable with antifungals — most people over-complicate it. Nutritional deficiencies can contribute.",
+    treatmentSlugs: ["ketoconazole-shampoo", "zinc-picolinate", "omega-3"],
+  },
+  {
+    slug: "androgenic-acne",
+    name: "Hormonal / Androgenic Acne",
+    description:
+      "Jawline, chin, and back acne driven by androgens (DHT). Common in males with higher testosterone or sensitivity. Requires addressing both the topical presentation and the hormonal root cause.",
+    treatmentSlugs: ["zinc-picolinate", "saw-palmetto", "benzoyl-peroxide", "salicylic-acid", "adapalene", "isotretinoin"],
+  },
+  {
+    slug: "skin-texture",
+    name: "Rough Skin Texture",
+    description:
+      "Uneven, bumpy, or dull skin surface. Often from dead cell buildup, sluggish turnover, or dehydration. The right exfoliant + retinoid stack will address most cases within 8–12 weeks.",
+    treatmentSlugs: ["glycolic-acid", "salicylic-acid", "dermaroller", "tretinoin", "niacinamide", "snail-mucin"],
+  },
 ];
