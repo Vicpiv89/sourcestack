@@ -41,10 +41,24 @@ export default function TreatmentDetail() {
       <div className="px-6 pt-12 pb-24 max-w-3xl mx-auto">
         <Link
           to="/treatments"
-          className="text-white/30 text-sm hover:text-white/60 transition-colors mb-8 block"
+          className="text-white/30 text-sm hover:text-white/60 transition-colors mb-6 block"
         >
           ← Treatments
         </Link>
+        <div className="flex gap-2 mb-6">
+          <Link
+            to={`/stack?t=${treatment.slug}`}
+            className="px-3 py-1.5 text-xs border border-white/10 rounded-lg text-white/50 hover:text-white hover:border-white/30 transition-colors"
+          >
+            + Add to Stack
+          </Link>
+          <Link
+            to={`/compare?t=${treatment.slug}`}
+            className="px-3 py-1.5 text-xs border border-white/10 rounded-lg text-white/50 hover:text-white hover:border-white/30 transition-colors"
+          >
+            Compare
+          </Link>
+        </div>
         <DisclaimerBanner />
 
         {/* Header */}

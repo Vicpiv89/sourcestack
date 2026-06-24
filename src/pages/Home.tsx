@@ -235,8 +235,30 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Quiz / Stack promo */}
+        <div className="mt-16 border border-white/10 rounded-2xl px-8 py-10 bg-white/[0.02] text-center">
+          <p className="text-white font-semibold text-xl mb-2">Not sure where to start?</p>
+          <p className="text-white/40 text-sm mb-6">
+            Answer 3 questions and get a curated starter protocol based on your goal and experience level.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <a
+              href="/quiz"
+              className="px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-lg hover:bg-white/90 transition-colors"
+            >
+              Build my stack →
+            </a>
+            <a
+              href="/stack"
+              className="px-5 py-2.5 border border-white/20 text-white text-sm rounded-lg hover:border-white/40 transition-colors"
+            >
+              Stack Builder
+            </a>
+          </div>
+        </div>
+
         {/* Testimonials */}
-        <div className="mt-20">
+        <div className="mt-16">
           <h2 className="text-white font-semibold mb-6 text-center">
             What the community says
           </h2>

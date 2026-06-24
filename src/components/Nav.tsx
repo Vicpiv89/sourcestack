@@ -14,6 +14,7 @@ export default function Nav() {
     { to: "/", label: "Home" },
     { to: "/issues", label: "Browse Issues" },
     { to: "/treatments", label: "Treatments" },
+    { to: "/stack", label: "Stack Builder" },
     { to: "/about", label: "About" },
   ];
 

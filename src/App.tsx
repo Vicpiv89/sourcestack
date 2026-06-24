@@ -9,6 +9,9 @@ import Treatments from "./pages/Treatments";
 import TreatmentDetail from "./pages/TreatmentDetail";
 import Disclaimer from "./pages/Disclaimer";
 import About from "./pages/About";
+import StackBuilder from "./pages/StackBuilder";
+import Compare from "./pages/Compare";
+import Quiz from "./pages/Quiz";
 
 export default function App() {
   return (
@@ -25,6 +28,9 @@ export default function App() {
               <Route path="/treatments/:slug" element={<TreatmentDetail />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/about" element={<About />} />
+              <Route path="/stack" element={<StackBuilder />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/quiz" element={<Quiz />} />
             </Routes>
           </div>
           <Footer />
