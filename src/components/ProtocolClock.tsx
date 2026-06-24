@@ -85,8 +85,8 @@ export default function ProtocolClock({ selected }: Props) {
   }, [items]);
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ overflow: 'visible' }}>
+    <div className="flex flex-col items-center gap-3 w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxWidth: W, overflow: 'visible', display: 'block' }}>
         <defs>
           <filter id="clock-glow" x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur stdDeviation="3.5" result="blur" />

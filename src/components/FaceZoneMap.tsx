@@ -111,9 +111,9 @@ export default function FaceZoneMap() {
     : [];
 
   return (
-    <div className="flex flex-col items-center gap-5 select-none">
-      <div className="relative" style={{ width: 220, height: 300 }}>
-        <svg viewBox="0 0 200 270" width="220" height="297" style={{ overflow: 'visible' }}>
+    <div className="flex flex-col items-center gap-5 select-none w-full">
+      <div className="relative mx-auto" style={{ width: '100%', maxWidth: 220 }}>
+        <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block' }}>
           <defs>
             <filter id="face-glow" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="5" result="blur" />
@@ -208,7 +208,9 @@ export default function FaceZoneMap() {
                 }}
                 onMouseEnter={() => setActiveZoneId(z.id)}
                 onMouseLeave={() => setActiveZoneId(null)}
+                onTouchStart={(e) => { e.preventDefault(); setActiveZoneId(prev => prev === z.id ? null : z.id); }}
                 onClick={() => {
+                  // On mobile touch already handled by onTouchStart; on desktop navigate for single-issue zones
                   if (z.issueSlugs.length === 1) navigate(`/issues/${z.issueSlugs[0]}`);
                   else setActiveZoneId(z.id);
                 }}
@@ -237,7 +239,7 @@ export default function FaceZoneMap() {
 
       {/* Info panel */}
       <div
-        className="w-full max-w-xs min-h-[88px] rounded-xl px-5 py-4 transition-all duration-300"
+        className="w-full min-h-[88px] rounded-xl px-5 py-4 transition-all duration-300"
         style={{
           background: zone ? hexToRgba(zone.color, 0.06) : 'rgba(255,255,255,0.02)',
           border: `1px solid ${zone ? hexToRgba(zone.color, 0.25) : 'rgba(255,255,255,0.07)'}`,

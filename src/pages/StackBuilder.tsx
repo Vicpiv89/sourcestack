@@ -26,6 +26,7 @@ export default function StackBuilder() {
   const [category, setCategory] = useState("All");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(true);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -124,10 +125,19 @@ export default function StackBuilder() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row max-w-7xl mx-auto px-6 pb-24 gap-6">
+      <div className="flex flex-col md:flex-row max-w-7xl mx-auto px-4 sm:px-6 pb-24 gap-6">
         {/* Picker panel */}
         <div className="md:w-80 shrink-0">
-          <div className="sticky top-[73px]">
+          {/* Mobile collapse toggle */}
+          <button
+            className="md:hidden w-full flex items-center justify-between px-4 py-3 mb-3 border border-white/10 rounded-xl text-sm text-white/60 hover:text-white hover:border-white/20 transition-colors"
+            onClick={() => setPickerOpen(o => !o)}
+          >
+            <span>Add treatments {selected.length > 0 ? `(${selected.length} selected)` : ''}</span>
+            <span className="text-white/30 transition-transform duration-200" style={{ transform: pickerOpen ? 'rotate(180deg)' : 'none' }}>▾</span>
+          </button>
+
+          <div className={`md:sticky md:top-[65px] ${pickerOpen ? 'block' : 'hidden md:block'}`}>
             <input
               type="text"
               value={search}
@@ -150,7 +160,7 @@ export default function StackBuilder() {
                 </button>
               ))}
             </div>
-            <div className="flex flex-col gap-1 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-1 max-h-[35vh] md:max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
               {filtered.map((t) => {
                 const isSelected = selected.includes(t.slug);
                 const meta = stackMeta[t.slug];

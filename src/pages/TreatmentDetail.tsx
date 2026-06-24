@@ -5,6 +5,7 @@ import { issues } from "../data/issues";
 import VendorCard from "../components/VendorCard";
 import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
+import TreatmentFaceAnim from "../components/TreatmentFaceAnim";
 import SEO from "../components/SEO";
 import { useAuth } from "../context/AuthContext";
 
@@ -44,7 +45,7 @@ export default function TreatmentDetail() {
         description={`${treatment.summary.slice(0, 155).trimEnd()}…`}
         path={`/treatments/${treatment.slug}`}
       />
-      <div className="px-6 pt-12 pb-24 max-w-3xl mx-auto">
+      <div className="px-4 sm:px-6 pt-10 pb-24 max-w-3xl mx-auto">
         <Link
           to="/treatments"
           className="text-white/30 text-sm hover:text-white/60 transition-colors mb-6 block"
@@ -78,6 +79,11 @@ export default function TreatmentDetail() {
           <p className="text-white/50 text-base leading-relaxed">
             {treatment.summary}
           </p>
+        </div>
+
+        {/* Before / After animation */}
+        <div className="mb-10">
+          <TreatmentFaceAnim slug={treatment.slug} />
         </div>
 
         {/* Related issues */}
