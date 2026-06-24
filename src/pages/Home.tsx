@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
@@ -171,18 +171,18 @@ export default function Home() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-white font-semibold">Browse by Issue</h2>
-              <a
-                href="/issues"
+              <Link
+                to="/issues"
                 className="text-xs text-white/30 hover:text-white/60 transition-colors"
               >
                 View all →
-              </a>
+              </Link>
             </div>
             <div className="flex flex-col gap-2">
               {issues.slice(0, 5).map((issue) => (
-                <a
+                <Link
                   key={issue.slug}
-                  href={`/issues/${issue.slug}`}
+                  to={`/issues/${issue.slug}`}
                   className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
                 >
                   <div>
@@ -197,7 +197,7 @@ export default function Home() {
                   <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">
                     →
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -206,18 +206,18 @@ export default function Home() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-white font-semibold">Browse by Treatment</h2>
-              <a
-                href="/treatments"
+              <Link
+                to="/treatments"
                 className="text-xs text-white/30 hover:text-white/60 transition-colors"
               >
                 View all →
-              </a>
+              </Link>
             </div>
             <div className="flex flex-col gap-2">
               {treatments.slice(0, 5).map((t) => (
-                <a
+                <Link
                   key={t.slug}
-                  href={`/treatments/${t.slug}`}
+                  to={`/treatments/${t.slug}`}
                   className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
                 >
                   <div>
@@ -229,7 +229,7 @@ export default function Home() {
                   <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">
                     →
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -242,18 +242,18 @@ export default function Home() {
             Answer 3 questions and get a curated starter protocol based on your goal and experience level.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <a
-              href="/quiz"
+            <Link
+              to="/quiz"
               className="px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-lg hover:bg-white/90 transition-colors"
             >
               Build my stack →
-            </a>
-            <a
-              href="/stack"
+            </Link>
+            <Link
+              to="/stack"
               className="px-5 py-2.5 border border-white/20 text-white text-sm rounded-lg hover:border-white/40 transition-colors"
             >
               Stack Builder
-            </a>
+            </Link>
           </div>
         </div>
 

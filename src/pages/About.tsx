@@ -1,11 +1,7 @@
 import { Link } from "react-router-dom";
-
-const stats = [
-  { value: "24+", label: "Treatments documented" },
-  { value: "9", label: "Vetted vendors" },
-  { value: "12", label: "Issues covered" },
-  { value: "100%", label: "Independent — no paid placements" },
-];
+import { treatments } from "../data/treatments";
+import { vendors } from "../data/vendors";
+import { issues } from "../data/issues";
 
 const howWeVet = [
   {
@@ -59,7 +55,12 @@ export default function About() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-14">
-          {stats.map((s) => (
+          {[
+            { value: `${treatments.length}`, label: "Treatments documented" },
+            { value: `${vendors.filter((v) => v.trusted).length}`, label: "Vetted vendors" },
+            { value: `${issues.length}`, label: "Issues covered" },
+            { value: "100%", label: "Independent — no paid placements" },
+          ].map((s) => (
             <div
               key={s.label}
               className="bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4"
