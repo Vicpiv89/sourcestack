@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SEO from "../components/SEO";
+import FaceZoneMap from "../components/FaceZoneMap";
 import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
@@ -63,18 +64,18 @@ export default function Home() {
         description="Search by issue or compound — get vetted protocols, interaction warnings, and trusted vendor sources for hair loss, skincare, peptides, and supplements."
         path="/"
       />
-      {/* Hero */}
-      <div className="px-6 pt-20 pb-16 max-w-3xl mx-auto text-center">
-        <h1 className="text-5xl font-bold text-white tracking-tight mb-4">
+
+      {/* ── Hero ──────────────────────────────────────── */}
+      <div className="px-6 pt-16 pb-8 max-w-3xl mx-auto text-center animate-fade-up">
+        <h1 className="text-5xl font-bold text-white tracking-tight mb-3">
           Your protocol, sourced.
         </h1>
         <p className="text-white/40 text-lg mb-8">
-          Search by issue to find treatments, or search by compound to find
-          vetted sources and protocols.
+          Search by issue to find treatments, or search by compound to find vetted sources and protocols.
         </p>
 
         {/* Stats bar */}
-        <div className="flex items-center justify-center gap-6 mb-12 flex-wrap">
+        <div className="flex items-center justify-center gap-6 mb-10 flex-wrap animate-fade-up-delay-1">
           <div className="text-center">
             <p className="text-white font-bold text-xl">{treatments.length}+</p>
             <p className="text-white/30 text-xs">treatments</p>
@@ -97,13 +98,11 @@ export default function Home() {
         </div>
 
         {/* Mode toggle */}
-        <div className="flex items-center justify-center gap-1 mb-6 bg-white/5 rounded-xl p-1 w-fit mx-auto">
+        <div className="flex items-center justify-center gap-1 mb-5 bg-white/5 rounded-xl p-1 w-fit mx-auto animate-fade-up-delay-2">
           <button
             onClick={() => setMode("issue")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-              mode === "issue"
-                ? "bg-white text-black"
-                : "text-white/40 hover:text-white/70"
+              mode === "issue" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
             }`}
           >
             I have an issue
@@ -111,9 +110,7 @@ export default function Home() {
           <button
             onClick={() => setMode("treatment")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-              mode === "treatment"
-                ? "bg-white text-black"
-                : "text-white/40 hover:text-white/70"
+              mode === "treatment" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
             }`}
           >
             I know what I want
@@ -121,7 +118,7 @@ export default function Home() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-lg mx-auto">
+        <div className="relative max-w-lg mx-auto animate-fade-up-delay-3">
           <input
             type="text"
             value={query}
@@ -143,17 +140,13 @@ export default function Home() {
           )}
         </div>
 
-        {/* Search results dropdown */}
+        {/* Search results */}
         {query && results.length > 0 && (
           <div className="max-w-lg mx-auto mt-2 bg-[#111] border border-white/10 rounded-xl overflow-hidden">
             {results.map((r) => (
               <button
                 key={r.slug}
-                onClick={() =>
-                  navigate(
-                    `/${mode === "issue" ? "issues" : "treatments"}/${r.slug}`
-                  )
-                }
+                onClick={() => navigate(`/${mode === "issue" ? "issues" : "treatments"}/${r.slug}`)}
                 className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
               >
                 <p className="text-white text-sm font-medium">{r.name}</p>
@@ -164,23 +157,28 @@ export default function Home() {
             ))}
           </div>
         )}
-
         {query && results.length === 0 && (
           <p className="text-white/25 text-sm mt-4">No results for "{query}"</p>
         )}
       </div>
 
-      {/* Browse sections */}
+      {/* ── Face Zone Map ─────────────────────────────── */}
+      <div className="px-6 pb-16 max-w-xl mx-auto animate-fade-up-delay-4">
+        <div className="text-center mb-6">
+          <h2 className="text-white font-semibold text-lg mb-1">Navigate by face zone</h2>
+          <p className="text-white/30 text-sm">Hover any area — see what's causing it and how to fix it.</p>
+        </div>
+        <FaceZoneMap />
+      </div>
+
+      {/* ── Browse sections ───────────────────────────── */}
       <div className="px-6 pb-24 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Issues */}
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-white font-semibold">Browse by Issue</h2>
-              <Link
-                to="/issues"
-                className="text-xs text-white/30 hover:text-white/60 transition-colors"
-              >
+              <Link to="/issues" className="text-xs text-white/30 hover:text-white/60 transition-colors">
                 View all →
               </Link>
             </div>
@@ -189,20 +187,15 @@ export default function Home() {
                 <Link
                   key={issue.slug}
                   to={`/issues/${issue.slug}`}
-                  className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
+                  className="card-hover flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
                 >
                   <div>
-                    <p className="text-white text-sm font-medium group-hover:text-white transition-colors">
-                      {issue.name}
-                    </p>
+                    <p className="text-white text-sm font-medium">{issue.name}</p>
                     <p className="text-white/30 text-xs mt-0.5">
-                      {issue.treatmentSlugs.length} treatment
-                      {issue.treatmentSlugs.length !== 1 ? "s" : ""}
+                      {issue.treatmentSlugs.length} treatment{issue.treatmentSlugs.length !== 1 ? "s" : ""}
                     </p>
                   </div>
-                  <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">
-                    →
-                  </span>
+                  <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">→</span>
                 </Link>
               ))}
             </div>
@@ -212,10 +205,7 @@ export default function Home() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-white font-semibold">Browse by Treatment</h2>
-              <Link
-                to="/treatments"
-                className="text-xs text-white/30 hover:text-white/60 transition-colors"
-              >
+              <Link to="/treatments" className="text-xs text-white/30 hover:text-white/60 transition-colors">
                 View all →
               </Link>
             </div>
@@ -224,17 +214,13 @@ export default function Home() {
                 <Link
                   key={t.slug}
                   to={`/treatments/${t.slug}`}
-                  className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
+                  className="card-hover flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
                 >
                   <div>
-                    <p className="text-white text-sm font-medium group-hover:text-white transition-colors">
-                      {t.name}
-                    </p>
+                    <p className="text-white text-sm font-medium">{t.name}</p>
                     <p className="text-white/30 text-xs mt-0.5">{t.category}</p>
                   </div>
-                  <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">
-                    →
-                  </span>
+                  <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">→</span>
                 </Link>
               ))}
             </div>
@@ -242,7 +228,7 @@ export default function Home() {
         </div>
 
         {/* Quiz / Stack promo */}
-        <div className="mt-16 border border-white/10 rounded-2xl px-8 py-10 bg-white/[0.02] text-center">
+        <div className="mt-16 border border-white/10 rounded-2xl px-8 py-10 bg-white/[0.02] text-center card-hover">
           <p className="text-white font-semibold text-xl mb-2">Not sure where to start?</p>
           <p className="text-white/40 text-sm mb-6">
             Answer 3 questions and get a curated starter protocol based on your goal and experience level.
@@ -265,18 +251,14 @@ export default function Home() {
 
         {/* Testimonials */}
         <div className="mt-16">
-          <h2 className="text-white font-semibold mb-6 text-center">
-            What the community says
-          </h2>
+          <h2 className="text-white font-semibold mb-6 text-center">What the community says</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={i}
-                className="bg-white/[0.03] border border-white/10 rounded-xl px-5 py-5 flex flex-col gap-4"
+                className="card-hover bg-white/[0.03] border border-white/10 rounded-xl px-5 py-5 flex flex-col gap-4"
               >
-                <p className="text-white/55 text-sm leading-relaxed italic">
-                  "{t.quote}"
-                </p>
+                <p className="text-white/55 text-sm leading-relaxed italic">"{t.quote}"</p>
                 <p className="text-white/25 text-xs mt-auto">{t.handle}</p>
               </div>
             ))}

@@ -4,6 +4,7 @@ import { treatments } from "../data/treatments";
 import { stackMeta, INTERACTIONS } from "../data/stackMeta";
 import { useAuth } from "../context/AuthContext";
 import UpgradeModal from "../components/UpgradeModal";
+import ProtocolClock from "../components/ProtocolClock";
 import SEO from "../components/SEO";
 
 const CATEGORIES = ["All", "Hair Loss", "Skincare", "Supplements", "Peptides", "Research Compounds", "Mechanical"];
@@ -199,6 +200,12 @@ export default function StackBuilder() {
             </div>
           ) : (
             <div className="flex flex-col gap-5">
+              {/* Protocol clock */}
+              <div className="border border-white/[0.07] rounded-2xl bg-white/[0.01] py-6 flex flex-col items-center">
+                <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">Daily Schedule</p>
+                <ProtocolClock selected={selected} />
+              </div>
+
               {/* Selected badges */}
               <div className="flex flex-wrap gap-2">
                 {selectedTreatments.map((t) => (
