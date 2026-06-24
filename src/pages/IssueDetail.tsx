@@ -5,6 +5,7 @@ import { treatments } from "../data/treatments";
 import VendorCard from "../components/VendorCard";
 import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
+import SEO from "../components/SEO";
 import { useAuth } from "../context/AuthContext";
 
 export default function IssueDetail() {
@@ -32,6 +33,11 @@ export default function IssueDetail() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title={`${issue.name} — Treatments & Sources`}
+        description={`${issue.description} ${issue.treatmentSlugs.length} vetted treatment options with protocols and sources.`}
+        path={`/issues/${issue.slug}`}
+      />
       <div className="px-6 pt-12 pb-24 max-w-3xl mx-auto">
         <Link
           to="/issues"

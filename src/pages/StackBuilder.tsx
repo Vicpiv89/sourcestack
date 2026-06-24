@@ -4,6 +4,7 @@ import { treatments } from "../data/treatments";
 import { stackMeta, INTERACTIONS } from "../data/stackMeta";
 import { useAuth } from "../context/AuthContext";
 import UpgradeModal from "../components/UpgradeModal";
+import SEO from "../components/SEO";
 
 const CATEGORIES = ["All", "Hair Loss", "Skincare", "Supplements", "Peptides", "Research Compounds", "Mechanical"];
 
@@ -80,6 +81,11 @@ export default function StackBuilder() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="Stack Builder — Build Your Protocol"
+        description="Combine looksmaxxing treatments into a personalized AM/PM daily protocol. Get interaction warnings, monthly cost estimates, and vetted vendor sources."
+        path="/stack"
+      />
       <div className="px-6 pt-10 pb-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-2">
           <div>

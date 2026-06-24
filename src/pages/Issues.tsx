@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { issues } from "../data/issues";
 import { scoreMatch } from "../data/synonyms";
+import SEO from "../components/SEO";
 
 export default function Issues() {
   const [query, setQuery] = useState("");
@@ -22,6 +23,11 @@ export default function Issues() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="Browse Issues"
+        description={`${issues.length} looksmaxxing concerns covered — hair loss, skin clarity, hyperpigmentation, beard growth, and more. Find what actually works for each.`}
+        path="/issues"
+      />
       <div className="px-6 pt-14 pb-24 max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
           Browse Issues

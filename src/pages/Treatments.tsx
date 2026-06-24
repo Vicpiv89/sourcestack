@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { treatments } from "../data/treatments";
 import { scoreMatch } from "../data/synonyms";
+import SEO from "../components/SEO";
 
 const CATEGORIES = [
   "All",
@@ -37,6 +38,11 @@ export default function Treatments() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="All Treatments"
+        description={`${treatments.length} compounds with full protocols, safety notes, and vetted vendor sources. Hair loss, skincare, peptides, supplements, and research compounds.`}
+        path="/treatments"
+      />
       <div className="px-6 pt-14 pb-24 max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
           Treatments

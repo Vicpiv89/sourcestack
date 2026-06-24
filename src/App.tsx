@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./context/AuthContext";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
@@ -15,6 +16,7 @@ import Quiz from "./pages/Quiz";
 
 export default function App() {
   return (
+    <HelmetProvider>
     <BrowserRouter>
       <AuthProvider>
         <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
@@ -37,5 +39,6 @@ export default function App() {
         </div>
       </AuthProvider>
     </BrowserRouter>
+    </HelmetProvider>
   );
 }

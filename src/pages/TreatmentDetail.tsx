@@ -5,6 +5,7 @@ import { issues } from "../data/issues";
 import VendorCard from "../components/VendorCard";
 import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
+import SEO from "../components/SEO";
 import { useAuth } from "../context/AuthContext";
 
 export default function TreatmentDetail() {
@@ -38,6 +39,11 @@ export default function TreatmentDetail() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title={`${treatment.name} — Protocol & Sources`}
+        description={`${treatment.summary.slice(0, 155).trimEnd()}…`}
+        path={`/treatments/${treatment.slug}`}
+      />
       <div className="px-6 pt-12 pb-24 max-w-3xl mx-auto">
         <Link
           to="/treatments"

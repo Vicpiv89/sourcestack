@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO";
 
 export default function Disclaimer() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="Disclaimer"
+        description="SourceStack is for informational purposes only. Not medical advice. Research compounds are not approved for human use."
+        path="/disclaimer"
+      />
       <div className="px-6 pt-12 pb-24 max-w-2xl mx-auto">
         <Link
           to="/"

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { treatments } from "../data/treatments";
 import { stackMeta } from "../data/stackMeta";
+import SEO from "../components/SEO";
 
 const RISK_COLORS: Record<string, string> = {
   low: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
@@ -108,6 +109,11 @@ export default function Compare() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="Compare Treatments"
+        description="Side-by-side comparison of looksmaxxing compounds. Compare protocols, cost, risk level, beginner-friendliness, and vendor sources."
+        path="/compare"
+      />
       <div className="px-6 pt-10 pb-24 max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold text-white tracking-tight mb-1">Compare Treatments</h1>
         <p className="text-white/30 text-sm mb-8">Select up to 3 treatments for a side-by-side breakdown.</p>

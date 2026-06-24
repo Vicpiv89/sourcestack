@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
 import { issues } from "../data/issues";
+import SEO from "../components/SEO";
 
 const howWeVet = [
   {
@@ -25,6 +26,11 @@ const howWeVet = [
 export default function About() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="About — Independent Looksmaxxing Reference"
+        description="SourceStack is an independent protocol and vendor hub for serious looksmaxxers. No paid placements, no courses — just vetted information and sourcing."
+        path="/about"
+      />
       <div className="px-6 pt-12 pb-24 max-w-2xl mx-auto">
         <Link
           to="/"

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import SEO from "../components/SEO";
 import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
@@ -57,6 +58,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+      <SEO
+        title="Your Protocol, Sourced"
+        description="Search by issue or compound — get vetted protocols, interaction warnings, and trusted vendor sources for hair loss, skincare, peptides, and supplements."
+        path="/"
+      />
       {/* Hero */}
       <div className="px-6 pt-20 pb-16 max-w-3xl mx-auto text-center">
         <h1 className="text-5xl font-bold text-white tracking-tight mb-4">
