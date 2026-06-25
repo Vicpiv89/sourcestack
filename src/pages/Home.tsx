@@ -3,6 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import FaceZoneMap from "../components/FaceZoneMap";
 import TutorialModal, { STORAGE_KEY } from "../components/TutorialModal";
+import AuthModal from "../components/AuthModal";
+import { useAuth } from "../context/AuthContext";
 import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
@@ -24,14 +26,17 @@ const TESTIMONIALS = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"issue" | "treatment">("issue");
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
 
+  // Auto-show only for logged-out first-timers
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) setShowTutorial(true);
-  }, []);
+    if (!user && !localStorage.getItem(STORAGE_KEY)) setShowTutorial(true);
+  }, [user]);
 
   const issueResults = query
     ? issues
@@ -285,7 +290,13 @@ export default function Home() {
       </div>
     </div>
 
-      {showTutorial && <TutorialModal onClose={() => setShowTutorial(false)} />}
+      {showTutorial && (
+        <TutorialModal
+          onClose={() => setShowTutorial(false)}
+          onComplete={() => { if (!user) setShowAuth(true); }}
+        />
+      )}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </>
   );
 }

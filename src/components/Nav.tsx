@@ -49,6 +49,11 @@ export default function Nav() {
         <div className="hidden md:flex items-center gap-2">
           {user ? (
             <>
+              {isPro && (
+                <span className="px-2 py-1 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Pro
+                </span>
+              )}
               {!isPro && (
                 <button
                   onClick={() => setShowUpgrade(true)}
@@ -57,14 +62,12 @@ export default function Nav() {
                   Upgrade
                 </button>
               )}
-              {isPro && (
-                <span className="px-2 py-1 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Pro
-                </span>
-              )}
+              <span className="text-white/25 text-xs max-w-[120px] truncate hidden lg:block">
+                {user.email?.split('@')[0]}
+              </span>
               <button
                 onClick={() => signOut()}
-                className="px-3 py-1.5 rounded-lg text-xs text-white/40 hover:text-white/70 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/25 transition-colors"
               >
                 Sign out
               </button>
@@ -133,12 +136,15 @@ export default function Nav() {
             ))}
             <div className="mt-2 pt-3 border-t border-white/[0.06] flex flex-col gap-2">
               {user ? (
-                <button
-                  onClick={() => { signOut(); closeMenu(); }}
-                  className="px-3 py-2 text-left text-sm text-white/40 hover:text-white/70 transition-colors"
-                >
-                  Sign out
-                </button>
+                <>
+                  <p className="px-3 text-xs text-white/20 truncate">{user.email}</p>
+                  <button
+                    onClick={() => { signOut(); closeMenu(); }}
+                    className="px-3 py-2.5 border border-white/10 rounded-xl text-sm text-white/60 hover:text-white hover:border-white/25 transition-colors text-center"
+                  >
+                    Sign out
+                  </button>
+                </>
               ) : (
                 <button
                   onClick={() => { setShowAuth(true); closeMenu(); }}

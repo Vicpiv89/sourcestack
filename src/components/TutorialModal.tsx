@@ -255,21 +255,29 @@ const STEPS = [
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
-interface Props { onClose: () => void }
+interface Props {
+  onClose: () => void;
+  onComplete?: () => void; // called when the last step is finished (not skipped)
+}
 
-export default function TutorialModal({ onClose }: Props) {
+export default function TutorialModal({ onClose, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  const advance = () => {
-    if (isLast) { dismiss(); }
-    else setStep(s => s + 1);
-  };
-
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
     onClose();
+  };
+
+  const advance = () => {
+    if (isLast) {
+      localStorage.setItem(STORAGE_KEY, 'true');
+      onClose();
+      onComplete?.();
+    } else {
+      setStep(s => s + 1);
+    }
   };
 
   return (
