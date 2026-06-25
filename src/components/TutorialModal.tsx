@@ -290,9 +290,9 @@ export default function TutorialModal({ onClose, onComplete, dismissible = false
         onClick={dismissible ? dismiss : undefined}
       />
 
-      <div className="relative w-full max-w-sm bg-[#0d0d0d] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="relative w-full max-w-sm h-[80vh] bg-[#0d0d0d] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
         {/* Progress bar */}
-        <div className="h-[2px] bg-white/[0.05]">
+        <div className="h-[2px] bg-white/[0.05] shrink-0">
           <div
             className="h-full bg-white/25 transition-all duration-500 ease-out"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
@@ -310,68 +310,71 @@ export default function TutorialModal({ onClose, onComplete, dismissible = false
         )}
 
         {/* Content — keyed so it animates on step change */}
-        <div key={step} className="px-6 pt-5 pb-6" style={{ animation: 'fadeUp 0.3s ease both' }}>
-          {/* Visual */}
-          <div className="flex justify-center mb-4">
+        <div key={step} className="flex flex-col flex-1 min-h-0 px-6 pt-5 pb-6" style={{ animation: 'fadeUp 0.3s ease both' }}>
+          {/* Visual — expands to fill available space */}
+          <div className="flex-1 flex items-center justify-center min-h-0 mb-4">
             {current.visual}
           </div>
 
-          {/* Step label */}
-          <p className="text-[9px] text-white/25 uppercase tracking-widest mb-2">
-            {step + 1} of {STEPS.length} · {current.label}
-          </p>
+          {/* Bottom content */}
+          <div className="shrink-0">
+            {/* Step label */}
+            <p className="text-[9px] text-white/25 uppercase tracking-widest mb-2">
+              {step + 1} of {STEPS.length} · {current.label}
+            </p>
 
-          {/* Title */}
-          <h2 className="text-white text-[1.15rem] font-bold mb-2.5 leading-tight">
-            {current.title}
-          </h2>
+            {/* Title */}
+            <h2 className="text-white text-[1.15rem] font-bold mb-2.5 leading-tight">
+              {current.title}
+            </h2>
 
-          {/* Body */}
-          <p className="text-white/40 text-sm leading-relaxed mb-6">
-            {current.body}
-          </p>
+            {/* Body */}
+            <p className="text-white/40 text-sm leading-relaxed mb-6">
+              {current.body}
+            </p>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between gap-3">
-            <button
-              onClick={dismiss}
-              className="text-xs text-white/20 hover:text-white/40 transition-colors"
-            >
-              {dismissible ? 'Skip' : 'Skip for now'}
-            </button>
-            <div className="flex items-center gap-2">
-              {current.cta && (
-                <Link
-                  to={current.cta.to}
-                  onClick={dismiss}
-                  className="px-3 py-1.5 text-xs border border-white/[0.12] rounded-lg text-white/45 hover:text-white hover:border-white/25 transition-colors"
-                >
-                  {current.cta.label}
-                </Link>
-              )}
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-3">
               <button
-                onClick={advance}
-                className="px-4 py-1.5 bg-white text-black text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors"
+                onClick={dismiss}
+                className="text-xs text-white/20 hover:text-white/40 transition-colors"
               >
-                {isLast ? 'Get started' : 'Next →'}
+                {dismissible ? 'Skip' : 'Skip for now'}
               </button>
+              <div className="flex items-center gap-2">
+                {current.cta && (
+                  <Link
+                    to={current.cta.to}
+                    onClick={dismiss}
+                    className="px-3 py-1.5 text-xs border border-white/[0.12] rounded-lg text-white/45 hover:text-white hover:border-white/25 transition-colors"
+                  >
+                    {current.cta.label}
+                  </Link>
+                )}
+                <button
+                  onClick={advance}
+                  className="px-4 py-1.5 bg-white text-black text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors"
+                >
+                  {isLast ? 'Get started' : 'Next →'}
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Step dots */}
-          <div className="flex items-center justify-center gap-1.5 mt-5">
-            {STEPS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setStep(i)}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: i === step ? 18 : 5,
-                  height: 5,
-                  background: i === step ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.12)',
-                }}
-              />
-            ))}
+            {/* Step dots */}
+            <div className="flex items-center justify-center gap-1.5 mt-5">
+              {STEPS.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setStep(i)}
+                  className="rounded-full transition-all duration-300"
+                  style={{
+                    width: i === step ? 18 : 5,
+                    height: 5,
+                    background: i === step ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.12)',
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
