@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import FaceZoneMap from "../components/FaceZoneMap";
-import TutorialModal, { STORAGE_KEY } from "../components/TutorialModal";
+import TutorialModal from "../components/TutorialModal";
 import AuthModal from "../components/AuthModal";
 import { useAuth } from "../context/AuthContext";
 import { issues } from "../data/issues";
@@ -33,9 +33,9 @@ export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
 
-  // Auto-show only for logged-out first-timers
+  // Show every visit for non-logged-in users — the only escape is signing up
   useEffect(() => {
-    if (!user && !localStorage.getItem(STORAGE_KEY)) setShowTutorial(true);
+    if (!user) setShowTutorial(true);
   }, [user]);
 
   const issueResults = query
@@ -294,6 +294,7 @@ export default function Home() {
         <TutorialModal
           onClose={() => setShowTutorial(false)}
           onComplete={() => { if (!user) setShowAuth(true); }}
+          dismissible={!!user}
         />
       )}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}

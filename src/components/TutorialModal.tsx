@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const STORAGE_KEY = 'ss_tutorial_seen';
+export const STORAGE_KEY = 'ss_tutorial_seen';
 
 // ── Step visuals ──────────────────────────────────────────────────────────────
 
@@ -258,21 +258,23 @@ const STEPS = [
 interface Props {
   onClose: () => void;
   onComplete?: () => void; // called when the last step is finished (not skipped)
+  // When false: backdrop doesn't close it, Skip is labelled "Skip for now"
+  // This is the default for guest users so the modal keeps reappearing until they sign up
+  dismissible?: boolean;
 }
 
-export default function TutorialModal({ onClose, onComplete }: Props) {
+export default function TutorialModal({ onClose, onComplete, dismissible = false }: Props) {
   const [step, setStep] = useState(0);
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, 'true');
+    // Don't write localStorage — non-logged-in users see this every visit
     onClose();
   };
 
   const advance = () => {
     if (isLast) {
-      localStorage.setItem(STORAGE_KEY, 'true');
       onClose();
       onComplete?.();
     } else {
@@ -282,7 +284,11 @@ export default function TutorialModal({ onClose, onComplete }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-3 pb-3 sm:px-4 sm:pb-0">
-      <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={dismiss} />
+      {/* Backdrop — only clickable when dismissible (logged-in users reopening manually) */}
+      <div
+        className="absolute inset-0 bg-black/65 backdrop-blur-sm"
+        onClick={dismissible ? dismiss : undefined}
+      />
 
       <div className="relative w-full max-w-sm bg-[#0d0d0d] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
         {/* Progress bar */}
@@ -293,13 +299,15 @@ export default function TutorialModal({ onClose, onComplete }: Props) {
           />
         </div>
 
-        {/* Close */}
-        <button
-          onClick={dismiss}
-          className="absolute top-3.5 right-4 text-white/20 hover:text-white/50 transition-colors text-sm z-10"
-        >
-          ✕
-        </button>
+        {/* Close — only shown when dismissible */}
+        {dismissible && (
+          <button
+            onClick={dismiss}
+            className="absolute top-3.5 right-4 text-white/20 hover:text-white/50 transition-colors text-sm z-10"
+          >
+            ✕
+          </button>
+        )}
 
         {/* Content — keyed so it animates on step change */}
         <div key={step} className="px-6 pt-5 pb-6" style={{ animation: 'fadeUp 0.3s ease both' }}>
@@ -327,9 +335,9 @@ export default function TutorialModal({ onClose, onComplete }: Props) {
           <div className="flex items-center justify-between gap-3">
             <button
               onClick={dismiss}
-              className="text-xs text-white/20 hover:text-white/50 transition-colors"
+              className="text-xs text-white/20 hover:text-white/40 transition-colors"
             >
-              Skip
+              {dismissible ? 'Skip' : 'Skip for now'}
             </button>
             <div className="flex items-center gap-2">
               {current.cta && (
@@ -371,4 +379,3 @@ export default function TutorialModal({ onClose, onComplete }: Props) {
   );
 }
 
-export { STORAGE_KEY };
