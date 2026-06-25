@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { treatments } from "../data/treatments";
 import { scoreMatch } from "../data/synonyms";
-import TreatmentGalaxy from "../components/TreatmentGalaxy";
 import SEO from "../components/SEO";
 
 const CATEGORIES = [
@@ -15,12 +14,9 @@ const CATEGORIES = [
   "Mechanical",
 ];
 
-type ViewMode = "grid" | "galaxy";
-
 export default function Treatments() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const scored = query
     ? treatments
@@ -40,87 +36,60 @@ export default function Treatments() {
     (t) => activeCategory === "All" || t.category === activeCategory
   );
 
+  const showResults = query.length > 0 || activeCategory !== "All";
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
       <SEO
-        title="All Treatments"
-        description={`${treatments.length} compounds with full protocols, safety notes, and vetted vendor sources. Hair loss, skincare, peptides, supplements, and research compounds.`}
+        title="Find Treatments"
+        description={`Search ${treatments.length} compounds with full protocols, safety notes, and vetted vendor sources. Hair loss, skincare, peptides, supplements, and research compounds.`}
         path="/treatments"
       />
-      <div className="px-6 pt-14 pb-24 max-w-5xl mx-auto">
-        <div className="flex items-end justify-between mb-2 flex-wrap gap-4 animate-fade-up">
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight mb-1">Treatments</h1>
-            <p className="text-white/40 text-sm">
-              Every compound in the database — protocol, safety, and vetted sources.
-            </p>
-          </div>
+      <div className="px-6 pt-14 pb-24 max-w-3xl mx-auto">
+        <div className="mb-8 animate-fade-up">
+          <h1 className="text-3xl font-bold text-white tracking-tight mb-1">Treatments</h1>
+          <p className="text-white/40 text-sm">
+            Search by compound or filter by category.
+          </p>
+        </div>
 
-          {/* View toggle */}
-          <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                viewMode === "grid" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect x="0" y="0" width="5" height="5" rx="1" fill="currentColor" />
-                <rect x="7" y="0" width="5" height="5" rx="1" fill="currentColor" />
-                <rect x="0" y="7" width="5" height="5" rx="1" fill="currentColor" />
-                <rect x="7" y="7" width="5" height="5" rx="1" fill="currentColor" />
-              </svg>
-              Grid
-            </button>
-            <button
-              onClick={() => setViewMode("galaxy")}
-              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                viewMode === "galaxy" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <circle cx="6" cy="6" r="2" fill="currentColor" />
-                <circle cx="6" cy="1" r="1" fill="currentColor" opacity="0.6" />
-                <circle cx="11" cy="6" r="1" fill="currentColor" opacity="0.6" />
-                <circle cx="6" cy="11" r="1" fill="currentColor" opacity="0.6" />
-                <circle cx="1" cy="6" r="1" fill="currentColor" opacity="0.6" />
-                <circle cx="9.5" cy="2.5" r="0.8" fill="currentColor" opacity="0.4" />
-                <circle cx="9.5" cy="9.5" r="0.8" fill="currentColor" opacity="0.4" />
-                <circle cx="2.5" cy="9.5" r="0.8" fill="currentColor" opacity="0.4" />
-                <circle cx="2.5" cy="2.5" r="0.8" fill="currentColor" opacity="0.4" />
-              </svg>
-              Galaxy
-            </button>
+        <div className="flex flex-col gap-4 mb-8 animate-fade-up-delay-1">
+          <div className="relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search compounds... (minoxidil, BPC-157, creatine...)"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/30 transition-colors"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  activeCategory === cat
+                    ? "bg-white text-black"
+                    : "bg-white/5 text-white/40 hover:text-white/70"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
 
-        {viewMode === "grid" && (
+        {showResults ? (
           <>
-            <div className="flex flex-col gap-4 mb-8 mt-6 animate-fade-up-delay-1">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search compounds..."
-                className="w-full max-w-md bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/30 transition-colors"
-              />
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      activeCategory === cat
-                        ? "bg-white text-black"
-                        : "bg-white/5 text-white/40 hover:text-white/70"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filtered.map((t) => (
                 <Link
@@ -150,21 +119,16 @@ export default function Treatments() {
                 </Link>
               ))}
             </div>
-
             {filtered.length === 0 && (
-              <p className="text-white/25 text-sm py-12 text-center">No treatments found.</p>
+              <div className="py-12 text-center">
+                <p className="text-white/25 text-sm">No results for "{query}".</p>
+              </div>
             )}
           </>
-        )}
-
-        {viewMode === "galaxy" && (
-          <div className="mt-6 animate-fade-up-delay-1">
-            <p className="text-white/25 text-xs mb-5 text-center">
-              All {treatments.length} compounds — hover to preview, click to open. Grouped by category.
-            </p>
-            <div className="border border-white/[0.06] rounded-2xl overflow-hidden bg-white/[0.01] p-4">
-              <TreatmentGalaxy />
-            </div>
+        ) : (
+          <div className="py-20 text-center">
+            <p className="text-white/20 text-sm mb-2">Search for a compound or pick a category above.</p>
+            <p className="text-white/10 text-xs">{treatments.length} compounds — hair loss, skincare, peptides, and more.</p>
           </div>
         )}
       </div>

@@ -14,6 +14,23 @@ export default function TreatmentDetail() {
   const treatment = treatments.find((t) => t.slug === slug);
   const { isPro } = useAuth();
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [inStack, setInStack] = useState(() => {
+    if (!treatment) return false;
+    const stored = localStorage.getItem("ss_stack");
+    const stack: string[] = stored ? JSON.parse(stored) : [];
+    return stack.includes(treatment.slug);
+  });
+
+  function toggleStack() {
+    if (!treatment) return;
+    const stored = localStorage.getItem("ss_stack");
+    const stack: string[] = stored ? JSON.parse(stored) : [];
+    const next = inStack
+      ? stack.filter((s) => s !== treatment.slug)
+      : [...stack, treatment.slug];
+    localStorage.setItem("ss_stack", JSON.stringify(next));
+    setInStack(!inStack);
+  }
 
   if (!treatment) {
     return (
@@ -52,16 +69,20 @@ export default function TreatmentDetail() {
         >
           ← Treatments
         </Link>
-        <div className="flex gap-2 mb-6">
-          <Link
-            to={`/stack?t=${treatment.slug}`}
-            className="px-3 py-1.5 text-xs border border-white/10 rounded-lg text-white/50 hover:text-white hover:border-white/30 transition-colors"
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={toggleStack}
+            className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors ${
+              inStack
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+                : "bg-white text-black hover:bg-white/90"
+            }`}
           >
-            + Add to Stack
-          </Link>
+            {inStack ? "✓ In your stack" : "+ Add to Stack"}
+          </button>
           <Link
             to={`/compare?t=${treatment.slug}`}
-            className="px-3 py-1.5 text-xs border border-white/10 rounded-lg text-white/50 hover:text-white hover:border-white/30 transition-colors"
+            className="px-3 py-2 text-xs border border-white/10 rounded-xl text-white/50 hover:text-white hover:border-white/30 transition-colors"
           >
             Compare
           </Link>

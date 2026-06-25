@@ -21,21 +21,30 @@ type Timing = "AM" | "PM" | "Daily" | "Weekly";
 
 export default function StackBuilder() {
   const { isPro } = useAuth();
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(() => {
+    const stored = localStorage.getItem("ss_stack");
+    return stored ? JSON.parse(stored) : [];
+  });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(true);
 
+  // Merge URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("t");
     if (t) {
-      const slugs = t.split(",").filter((s) => treatments.some((tr) => tr.slug === s));
-      setSelected(slugs);
+      const urlSlugs = t.split(",").filter((s) => treatments.some((tr) => tr.slug === s));
+      setSelected((prev) => Array.from(new Set([...prev, ...urlSlugs])));
     }
   }, []);
+
+  // Persist to localStorage on every change
+  useEffect(() => {
+    localStorage.setItem("ss_stack", JSON.stringify(selected));
+  }, [selected]);
 
   const toggle = useCallback((slug: string) => {
     setSelected((prev) =>
@@ -230,128 +239,171 @@ export default function StackBuilder() {
                 ))}
               </div>
 
-              {/* Protocol sections */}
-              {timingSections.map(({ label, timing, color }) => {
-                const items = byTiming(timing);
-                if (items.length === 0) return null;
-                return (
-                  <div key={timing} className="border border-white/10 rounded-2xl overflow-hidden">
-                    <div className="px-5 py-3.5 bg-white/[0.03] border-b border-white/5 flex items-center gap-2">
-                      <span className={`text-xs font-semibold uppercase tracking-widest ${color}`}>
-                        {label}
-                      </span>
-                    </div>
-                    <div className="px-5 py-4 flex flex-col gap-4">
-                      {items.map((t) => (
-                        <div key={t.slug}>
-                          <p className="text-white/20 text-[10px] uppercase tracking-widest mb-2">
-                            {t.name}
-                          </p>
-                          <ol className="flex flex-col gap-2.5">
-                            {t.protocol.map((step, i) => (
-                              <li key={i} className="flex gap-3">
-                                <span className="text-white/15 font-mono text-xs shrink-0 w-4 text-right mt-0.5">
-                                  {i + 1}
-                                </span>
-                                <span className="text-white/60 text-sm leading-relaxed">{step}</span>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Interactions */}
-              {activeInteractions.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {activeInteractions.map((interaction, i) => {
-                    const borderColor =
-                      interaction.severity === "error"
-                        ? "border-red-500/20"
-                        : interaction.severity === "warning"
-                        ? "border-amber-500/20"
-                        : "border-blue-500/20";
-                    const textColor =
-                      interaction.severity === "error"
-                        ? "text-red-400/80"
-                        : interaction.severity === "warning"
-                        ? "text-amber-400/80"
-                        : "text-blue-400/80";
-                    const icon =
-                      interaction.severity === "error"
-                        ? "✕"
-                        : interaction.severity === "warning"
-                        ? "!"
-                        : "i";
+              {/* Protocol sections + interactions + cost — Pro only */}
+              {isPro ? (
+                <>
+                  {timingSections.map(({ label, timing, color }) => {
+                    const items = byTiming(timing);
+                    if (items.length === 0) return null;
                     return (
-                      <div key={i} className={`border ${borderColor} rounded-xl px-4 py-3 flex gap-3`}>
-                        <span className={`${textColor} text-xs font-bold shrink-0 mt-0.5`}>{icon}</span>
-                        <div>
-                          <p className={`${textColor} text-xs font-medium mb-0.5`}>
-                            {interaction.slugs
-                              .map((s) => treatments.find((t) => t.slug === s)?.name)
-                              .filter(Boolean)
-                              .join(" + ")}
-                          </p>
-                          <p className="text-white/40 text-xs leading-relaxed">{interaction.message}</p>
+                      <div key={timing} className="border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="px-5 py-3.5 bg-white/[0.03] border-b border-white/5 flex items-center gap-2">
+                          <span className={`text-xs font-semibold uppercase tracking-widest ${color}`}>
+                            {label}
+                          </span>
+                        </div>
+                        <div className="px-5 py-4 flex flex-col gap-4">
+                          {items.map((t) => (
+                            <div key={t.slug}>
+                              <p className="text-white/20 text-[10px] uppercase tracking-widest mb-2">
+                                {t.name}
+                              </p>
+                              <ol className="flex flex-col gap-2.5">
+                                {t.protocol.map((step, i) => (
+                                  <li key={i} className="flex gap-3">
+                                    <span className="text-white/15 font-mono text-xs shrink-0 w-4 text-right mt-0.5">
+                                      {i + 1}
+                                    </span>
+                                    <span className="text-white/60 text-sm leading-relaxed">{step}</span>
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     );
                   })}
+
+                  {activeInteractions.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {activeInteractions.map((interaction, i) => {
+                        const borderColor =
+                          interaction.severity === "error"
+                            ? "border-red-500/20"
+                            : interaction.severity === "warning"
+                            ? "border-amber-500/20"
+                            : "border-blue-500/20";
+                        const textColor =
+                          interaction.severity === "error"
+                            ? "text-red-400/80"
+                            : interaction.severity === "warning"
+                            ? "text-amber-400/80"
+                            : "text-blue-400/80";
+                        const icon =
+                          interaction.severity === "error" ? "✕" : interaction.severity === "warning" ? "!" : "i";
+                        return (
+                          <div key={i} className={`border ${borderColor} rounded-xl px-4 py-3 flex gap-3`}>
+                            <span className={`${textColor} text-xs font-bold shrink-0 mt-0.5`}>{icon}</span>
+                            <div>
+                              <p className={`${textColor} text-xs font-medium mb-0.5`}>
+                                {interaction.slugs
+                                  .map((s) => treatments.find((t) => t.slug === s)?.name)
+                                  .filter(Boolean)
+                                  .join(" + ")}
+                              </p>
+                              <p className="text-white/40 text-xs leading-relaxed">{interaction.message}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="border border-white/10 rounded-2xl overflow-hidden">
+                    <div className="px-5 py-3.5 bg-white/[0.03] border-b border-white/5">
+                      <p className="text-white/40 text-xs font-semibold uppercase tracking-widest">
+                        Estimated Monthly Cost
+                      </p>
+                    </div>
+                    <div className="px-5 py-4">
+                      <div className="flex flex-col gap-2 mb-4">
+                        {selectedTreatments.map((t) => {
+                          const meta = stackMeta[t.slug];
+                          return (
+                            <div key={t.slug} className="flex items-center justify-between">
+                              <span className="text-white/40 text-sm">{t.name}</span>
+                              <span className="text-white/60 text-sm font-mono">
+                                {meta?.monthlyCostEstimate ?? "—"}/mo
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                        <span className="text-white/50 text-sm font-medium">Total estimate</span>
+                        <span className="text-white font-bold">~${totalCostMin}/mo</span>
+                      </div>
+                      <p className="text-white/20 text-xs mt-2">
+                        Estimates based on vetted vendor prices. Actual cost varies.
+                      </p>
+                    </div>
+                  </div>
+
+                  {selected.length >= 2 && (
+                    <Link
+                      to={`/compare?t=${selected.slice(0, 3).join(",")}`}
+                      className="block text-center px-5 py-3 border border-white/10 text-white/50 text-sm rounded-xl hover:border-white/30 hover:text-white transition-colors"
+                    >
+                      Compare treatments
+                    </Link>
+                  )}
+                </>
+              ) : (
+                /* Pro upsell gate */
+                <div className="relative rounded-2xl border border-white/[0.07] overflow-hidden">
+                  {/* Blurred preview */}
+                  <div className="pointer-events-none select-none blur-[5px] opacity-25 px-5 pt-5 pb-2 flex flex-col gap-4">
+                    <div className="border border-white/10 rounded-xl p-4">
+                      <p className="text-amber-400/80 text-xs font-semibold uppercase tracking-widest mb-3">Morning (AM)</p>
+                      {selectedTreatments.slice(0, 2).map((t) => (
+                        <div key={t.slug} className="mb-3">
+                          <p className="text-white/20 text-[10px] uppercase tracking-widest mb-1">{t.name}</p>
+                          {t.protocol.slice(0, 2).map((step, i) => (
+                            <div key={i} className="flex gap-3 mb-1">
+                              <span className="text-white/15 font-mono text-xs w-4">{i + 1}</span>
+                              <span className="text-white/60 text-sm">{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border border-white/10 rounded-xl p-4">
+                      <p className="text-blue-400/80 text-xs font-semibold uppercase tracking-widest mb-3">Evening (PM)</p>
+                      <div className="h-10 bg-white/[0.04] rounded-lg" />
+                    </div>
+                    <div className="border border-amber-500/10 rounded-xl px-4 py-3 flex gap-3">
+                      <span className="text-amber-400/80 text-xs font-bold">!</span>
+                      <p className="text-white/40 text-xs">Interaction detected — check before combining</p>
+                    </div>
+                    <div className="border border-white/10 rounded-xl p-4">
+                      <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-2">Estimated Monthly Cost</p>
+                      <div className="h-8 bg-white/[0.03] rounded" />
+                    </div>
+                  </div>
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/88 to-[#0a0a0a]/20 flex flex-col items-center justify-end pb-10 px-8 text-center">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full border border-white/10 bg-white/5 mb-4">
+                      <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Pro</span>
+                    </span>
+                    <p className="text-white text-xl font-bold mb-2 leading-tight">
+                      Your complete routine, built.
+                    </p>
+                    <p className="text-white/45 text-sm leading-relaxed mb-6 max-w-xs">
+                      Exact AM/PM timing, interaction warnings, and a real monthly cost breakdown —
+                      tailored to your stack. Stop guessing, start executing.
+                    </p>
+                    <button
+                      onClick={() => setShowUpgrade(true)}
+                      className="px-7 py-3 bg-white text-black font-bold rounded-xl text-sm hover:bg-white/90 transition-colors"
+                    >
+                      Unlock with Pro — $19/mo
+                    </button>
+                    <p className="text-white/20 text-xs mt-3">Instant access · Cancel anytime</p>
+                  </div>
                 </div>
               )}
-
-              {/* Cost estimate */}
-              <div className="border border-white/10 rounded-2xl overflow-hidden">
-                <div className="px-5 py-3.5 bg-white/[0.03] border-b border-white/5">
-                  <p className="text-white/40 text-xs font-semibold uppercase tracking-widest">
-                    Estimated Monthly Cost
-                  </p>
-                </div>
-                <div className="px-5 py-4">
-                  <div className="flex flex-col gap-2 mb-4">
-                    {selectedTreatments.map((t) => {
-                      const meta = stackMeta[t.slug];
-                      return (
-                        <div key={t.slug} className="flex items-center justify-between">
-                          <span className="text-white/40 text-sm">{t.name}</span>
-                          <span className="text-white/60 text-sm font-mono">
-                            {meta?.monthlyCostEstimate ?? "—"}/mo
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                    <span className="text-white/50 text-sm font-medium">Total estimate</span>
-                    <span className="text-white font-bold">~${totalCostMin}/mo</span>
-                  </div>
-                  <p className="text-white/20 text-xs mt-2">
-                    Estimates based on vetted vendor prices. Actual cost varies.
-                  </p>
-                </div>
-              </div>
-
-              {/* Save / Compare CTA */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => (isPro ? undefined : setShowUpgrade(true))}
-                  className="flex-1 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-white/90 transition-colors"
-                >
-                  {isPro ? "Stack Saved" : "Save Stack — Pro"}
-                </button>
-                {selected.length >= 2 && (
-                  <Link
-                    to={`/compare?t=${selected.slice(0, 3).join(",")}`}
-                    className="px-5 py-3 border border-white/10 text-white/50 text-sm rounded-xl hover:border-white/30 hover:text-white transition-colors"
-                  >
-                    Compare
-                  </Link>
-                )}
-              </div>
             </div>
           )}
         </div>
