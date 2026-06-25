@@ -26,7 +26,7 @@ const TESTIMONIALS = [
 ];
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"issue" | "treatment">("issue");
   const [showTutorial, setShowTutorial] = useState(false);
@@ -34,9 +34,10 @@ export default function Home() {
   const navigate = useNavigate();
 
   // Show every visit for non-logged-in users — the only escape is signing up
+  // Wait for auth to finish loading so we don't flash the tutorial for logged-in users
   useEffect(() => {
-    if (!user) setShowTutorial(true);
-  }, [user]);
+    if (!loading && !user) setShowTutorial(true);
+  }, [user, loading]);
 
   const issueResults = query
     ? issues

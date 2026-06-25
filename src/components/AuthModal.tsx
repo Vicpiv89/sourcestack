@@ -67,7 +67,28 @@ export default function AuthModal({ onClose, initialTab = "signin" }: Props) {
         </div>
 
         {success ? (
-          <p className="text-emerald-400 text-sm text-center py-4">{success}</p>
+          <div className="flex flex-col items-center text-center py-4 gap-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M20 6L9 17l-5-5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-semibold mb-2">Check your inbox</p>
+              <p className="text-white/40 text-sm leading-relaxed">
+                We sent a confirmation link to{' '}
+                <span className="text-white/70">{email}</span>.
+                Click it to activate your account.
+              </p>
+            </div>
+            <p className="text-white/20 text-xs">Didn't get it? Check your spam folder.</p>
+            <button
+              onClick={onClose}
+              className="text-xs text-white/30 hover:text-white/60 transition-colors mt-1"
+            >
+              Close
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
