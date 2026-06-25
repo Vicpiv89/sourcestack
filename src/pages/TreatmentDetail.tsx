@@ -34,7 +34,7 @@ export default function TreatmentDetail() {
 
   if (!treatment) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#111] text-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-white/40">Treatment not found.</p>
           <Link
@@ -56,7 +56,7 @@ export default function TreatmentDetail() {
   const lockedSteps = treatment.protocol.slice(2);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title={`${treatment.name} — Protocol & Sources`}
         description={`${treatment.summary.slice(0, 155).trimEnd()}…`}
@@ -170,7 +170,7 @@ export default function TreatmentDetail() {
                       ))}
                     </ol>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/80 to-transparent flex flex-col items-center justify-end pb-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/80 to-transparent flex flex-col items-center justify-end pb-2">
                     <button
                       onClick={() => setShowUpgrade(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors"

@@ -23,7 +23,7 @@ export default function Nav() {
 
   return (
     <>
-      <header className="border-b border-white/10 px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 bg-[#0a0a0a]/95 backdrop-blur-sm z-40 relative">
+      <header className="border-b border-white/[0.07] px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 bg-[#111]/95 backdrop-blur-sm z-40 relative">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5" onClick={closeMenu}>
           <span className="text-base font-semibold tracking-tight text-white">SourceStack</span>
@@ -119,7 +119,7 @@ export default function Nav() {
 
         {/* Mobile dropdown */}
         {menuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-[#0a0a0a]/98 border-b border-white/10 px-5 py-4 flex flex-col gap-1 z-50 backdrop-blur-sm">
+          <div className="md:hidden absolute top-full left-0 right-0 bg-[#111]/98 border-b border-white/[0.07] px-5 py-4 flex flex-col gap-1 z-50 backdrop-blur-sm">
             {NAV_LINKS.map(({ to, label }) => (
               <Link
                 key={to}

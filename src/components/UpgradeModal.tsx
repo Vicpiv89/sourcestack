@@ -57,7 +57,7 @@ export default function UpgradeModal({ onClose }: Props) {
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-md p-8">
+      <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-md p-8">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white/30 hover:text-white/60 transition-colors text-sm"

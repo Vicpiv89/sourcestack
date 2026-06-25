@@ -71,7 +71,7 @@ export default function Home() {
 
   return (
     <>
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Your Protocol, Sourced"
         description="Search by issue or compound — get vetted protocols, interaction warnings, and trusted vendor sources for hair loss, skincare, peptides, and supplements."
@@ -166,7 +166,7 @@ export default function Home() {
 
         {/* Search results */}
         {query && results.length > 0 && (
-          <div className="max-w-lg mx-auto mt-2 bg-[#111] border border-white/10 rounded-xl overflow-hidden">
+          <div className="max-w-lg mx-auto mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden">
             {results.map((r) => (
               <button
                 key={r.slug}

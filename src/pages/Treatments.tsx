@@ -39,7 +39,7 @@ export default function Treatments() {
   const showResults = query.length > 0 || activeCategory !== "All";
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Find Treatments"
         description={`Search ${treatments.length} compounds with full protocols, safety notes, and vetted vendor sources. Hair loss, skincare, peptides, supplements, and research compounds.`}

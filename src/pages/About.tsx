@@ -25,7 +25,7 @@ const howWeVet = [
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="About — Independent Looksmaxxing Reference"
         description="SourceStack is an independent protocol and vendor hub for serious looksmaxxers. No paid placements, no courses — just vetted information and sourcing."

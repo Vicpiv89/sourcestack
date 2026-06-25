@@ -116,7 +116,7 @@ export default function Quiz() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Build My Stack — 3-Question Protocol Quiz"
         description="Answer 3 questions about your goal, experience level, and budget — get a curated looksmaxxing starter stack with vetted sources."

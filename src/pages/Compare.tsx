@@ -108,7 +108,7 @@ export default function Compare() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Compare Treatments"
         description="Side-by-side comparison of looksmaxxing compounds. Compare protocols, cost, risk level, beginner-friendliness, and vendor sources."
@@ -144,7 +144,7 @@ export default function Compare() {
                   </button>
                 </div>
                 {open === idx && (
-                  <div className="absolute top-full mt-1 left-0 z-50 bg-[#111] border border-white/15 rounded-xl overflow-hidden w-72 shadow-xl">
+                  <div className="absolute top-full mt-1 left-0 z-50 bg-[#1a1a1a] border border-white/15 rounded-xl overflow-hidden w-72 shadow-xl">
                     <div className="px-3 pt-3 pb-2 border-b border-white/5">
                       <input
                         type="text"

@@ -16,7 +16,7 @@ export default function IssueDetail() {
 
   if (!issue) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#111] text-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-white/40">Issue not found.</p>
           <Link to="/issues" className="text-white/60 text-sm mt-2 block hover:text-white">
@@ -32,7 +32,7 @@ export default function IssueDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title={`${issue.name} — Treatments & Sources`}
         description={`${issue.description} ${issue.treatmentSlugs.length} vetted treatment options with protocols and sources.`}

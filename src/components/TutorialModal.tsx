@@ -290,7 +290,7 @@ export default function TutorialModal({ onClose, onComplete, dismissible = false
         onClick={dismissible ? dismiss : undefined}
       />
 
-      <div className="relative w-full max-w-sm h-[80vh] bg-[#0d0d0d] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="relative w-full max-w-sm h-[80vh] bg-[#181818] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
         {/* Progress bar */}
         <div className="h-[2px] bg-white/[0.05] shrink-0">
           <div

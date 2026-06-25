@@ -91,7 +91,7 @@ export default function StackBuilder() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Stack Builder — Build Your Protocol"
         description="Combine looksmaxxing treatments into a personalized AM/PM daily protocol. Get interaction warnings, monthly cost estimates, and vetted vendor sources."
@@ -383,7 +383,7 @@ export default function StackBuilder() {
                   </div>
 
                   {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/88 to-[#0a0a0a]/20 flex flex-col items-center justify-end pb-10 px-8 text-center">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/90 to-[#111]/10 flex flex-col items-center justify-end pb-10 px-8 text-center">
                     <span className="inline-block px-2.5 py-0.5 rounded-full border border-white/10 bg-white/5 mb-4">
                       <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Pro</span>
                     </span>

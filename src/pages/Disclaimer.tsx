@@ -3,7 +3,7 @@ import SEO from "../components/SEO";
 
 export default function Disclaimer() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Disclaimer"
         description="SourceStack is for informational purposes only. Not medical advice. Research compounds are not approved for human use."
