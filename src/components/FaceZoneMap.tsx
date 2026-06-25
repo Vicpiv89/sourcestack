@@ -130,69 +130,67 @@ export default function FaceZoneMap() {
 
           {/* ── Face fill ─────────────────────────────── */}
           <path
-            d="M 100 252 C 80 252 62 234 54 210 C 44 184 38 158 38 132 C 37 104 44 78 58 64 C 68 52 82 42 100 40 C 118 42 132 52 142 64 C 156 78 163 104 162 132 C 162 158 156 184 146 210 C 138 234 120 252 100 252 Z"
+            d="M 100 42 C 118 44 132 52 143 68 C 157 82 165 110 165 136 C 165 160 160 185 143 208 L 100 254 L 57 208 C 40 185 35 160 35 136 C 35 110 43 82 57 68 C 68 52 82 44 100 42 Z"
             fill="url(#face-grad)"
           />
 
           {/* ── Face line art (non-interactive) ───────── */}
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-            {/* Outline */}
+            {/* Outline — wide cheekbones, angular jaw, pointed chin */}
             <path
-              d="M 100 252 C 80 252 62 234 54 210 C 44 184 38 158 38 132 C 37 104 44 78 58 64 C 68 52 82 42 100 40 C 118 42 132 52 142 64 C 156 78 163 104 162 132 C 162 158 156 184 146 210 C 138 234 120 252 100 252 Z"
+              d="M 100 42 C 118 44 132 52 143 68 C 157 82 165 110 165 136 C 165 160 160 185 143 208 L 100 254 L 57 208 C 40 185 35 160 35 136 C 35 110 43 82 57 68 C 68 52 82 44 100 42 Z"
               stroke="rgba(255,255,255,0.2)"
               strokeWidth="0.8"
             />
             {/* Hairline */}
             <path
-              d="M 58 64 C 70 50 84 44 100 42 C 116 44 130 50 142 64"
+              d="M 57 68 C 70 52 84 44 100 42 C 116 44 130 52 143 68"
               stroke="rgba(255,255,255,0.12)"
               strokeWidth="0.7"
             />
             {/* Left ear */}
             <path
-              d="M 38 134 C 34 124 30 132 34 142 C 36 148 38 145"
+              d="M 35 136 C 31 126 27 134 31 144 C 33 150 35 147"
               stroke="rgba(255,255,255,0.12)"
               strokeWidth="0.7"
             />
             {/* Right ear */}
             <path
-              d="M 162 134 C 166 124 170 132 166 142 C 164 148 162 145"
+              d="M 165 136 C 169 126 173 134 169 144 C 167 150 165 147"
               stroke="rgba(255,255,255,0.12)"
               strokeWidth="0.7"
             />
-            {/* Left eye */}
+            {/* Left eye — positive canthal tilt (outer corner higher) */}
             <path
-              d="M 62 126 Q 76 118 90 126 Q 76 132 62 126 Z"
+              d="M 63 126 Q 76 120 89 130 Q 76 134 63 126 Z"
               stroke="rgba(255,255,255,0.28)"
               strokeWidth="0.8"
               fill="rgba(255,255,255,0.04)"
             />
             {/* Right eye */}
             <path
-              d="M 110 126 Q 124 118 138 126 Q 124 132 110 126 Z"
+              d="M 137 126 Q 124 120 111 130 Q 124 134 137 126 Z"
               stroke="rgba(255,255,255,0.28)"
               strokeWidth="0.8"
               fill="rgba(255,255,255,0.04)"
             />
             {/* Pupils */}
-            <circle cx="76" cy="126" r="2.5" fill="rgba(255,255,255,0.22)" />
-            <circle cx="124" cy="126" r="2.5" fill="rgba(255,255,255,0.22)" />
-            {/* Left brow */}
-            <path d="M 60 112 C 68 107 76 106 90 110" stroke="rgba(255,255,255,0.28)" strokeWidth="1.2" />
+            <circle cx="76" cy="127" r="2" fill="rgba(255,255,255,0.22)" />
+            <circle cx="124" cy="127" r="2" fill="rgba(255,255,255,0.22)" />
+            {/* Left brow — strong horizontal */}
+            <path d="M 60 113 C 70 107 80 106 91 110" stroke="rgba(255,255,255,0.28)" strokeWidth="1.3" />
             {/* Right brow */}
-            <path d="M 110 110 C 124 106 132 107 140 112" stroke="rgba(255,255,255,0.28)" strokeWidth="1.2" />
+            <path d="M 109 110 C 120 106 130 107 140 113" stroke="rgba(255,255,255,0.28)" strokeWidth="1.3" />
             {/* Nose bridge + nostrils */}
             <path
-              d="M 96 135 C 94 148 90 162 90 167 C 90 171 94 173 100 173 C 106 173 110 171 110 167 C 110 162 106 148 104 135"
+              d="M 97 136 C 95 149 91 163 91 168 C 91 172 95 174 100 174 C 105 174 109 172 109 168 C 109 163 105 149 103 136"
               stroke="rgba(255,255,255,0.14)"
               strokeWidth="0.7"
             />
-            {/* Philtrum */}
-            <path d="M 100 180 L 100 185" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
-            {/* Upper lip */}
-            <path d="M 84 190 C 90 185 96 183 100 185 C 104 183 110 185 116 190" stroke="rgba(255,255,255,0.22)" strokeWidth="0.8" />
+            {/* Upper lip (Cupid's bow) */}
+            <path d="M 85 191 C 91 186 96 184 100 186 C 104 184 109 186 115 191" stroke="rgba(255,255,255,0.22)" strokeWidth="0.8" />
             {/* Lower lip */}
-            <path d="M 84 190 C 92 198 108 198 116 190" stroke="rgba(255,255,255,0.22)" strokeWidth="0.8" />
+            <path d="M 85 191 C 93 199 107 199 115 191" stroke="rgba(255,255,255,0.22)" strokeWidth="0.8" />
           </g>
 
           {/* ── Interactive zones ─────────────────────── */}

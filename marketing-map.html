@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SourceStack — Marketing Map</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--green:#34d399;--blue:#60a5fa;--purple:#a78bfa;--amber:#fbbf24;--red:#f87171;
+  --text:#e5e5e5;--muted:rgba(255,255,255,0.4);--dim:rgba(255,255,255,0.15);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;user-select:none}
+#vp{position:fixed;inset:0;cursor:grab;overflow:hidden}
+#vp.grabbing{cursor:grabbing}
+#world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+#conn{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+#gridbg{position:fixed;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px);
+  background-size:36px 36px}
+.zlabel{position:absolute;font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.1em;opacity:.2;pointer-events:none}
+.node{position:absolute;width:215px;background:#111;border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:14px 16px;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s,transform .1s;pointer-events:all}
+.node:hover{border-color:rgba(255,255,255,.28);transform:translateY(-2px);
+  box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.node.active{border-color:white;box-shadow:0 0 28px rgba(255,255,255,.1)}
+.node.done{border-color:rgba(52,211,153,.3)}
+.blend-node{background:rgba(251,191,36,.04);border-color:rgba(251,191,36,.2)}
+.blend-node:hover{border-color:rgba(251,191,36,.45)}
+.blend-node.active{border-color:var(--amber);box-shadow:0 0 28px rgba(251,191,36,.12)}
+.ndot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:7px;flex-shrink:0;margin-top:3px}
+.nhdr{display:flex;align-items:flex-start;gap:0;margin-bottom:9px}
+.ntitle{font-size:13px;font-weight:600;color:white;line-height:1.3;flex:1}
+.ncat{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:8px}
+.nstats{display:flex;gap:5px;flex-wrap:wrap}
+.sp{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid}
+.sl{color:var(--green);border-color:rgba(52,211,153,.25);background:rgba(52,211,153,.06)}
+.sm{color:var(--amber);border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.06)}
+.sh{color:var(--red);border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.06)}
+.sb{color:var(--blue);border-color:rgba(96,165,250,.25);background:rgba(96,165,250,.06)}
+.sd{color:var(--green);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+.hub{position:absolute;border-radius:50%;background:#161616;border:1px solid rgba(255,255,255,.18);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;pointer-events:none}
+#panel{position:fixed;top:0;right:0;width:360px;height:100vh;background:#111;
+  border-left:1px solid rgba(255,255,255,.08);padding:28px 24px;overflow-y:auto;
+  transform:translateX(100%);transition:transform .25s cubic-bezier(.16,1,.3,1);z-index:100;pointer-events:all}
+#panel.open{transform:translateX(0)}
+#pclose{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--muted);
+  font-size:22px;cursor:pointer;padding:4px;line-height:1}
+#pclose:hover{color:white}
+.pcat{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px}
+.ptitle{font-size:20px;font-weight:700;color:white;margin-bottom:14px;line-height:1.25}
+.pdesc{font-size:13px;color:rgba(255,255,255,.48);line-height:1.7;margin-bottom:20px}
+.pmgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.pmitem label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  color:rgba(255,255,255,.18);margin-bottom:4px}
+.pmitem p{font-size:12px;color:var(--text)}
+.pdiv{height:1px;background:rgba(255,255,255,.06);margin:20px 0}
+.ppc{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ppc-col label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.ppc-col ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.ppc-col ul li{font-size:12px;color:rgba(255,255,255,.42);padding-left:14px;position:relative;line-height:1.45}
+.pros-col label{color:rgba(52,211,153,.6)}
+.cons-col label{color:rgba(248,113,113,.6)}
+.pros-col li::before{content:'+';position:absolute;left:0;color:var(--green);font-weight:700}
+.cons-col li::before{content:'−';position:absolute;left:0;color:var(--red);font-weight:700}
+.btags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.btag{font-size:11px;padding:3px 10px;border-radius:999px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45)}
+#ctrls{position:fixed;bottom:24px;left:24px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.cb{width:36px;height:36px;background:#1a1a1a;border:1px solid rgba(255,255,255,.1);border-radius:8px;
+  color:rgba(255,255,255,.5);font-size:16px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:color .1s,border-color .1s}
+.cb:hover{color:white;border-color:rgba(255,255,255,.25)}
+#topbar{position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;background:rgba(17,17,17,.92);
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 16px;
+  z-index:50;backdrop-filter:blur(8px);pointer-events:none}
+#topbar span{font-size:12px;color:rgba(255,255,255,.3)}
+#topbar strong{font-size:12px;color:rgba(255,255,255,.7);font-weight:600}
+#legend{position:fixed;top:20px;left:20px;background:rgba(17,17,17,.92);
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;
+  z-index:50;backdrop-filter:blur(8px)}
+.ltitle{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.2);margin-bottom:8px}
+.litem{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,.38);
+  margin-bottom:5px;cursor:pointer;transition:color .1s;padding:2px 0}
+.litem:last-child{margin-bottom:0}
+.litem:hover{color:white}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#hint{position:fixed;bottom:24px;right:24px;font-size:11px;
+  color:rgba(255,255,255,.13);z-index:50;text-align:right;line-height:1.9;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="gridbg"></div>
+<div id="vp">
+  <div id="world">
+    <svg id="conn"></svg>
+  </div>
+</div>
+
+<div id="topbar">
+  <strong>SourceStack</strong>
+  <span>·</span>
+  <span>Marketing Strategy Map — drag to pan · scroll to zoom · click any node</span>
+</div>
+
+<div id="legend">
+  <div class="ltitle">Channels</div>
+  <div class="litem" data-cat="organic"><span class="ldot" style="background:#34d399"></span>Organic / Free</div>
+  <div class="litem" data-cat="seo"><span class="ldot" style="background:#60a5fa"></span>SEO</div>
+  <div class="litem" data-cat="partnerships"><span class="ldot" style="background:#a78bfa"></span>Partnerships</div>
+  <div class="litem" data-cat="community"><span class="ldot" style="background:#34d399"></span>Community</div>
+  <div class="litem" data-cat="paid"><span class="ldot" style="background:#f87171"></span>Paid (Later)</div>
+  <div class="litem" data-cat="blends"><span class="ldot" style="background:#fbbf24"></span>Strategy Blends</div>
+</div>
+
+<div id="ctrls">
+  <button class="cb" id="zin">+</button>
+  <button class="cb" id="zout">−</button>
+  <button class="cb" id="rst" style="font-size:13px">⌂</button>
+</div>
+
+<div id="hint">Scroll to zoom<br>Drag to pan<br>Click node for details</div>
+
+<div id="panel">
+  <button id="pclose">×</button>
+  <div id="pcontent"></div>
+</div>
+
+<script>
+const NW = 215, NH = 105, HR = 80;
+
+const NODES = [
+  {id:'hub',type:'hub',x:0,y:0},
+
+  // ORGANIC
+  {id:'comment-seeding',type:'s',cat:'organic',accent:'#34d399',
+   title:'Comment Seeding',catLabel:'Organic / Free',
+   x:-760,y:-340,
+   stats:[{t:'$0',c:'sl'},{t:'Low effort',c:'sl'},{t:'500k–2M imp',c:'sb'}],
+   desc:'Find threads where people ask exactly what SourceStack answers — "legit RU58841 source", "minoxidil beard protocol", "tretinoin vs adapalene" — and drop a genuinely helpful reply with a deep link to the relevant treatment page. Not a promo; a better answer than anything else in the thread. One good Reddit comment from 2 years ago still drives clicks today.',
+   meta:[{l:'Expected Reach',v:'500k–2M impressions / 3 months'},{l:'Time to Results',v:'1–3 days (Reddit indexes fast)'},{l:'Ongoing Effort',v:'30–45 min/day, 5 days/week'},{l:'Cost',v:'$0'},{l:'Best Platforms',v:'r/tressless, r/Tretinoin, r/Peptides, TikTok, YouTube comments'},{l:'Effort Level',v:'Low'}],
+   pros:['Permanent — comments live for years','High-intent audience (already asking)','Deep links look helpful, not spammy','Compounds over time without extra effort'],
+   cons:['Reddit bans accounts for self-promotion','Need aged accounts with karma','Requires genuine community knowledge','Manual effort — doesn\'t scale without systems']},
+
+  {id:'reddit-posts',type:'s',cat:'organic',accent:'#34d399',
+   title:'Reddit Value Posts',catLabel:'Organic / Free',
+   x:-760,y:-180,
+   stats:[{t:'$0',c:'sl'},{t:'Medium effort',c:'sm'},{t:'5k–50k per post',c:'sb'}],
+   desc:'Post as yourself with genuine value — not "check out my site." Examples: "I tracked 55 looksmaxxing compounds — here\'s what I found on peptide vendors", "Full RU58841 vs Pyrilutamide breakdown with sources." Include the link naturally. These hit niche subreddit front pages regularly and can drive 5k–20k visitors from a single post.',
+   meta:[{l:'Expected Reach',v:'5k–50k visits per successful post'},{l:'Time to Results',v:'Hours after posting'},{l:'Ongoing Effort',v:'1–2 posts/week, ~1hr each'},{l:'Cost',v:'$0'},{l:'Target Subs',v:'r/tressless, r/SkincareAddiction, r/Peptides, r/looksmax, r/Biohackers'},{l:'Effort Level',v:'Medium'}],
+   pros:['Massive burst traffic potential','Builds community authority','Posts get bookmarked and re-shared for years','Free'],
+   cons:['High variance — most posts die with 5 upvotes','Mods remove obvious self-promo','Requires genuine expertise in the content']},
+
+  {id:'wiki-listings',type:'s',cat:'organic',accent:'#34d399',
+   title:'Subreddit Wiki Listings',catLabel:'Organic / Free',
+   x:-760,y:-20,
+   stats:[{t:'$0',c:'sl'},{t:'One DM',c:'sl'},{t:'Permanent traffic',c:'sd'}],
+   desc:'Many high-traffic subreddits maintain a wiki or pinned resources thread that every new member reads. Getting SourceStack listed there is worth thousands of monthly visitors permanently — one DM to a mod. Target: r/tressless wiki, r/SkincareAddiction resources, r/Peptides vendor guide.',
+   meta:[{l:'Expected Reach',v:'500–3k steady monthly visitors per listing'},{l:'Time to Results',v:'Days after mod approval'},{l:'Ongoing Effort',v:'One-time, ~1hr total'},{l:'Cost',v:'$0'},{l:'ROI',v:'Highest ROI per hour of anything on this list'},{l:'Effort Level',v:'Very Low'}],
+   pros:['Permanent passive traffic once listed','Mod-approved = strong credibility signal','Only needs to be done once per sub','Reaches new members continuously'],
+   cons:['Mods can say no','Site needs to look credible first','Volume per listing is modest (not viral)']},
+
+  {id:'product-hunt',type:'s',cat:'organic',accent:'#34d399',
+   title:'Product Hunt Launch',catLabel:'Organic / Free',
+   x:-760,y:140,
+   stats:[{t:'$0',c:'sl'},{t:'Medium prep',c:'sm'},{t:'2k–8k launch day',c:'sb'}],
+   desc:'A proper Product Hunt launch on a weekday with a strong headline, description, and 5–10 upvoters lined up in advance. The biohacking/self-optimization crowd overlaps heavily with PH. A solid launch can hit Top 5 for the day and drive 2k–8k visitors. Journalists use PH to find products to write about.',
+   meta:[{l:'Expected Reach',v:'2k–8k visits on launch day; ongoing indexing'},{l:'Time to Results',v:'Launch day'},{l:'Ongoing Effort',v:'One-time, ~3hrs prep + launch day'},{l:'Cost',v:'$0'},{l:'Key Prep',v:'Need 5+ people to upvote within the first hour — line up support in advance'},{l:'Effort Level',v:'Medium (prep)'}],
+   pros:['Burst of high-quality traffic in one day','Permanent presence on PH database','Journalists browse PH for stories','Credibility signal'],
+   cons:['PH audience skews tech/SaaS — partial overlap','Traffic spike doesn\'t last without follow-up','Competitive — many launches daily']},
+
+  {id:'shareable-stack',type:'s',cat:'organic',accent:'#34d399',
+   title:'Shareable Stack Mechanic',catLabel:'Organic / Free',
+   x:-760,y:300,
+   stats:[{t:'Already built',c:'sd'},{t:'$0',c:'sl'},{t:'Scales w/ users',c:'sb'}],
+   desc:'The Stack Builder already generates shareable URLs. "Rate my stack" is native looksmaxxing community behavior. Optionally enhance: generate a clean text summary on copy ("My stack: Minoxidil · RU58841 · sourcestack.onrender.com/stack?t=...") so shared links look intentional, not like raw URLs.',
+   meta:[{l:'Expected Reach',v:'Fully scales with user base size'},{l:'Time to Results',v:'When users start sharing'},{l:'Ongoing Effort',v:'One-time polish, then zero'},{l:'Cost',v:'$0'},{l:'Key Insight',v:'Virality multiplier — amplifies every other channel'},{l:'Effort Level',v:'Very Low'}],
+   pros:['Zero ongoing effort once built','Compounds with user base growth','Authentic — shared by real users','Deep links drive high-intent traffic'],
+   cons:['Requires existing user base to generate shares','Hard to measure attribution']},
+
+  {id:'tiktok-replies',type:'s',cat:'organic',accent:'#34d399',
+   title:'TikTok Reply Bombing',catLabel:'Organic / Free',
+   x:-760,y:460,
+   stats:[{t:'$0',c:'sl'},{t:'Low effort',c:'sl'},{t:'20–30 min/day',c:'sb'}],
+   desc:'Find TikToks on "where to buy RU58841", "minoxidil beard progress", "tretinoin routine" — reply with the direct treatment page link. TikTok comment sections are highly visible. Unlike Reddit, TikTok rarely bans for this. TikTok comments get shown to people who haven\'t even watched the video.',
+   meta:[{l:'Expected Reach',v:'High impressions, lower CTR than Reddit'},{l:'Time to Results',v:'1–2 days'},{l:'Ongoing Effort',v:'20–30 min/day'},{l:'Cost',v:'$0'},{l:'Key Insight',v:'Comments on high-view videos get massive passive exposure'},{l:'Effort Level',v:'Low'}],
+   pros:['Less moderation than Reddit','High-visibility platform','Very fast to execute'],
+   cons:['Lower purchase intent than Reddit/Google','TikTok traffic often doesn\'t convert well','Comments get buried fast']},
+
+  {id:'discord-seeding',type:'s',cat:'organic',accent:'#34d399',
+   title:'Discord Server Seeding',catLabel:'Organic / Free',
+   x:-760,y:620,
+   stats:[{t:'$0',c:'sl'},{t:'Medium effort',c:'sm'},{t:'High-intent',c:'sb'}],
+   desc:'Most major subreddits have associated Discord servers — r/tressless, r/Peptides, looksmax.org all have active Discords. Join as a genuine member, be helpful for 1–2 weeks, then drop the link in relevant conversations. Discord "resources" channels are especially valuable — getting pinned there is permanent.',
+   meta:[{l:'Expected Reach',v:'Smaller numbers but very high-intent'},{l:'Time to Results',v:'2–3 weeks (need community warm-up)'},{l:'Ongoing Effort',v:'1–2 hrs/week initially'},{l:'Cost',v:'$0'},{l:'Effort Level',v:'Medium'}],
+   pros:['Very high-intent users (serious practitioners)','Direct product feedback loop','Pinned resources = permanent passive traffic'],
+   cons:['Slower build-up','Requires genuine participation','Smaller audience than Reddit/YouTube']},
+
+  // SEO
+  {id:'on-page-seo',type:'s',cat:'seo',accent:'#60a5fa',done:true,
+   title:'On-Page SEO',catLabel:'SEO',
+   x:-220,y:-580,
+   stats:[{t:'✓ Done',c:'sd'},{t:'$0',c:'sl'},{t:'3–6 mo compounding',c:'sb'}],
+   desc:'Unique title tags, meta descriptions, canonical URLs, OG tags, sitemap.xml (81 URLs), and robots.txt are live. Every treatment page has a search-optimized title and description pulled from the compound\'s summary. Google can discover and index all 81 pages via the sitemap.',
+   meta:[{l:'Expected Reach',v:'Organic search traffic — builds over 3–6 months'},{l:'Time to Results',v:'4–8 weeks for indexing; 3–6 months for real traffic'},{l:'Ongoing Effort',v:'Done — zero ongoing needed'},{l:'Status',v:'Live ✓'}],
+   pros:['Permanent — traffic compounds over time','Zero ongoing cost','Captures high-intent search traffic','Already done'],
+   cons:['Slow — months before meaningful traffic','Competitive for some terms']},
+
+  {id:'programmatic-seo',type:'s',cat:'seo',accent:'#60a5fa',
+   title:'Programmatic SEO',catLabel:'SEO',
+   x:60,y:-580,
+   stats:[{t:'$0',c:'sl'},{t:'1-day dev',c:'sm'},{t:'100–2k/page/mo',c:'sb'}],
+   desc:'Generate dedicated pages for "vs" and "where to buy" queries: "Tretinoin vs Adapalene", "Where to buy RU58841 in Canada", "Best minoxidil source." Real searches with almost no quality results ranking. The Compare page already works — just needs canonical URL structure per comparison.',
+   meta:[{l:'Expected Reach',v:'100–2k monthly organic per page; 20+ pages = real volume'},{l:'Time to Results',v:'2–4 months'},{l:'Dev Work',v:'One-time ~1 day'},{l:'Cost',v:'$0'},{l:'Key Targets',v:'"ru58841 vs pyrilutamide", "where to buy ru58841", "bpc-157 protocol"'},{l:'Effort Level',v:'Medium (one-time)'}],
+   pros:['Extremely high-intent traffic','Low competition for niche terms','Compounds over time','Infrastructure mostly already built'],
+   cons:['Takes months to rank','Needs unique content per page','Google may treat thin pages as low-quality']},
+
+  {id:'blog-content',type:'s',cat:'seo',accent:'#60a5fa',
+   title:'Blog / Guide Content',catLabel:'SEO',
+   x:340,y:-580,
+   stats:[{t:'$0 or ~$50/article',c:'sm'},{t:'High effort',c:'sh'},{t:'1k–10k/mo per piece',c:'sb'}],
+   desc:'Publish deep guides that rank for informational queries: "Complete Hair Loss Protocol 2025", "Skincare Routine for Men: The Full Stack", "How to Source Peptides Safely." A handful of genuinely comprehensive pieces can rank and drive traffic for years.',
+   meta:[{l:'Expected Reach',v:'1k–10k monthly per ranking article'},{l:'Time to Results',v:'3–6 months to rank'},{l:'Ongoing Effort',v:'1–2 guides/month, ~4hrs each'},{l:'Cost',v:'$0 (or ~$50/article if outsourced)'},{l:'Effort Level',v:'High'}],
+   pros:['Strong long-term SEO signal','Can earn backlinks naturally','Drives trust and conversions'],
+   cons:['Slow — months before results','High effort per piece','Requires consistent output to compound']},
+
+  // PARTNERSHIPS
+  {id:'influencer-outreach',type:'s',cat:'partnerships',accent:'#a78bfa',
+   title:'Micro-Influencer Outreach',catLabel:'Partnerships',
+   x:700,y:-420,
+   stats:[{t:'$0',c:'sl'},{t:'One-time 2hrs',c:'sl'},{t:'5k–50k per creator',c:'sb'}],
+   desc:'20–30 TikTok/YouTube creators with 10k–100k followers in looksmaxxing, hair loss, skincare. DM them: "Built a free protocol hub I think your audience would genuinely find useful — no affiliation, no money changing hands." Some post about it for free because their audience will thank them.',
+   meta:[{l:'Expected Reach',v:'5k–50k per creator who shares'},{l:'Time to Results',v:'1–3 weeks after outreach'},{l:'Ongoing Effort',v:'One-time: 10–20 DMs, ~2hrs'},{l:'Cost',v:'$0 (or $50–200/post paid sponsorships)'},{l:'Key Insight',v:'Vic knows the community — warm knowledge = higher response rate'},{l:'Effort Level',v:'Low (one-time)'}],
+   pros:['Highly targeted — exact audience','Can be completely free','Creator\'s audience trusts their recommendation','Vic is the target user — authentic pitch'],
+   cons:['Low response rate on cold DMs','Quality varies hugely by creator','Hard to scale']},
+
+  {id:'vendor-affiliates',type:'s',cat:'partnerships',accent:'#a78bfa',
+   title:'Vendor Affiliate Programs',catLabel:'Partnerships',
+   x:700,y:-250,
+   stats:[{t:'$0 setup',c:'sl'},{t:'Very low effort',c:'sl'},{t:'$200–800/mo passive',c:'sb'}],
+   desc:'iHerb, BulkSupplements, Nootropics Depot, Amazon all have free affiliate programs. Sign up, replace vendor card links with affiliate links, earn commission. Zero upfront work — just swap URLs. Can realistically generate $200–800/month passively once traffic exists — pays for itself before subscription revenue becomes meaningful.',
+   meta:[{l:'Expected Revenue',v:'$200–800/mo once traffic is flowing'},{l:'Commission Rate',v:'3–8% per referred purchase'},{l:'Ongoing Effort',v:'One-time setup, ~2hrs. Zero ongoing.'},{l:'Cost',v:'$0'},{l:'Programs',v:'iHerb Affiliates, Amazon Associates, BulkSupplements, Nootropics Depot'},{l:'Effort Level',v:'Very Low'}],
+   pros:['Passive income on existing traffic','Doesn\'t require Pro subscribers to earn','Aligns incentives — you recommend what you\'d actually use'],
+   cons:['Requires traffic before it pays','Small commissions on supplements (3–8%)','Amazon terms can be restrictive']},
+
+  {id:'cross-promo',type:'s',cat:'partnerships',accent:'#a78bfa',
+   title:'Cross-Promotion',catLabel:'Partnerships',
+   x:700,y:-80,
+   stats:[{t:'$0',c:'sl'},{t:'Medium effort',c:'sm'},{t:'Backlinks + SEO',c:'sb'}],
+   desc:'Partner or cross-link with complementary tools: looksmax.org, umax-style apps, men\'s health Substack writers, biohacking newsletters. "Link to us and we\'ll link to you." These aren\'t competitors — same audience, different angle. Backlinks from partners also boost domain authority.',
+   meta:[{l:'Expected Reach',v:'Depends on partner audience size'},{l:'Time to Results',v:'1–4 weeks'},{l:'Ongoing Effort',v:'5–10 conversations; low ongoing'},{l:'Cost',v:'$0'},{l:'SEO Bonus',v:'Backlinks from partner sites boost domain authority'},{l:'Effort Level',v:'Medium'}],
+   pros:['Exactly targeted audience','Backlinks = SEO benefit','Mutually beneficial — no payment needed'],
+   cons:['Requires finding willing partners','Hard to measure','Variable results']},
+
+  // COMMUNITY
+  {id:'discord-community',type:'s',cat:'community',accent:'#34d399',
+   title:'SourceStack Discord',catLabel:'Community',
+   x:700,y:140,
+   stats:[{t:'$0',c:'sl'},{t:'Medium effort',c:'sm'},{t:'Retention + referral',c:'sb'}],
+   desc:'Create a Discord for SourceStack users — discuss protocols, share results, ask questions, give feedback. Converts one-time visitors into retained users who bring others. "Rate my stack" posts become a natural growth mechanic. A 500-person active Discord is worth more than 10k passive email subscribers for a niche product.',
+   meta:[{l:'Expected Reach',v:'Primarily retention + word-of-mouth amplifier'},{l:'Time to Results',v:'1–3 months to build meaningful community'},{l:'Ongoing Effort',v:'2–4 hrs/week moderation'},{l:'Cost',v:'$0'},{l:'Effort Level',v:'Medium'}],
+   pros:['Direct user feedback = better product','Community members bring others','Loyal users convert to Pro more readily'],
+   cons:['Takes consistent time to maintain','Slow to build critical mass','Can become a distraction from product']},
+
+  {id:'email-list',type:'s',cat:'community',accent:'#34d399',
+   title:'Email List / Newsletter',catLabel:'Community',
+   x:700,y:300,
+   stats:[{t:'$0 to 1k contacts',c:'sl'},{t:'1 email/month',c:'sl'},{t:'Owned channel',c:'sb'}],
+   desc:'Collect emails at signup (already happens via Supabase Auth). Send a monthly "stack update" — new treatments added, vendor changes, protocol highlights. A 2k email list of serious practitioners is worth far more than 50k random social followers. Use Mailchimp or Resend free tier.',
+   meta:[{l:'Expected Reach',v:'Proportional to signup conversion rate'},{l:'Time to Results',v:'Immediate — first send to captured emails'},{l:'Ongoing Effort',v:'1 email/month, ~1hr'},{l:'Cost',v:'$0 up to 1k contacts (Mailchimp/Resend)'},{l:'Effort Level',v:'Low'}],
+   pros:['Owned channel — not subject to platform changes','High conversion rate vs social','Drives Pro upgrades on feature announcements'],
+   cons:['Requires existing users to capture','Unsubscribes if content is low-value']},
+
+  // PAID
+  {id:'reddit-ads',type:'s',cat:'paid',accent:'#f87171',
+   title:'Reddit Ads',catLabel:'Paid (Later)',
+   x:340,y:580,
+   stats:[{t:'$150/mo min',c:'sm'},{t:'Medium effort',c:'sm'},{t:'$0.50–1.50 CPM',c:'sb'}],
+   desc:'Target r/tressless, r/SkincareAddiction, r/looksmax, r/Peptides directly. Reddit ads are relatively cheap and let you target exact subreddits. A "for practitioners, by practitioners" angle works. Run when comment seeding is already working — ads accelerate a proven message.',
+   meta:[{l:'Expected CPM',v:'$0.50–1.50'},{l:'Minimum Budget',v:'$5/day ($150/mo)'},{l:'Best Use Case',v:'Retargeting + subreddit targeting once organic is working'},{l:'Effort Level',v:'Medium'}],
+   pros:['Exact subreddit targeting','Cheap CPMs relative to Meta/Google','Community-native format'],
+   cons:['Reddit users actively dislike ads','Requires budget','Lower conversion than search intent']},
+
+  {id:'google-ads',type:'s',cat:'paid',accent:'#f87171',
+   title:'Google Search Ads',catLabel:'Paid (Later)',
+   x:580,y:580,
+   stats:[{t:'$300/mo min',c:'sh'},{t:'Medium effort',c:'sm'},{t:'$1.50–4.00 CPC',c:'sb'}],
+   desc:'Bid on exact search terms: "where to buy RU58841", "tretinoin protocol", "best minoxidil source Canada." The highest-intent searches possible — people actively looking for exactly what SourceStack provides. Expensive per click but extremely high purchase intent.',
+   meta:[{l:'Expected CPC',v:'$1.50–4.00'},{l:'Minimum Budget',v:'$300/mo to get meaningful data'},{l:'Best Use Case',v:'Targeting "where to buy" and "protocol" queries'},{l:'Effort Level',v:'Medium'}],
+   pros:['Highest-intent traffic possible','Measurable ROI','Scalable once profitable'],
+   cons:['Expensive to test','Requires landing page optimization','Supplement/RC ads may be restricted']},
+
+  {id:'meta-ads',type:'s',cat:'paid',accent:'#f87171',
+   title:'Meta Ads',catLabel:'Paid (Later)',
+   x:820,y:580,
+   stats:[{t:'$500/mo min',c:'sh'},{t:'Medium effort',c:'sm'},{t:'$8–18 CPM',c:'sb'}],
+   desc:'Interest targeting: men 18–30 interested in fitness, skincare, hair loss, biohacking. Works better for top-of-funnel brand awareness. Vic has $50k+ dropshipping revenue — he knows Meta. Use only once there\'s a clear quiz → email capture → upgrade funnel proven.',
+   meta:[{l:'Expected CPM',v:'$8–18 for this demographic'},{l:'Minimum Budget',v:'$500/mo to get real data'},{l:'Best Use Case',v:'Retargeting website visitors; quiz funnel top-of-funnel'},{l:'Effort Level',v:'Medium'}],
+   pros:['Vic already knows the platform','Visual creative potential','Scalable audience size'],
+   cons:['Health/supplement restrictions on Meta','Requires budget','Lower intent than search']},
+
+  // BLENDS
+  {id:'blend-a',type:'blend',cat:'blends',accent:'#fbbf24',
+   title:'Blend A — Organic Launch',catLabel:'Strategy Blend',
+   x:-700,y:900,
+   stats:[{t:'$0',c:'sl'},{t:'30 days',c:'sm'},{t:'$380–$1,520 MRR',c:'sb'}],
+   includes:['Comment Seeding','Reddit Value Posts','Product Hunt Launch','Subreddit Wiki Listings'],
+   desc:'Fastest route to first 1,000 users with zero budget. Run all organic channels simultaneously in the first 30 days, then layer in wiki listings for permanent passive traffic. The most realistic zero-cost launch path.',
+   meta:[{l:'Expected Result (30 days)',v:'500–2k registered users; 20–80 Pro conversions'},{l:'Revenue Estimate',v:'$380–$1,520 MRR after month 1'},{l:'Time Required',v:'~1hr/day for 30 days + PH prep weekend'},{l:'Cost',v:'$0'}],
+   pros:['Comment seeding captures existing demand','Reddit posts create burst traffic','PH creates a credibility anchor','Wiki listings make traffic permanent'],
+   cons:['Reddit account age — don\'t use fresh accounts','Posting too often in same subs = ban','PH needs prep — don\'t wing it']},
+
+  {id:'blend-b',type:'blend',cat:'blends',accent:'#fbbf24',
+   title:'Blend B — SEO Machine',catLabel:'Strategy Blend',
+   x:-420,y:900,
+   stats:[{t:'$0',c:'sl'},{t:'6 months',c:'sm'},{t:'500–3k organic/mo',c:'sb'}],
+   includes:['On-Page SEO ✓','Programmatic SEO','Blog Content (3–5 guides)','Google Search Console submission'],
+   desc:'One-time work that pays forever. Submit sitemap to Google Search Console, build programmatic SEO pages for "vs" and "where to buy" queries, write 3–5 cornerstone guides. No ongoing effort after setup — just compounds.',
+   meta:[{l:'Expected Result (6 months)',v:'500–3k monthly organic visitors; grows indefinitely'},{l:'Revenue Estimate',v:'$0 for 3 months, then $200–800/mo'},{l:'Time Required',v:'~2 days dev + 3–5 guides (4hrs each)'},{l:'Cost',v:'$0'}],
+   pros:['Captures high-intent "where to buy" searches','Compounds over time with zero ongoing effort','55 treatment pages are natural SEO assets'],
+   cons:['Very slow — don\'t rely on this alone early','Guide content takes real effort to rank']},
+
+  {id:'blend-c',type:'blend',cat:'blends',accent:'#fbbf24',
+   title:'Blend C — Viral Loop',catLabel:'Strategy Blend',
+   x:-140,y:900,
+   stats:[{t:'$0',c:'sl'},{t:'60 days',c:'sm'},{t:'Non-linear potential',c:'sb'}],
+   includes:['Micro-Influencer Outreach','Shareable Stack Mechanic','Comment Seeding','Discord Community'],
+   desc:'Self-reinforcing growth loop: influencers bring users, users build and share stacks, stack shares bring more users who share. Non-linear — 1 viral mention = 10k+ users possible. High variance but enormous upside.',
+   meta:[{l:'Expected Result (60 days)',v:'Non-linear if it hits — 10k+ users possible'},{l:'Revenue Estimate',v:'High variance — $0 or $5k+ depending on who picks it up'},{l:'Time Required',v:'2–3hrs for influencer DMs; Discord setup ~1 day'},{l:'Cost',v:'$0'}],
+   pros:['Viral potential — one right mention = massive spike','Community retains users who would otherwise churn','Stack sharing is native user behavior'],
+   cons:['High variance — not reliable as primary strategy','Discord requires ongoing moderation']},
+
+  {id:'blend-d',type:'blend',cat:'blends',accent:'#fbbf24',
+   title:'Blend D — Monetized Traffic',catLabel:'Strategy Blend',
+   x:140,y:900,
+   stats:[{t:'$0',c:'sl'},{t:'90 days',c:'sm'},{t:'$400–1,200/mo',c:'sb'}],
+   includes:['Comment Seeding','Vendor Affiliate Programs','Email List','Subreddit Wiki Listings'],
+   desc:'Optimize every visitor for revenue, not just signups. Comment seeding drives traffic → affiliate links earn on free users → email captures non-converters → email sequences drive Pro upgrades. Multiple revenue streams from the same traffic.',
+   meta:[{l:'Expected Result (90 days)',v:'$400–1,200/mo combined affiliate + subscription'},{l:'Revenue Estimate',v:'Most reliable path to first $1k MRR'},{l:'Time Required',v:'~1hr/day commenting + 2hrs affiliate setup + 1hr/mo email'},{l:'Cost',v:'$0'}],
+   pros:['Affiliate revenue doesn\'t require Pro subscriptions','Email captures the 95% who don\'t convert immediately','Multiple revenue streams from same traffic'],
+   cons:['Affiliate links require disclosure','Email requires consistent sends to not go cold']},
+
+  {id:'blend-e',type:'blend',cat:'blends',accent:'#fbbf24',
+   title:'Blend E — Full Stack (Month 3+)',catLabel:'Strategy Blend',
+   x:420,y:900,
+   stats:[{t:'$300–600/mo ads',c:'sm'},{t:'3–4hrs/week',c:'sm'},{t:'$950–$4,750 MRR',c:'sb'}],
+   includes:['All of Blend A','All of Blend B','Vendor Affiliates','Email List','Reddit Ads','Google Search Ads'],
+   desc:'Once organic traction is proven, layer in paid amplification. Reddit ads retarget Reddit visitors. Google ads capture remaining search intent. Only run paid once the organic → conversion funnel is proven — paid amplifies what\'s already working.',
+   meta:[{l:'Expected Result (Month 3–6)',v:'1k–5k monthly visitors; 50–250 Pro subscribers'},{l:'Revenue Estimate',v:'$950–$4,750 MRR + affiliate income'},{l:'Time Required',v:'3–4hrs/week ongoing'},{l:'Monthly Cost',v:'$300–600/mo ads only; organic is free'}],
+   pros:['Paid amplifies proven organic channels','Multiple compounding acquisition sources','Not betting on any single channel'],
+   cons:['Don\'t run paid until organic is converting','Budget discipline — easy to overspend']},
+];
+
+const CONNS = [
+  ['hub','comment-seeding'],['hub','on-page-seo'],['hub','influencer-outreach'],
+  ['hub','discord-community'],['hub','reddit-ads'],['hub','blend-c'],
+  ['comment-seeding','reddit-posts'],['reddit-posts','wiki-listings'],
+  ['wiki-listings','product-hunt'],['product-hunt','shareable-stack'],
+  ['shareable-stack','tiktok-replies'],['tiktok-replies','discord-seeding'],
+  ['on-page-seo','programmatic-seo'],['programmatic-seo','blog-content'],
+  ['influencer-outreach','vendor-affiliates'],['vendor-affiliates','cross-promo'],
+  ['cross-promo','discord-community'],
+  ['discord-community','email-list'],
+  ['reddit-ads','google-ads'],['google-ads','meta-ads'],
+  ['hub','blend-a'],['hub','blend-b'],['hub','blend-d'],['hub','blend-e'],
+];
+
+// State
+let tx = window.innerWidth/2, ty = window.innerHeight/2, sc = 0.82;
+let drag = false, lx = 0, ly = 0;
+
+const vp = document.getElementById('vp');
+const world = document.getElementById('world');
+const connSvg = document.getElementById('conn');
+const panel = document.getElementById('panel');
+const pcontent = document.getElementById('pcontent');
+const nodeEls = {};
+
+function applyT(){ world.style.transform = `translate(${tx}px,${ty}px) scale(${sc})`; }
+
+function nc(n){
+  if(n.type==='hub') return {x:0,y:0};
+  return {x:n.x+NW/2, y:n.y+NH/2};
+}
+
+// Build nodes
+NODES.forEach(n => {
+  if(n.type==='hub'){
+    const el = document.createElement('div');
+    el.className='hub';
+    el.style.cssText=`left:${-HR}px;top:${-HR}px;width:${HR*2}px;height:${HR*2}px`;
+    el.innerHTML=`<span style="font-size:18px;font-weight:700;color:white;letter-spacing:-.02em">SourceStack</span><span style="font-size:10px;color:rgba(255,255,255,.35);margin-top:4px">Marketing Map</span>`;
+    world.appendChild(el);
+    nodeEls[n.id]=el;
+    return;
+  }
+  const el = document.createElement('div');
+  el.className='node'+(n.type==='blend'?' blend-node':'')+(n.done?' done':'');
+  el.style.cssText=`left:${n.x}px;top:${n.y}px`;
+  el.dataset.id=n.id;
+  const statsH=(n.stats||[]).map(s=>`<span class="sp ${s.c}">${s.t}</span>`).join('');
+  el.innerHTML=`<div class="nhdr"><span class="ndot" style="background:${n.accent}"></span><span class="ntitle">${n.title}</span></div><div class="ncat">${n.catLabel}</div><div class="nstats">${statsH}</div>`;
+  el.addEventListener('click',e=>{e.stopPropagation();openPanel(n);});
+  world.appendChild(el);
+  nodeEls[n.id]=el;
+});
+
+// Zone labels
+const ZONES=[
+  {t:'Organic / Free',x:-1010,y:-430,c:'#34d399'},
+  {t:'SEO',x:-170,y:-640,c:'#60a5fa'},
+  {t:'Partnerships',x:510,y:-500,c:'#a78bfa'},
+  {t:'Community',x:510,y:80,c:'#34d399'},
+  {t:'Paid (Later)',x:270,y:510,c:'#f87171'},
+  {t:'Strategy Blends',x:-710,y:850,c:'#fbbf24'},
+];
+ZONES.forEach(z=>{
+  const el=document.createElement('div');
+  el.className='zlabel';
+  el.style.cssText=`left:${z.x}px;top:${z.y}px;color:${z.c}`;
+  el.textContent=z.t;
+  world.appendChild(el);
+});
+
+// Draw connections
+CONNS.forEach(([a,b])=>{
+  const fn=NODES.find(n=>n.id===a), tn=NODES.find(n=>n.id===b);
+  if(!fn||!tn) return;
+  const fc=nc(fn), tc=nc(tn);
+  const isBlend=fn.type==='blend'||tn.type==='blend';
+  const isHub=fn.type==='hub'||tn.type==='hub';
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',fc.x); line.setAttribute('y1',fc.y);
+  line.setAttribute('x2',tc.x); line.setAttribute('y2',tc.y);
+  line.setAttribute('stroke', isBlend?'rgba(251,191,36,0.1)':isHub?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.05)');
+  line.setAttribute('stroke-width', isHub?'1':'0.75');
+  if(!isHub) line.setAttribute('stroke-dasharray','4,6');
+  connSvg.appendChild(line);
+});
+
+// Panel
+let activeId=null;
+function openPanel(n){
+  if(activeId && nodeEls[activeId]) nodeEls[activeId].classList.remove('active');
+  activeId=n.id;
+  nodeEls[n.id].classList.add('active');
+  const metaH=(n.meta||[]).map(m=>`<div class="pmitem"><label>${m.l}</label><p>${m.v}</p></div>`).join('');
+  const prosH=(n.pros||[]).map(p=>`<li>${p}</li>`).join('');
+  const consH=(n.cons||[]).map(c=>`<li>${c}</li>`).join('');
+  const incH=n.includes?`<div class="pdiv"></div><p style="font-size:10px;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Includes</p><div class="btags">${n.includes.map(i=>`<span class="btag">${i}</span>`).join('')}</div>`:'';
+  pcontent.innerHTML=`
+    <div class="pcat">${n.catLabel}</div>
+    <div class="ptitle">${n.title}</div>
+    <div class="pdesc">${n.desc}</div>
+    ${incH}
+    <div class="pdiv"></div>
+    <div class="pmgrid">${metaH}</div>
+    <div class="pdiv"></div>
+    <div class="ppc">
+      <div class="ppc-col pros-col"><label>${n.type==='blend'?'Why This Works':'Pros'}</label><ul>${prosH}</ul></div>
+      <div class="ppc-col cons-col"><label>${n.type==='blend'?'Watch Out For':'Cons'}</label><ul>${consH}</ul></div>
+    </div>`;
+  panel.classList.add('open');
+}
+function closePanel(){
+  panel.classList.remove('open');
+  if(activeId && nodeEls[activeId]) nodeEls[activeId].classList.remove('active');
+  activeId=null;
+}
+document.getElementById('pclose').addEventListener('click',closePanel);
+vp.addEventListener('click',closePanel);
+
+// Pan
+vp.addEventListener('mousedown',e=>{if(e.button!==0)return;drag=true;lx=e.clientX;ly=e.clientY;vp.classList.add('grabbing');});
+window.addEventListener('mousemove',e=>{if(!drag)return;tx+=e.clientX-lx;ty+=e.clientY-ly;lx=e.clientX;ly=e.clientY;applyT();});
+window.addEventListener('mouseup',()=>{drag=false;vp.classList.remove('grabbing');});
+
+// Zoom
+vp.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=e.deltaY<0?1.05:1/1.05;
+  const ns=Math.min(2.5,Math.max(0.2,sc*f));
+  tx=e.clientX-(e.clientX-tx)*(ns/sc);
+  ty=e.clientY-(e.clientY-ty)*(ns/sc);
+  sc=ns;applyT();
+},{passive:false});
+
+// Controls
+document.getElementById('zin').onclick=()=>{const f=1.2;const ns=Math.min(2.5,sc*f);tx=window.innerWidth/2-(window.innerWidth/2-tx)*(ns/sc);ty=window.innerHeight/2-(window.innerHeight/2-ty)*(ns/sc);sc=ns;applyT();};
+document.getElementById('zout').onclick=()=>{const f=1/1.2;const ns=Math.max(0.2,sc*f);tx=window.innerWidth/2-(window.innerWidth/2-tx)*(ns/sc);ty=window.innerHeight/2-(window.innerHeight/2-ty)*(ns/sc);sc=ns;applyT();};
+document.getElementById('rst').onclick=()=>{tx=window.innerWidth/2;ty=window.innerHeight/2;sc=0.82;applyT();closePanel();};
+
+// Legend click to jump
+document.querySelectorAll('.litem[data-cat]').forEach(item=>{
+  item.addEventListener('click',e=>{
+    e.stopPropagation();
+    const cat=item.dataset.cat;
+    const ns=NODES.filter(n=>n.cat===cat);
+    if(!ns.length) return;
+    const xs=ns.map(n=>n.x+NW/2), ys=ns.map(n=>n.y+NH/2);
+    const cx=(Math.min(...xs)+Math.max(...xs))/2, cy=(Math.min(...ys)+Math.max(...ys))/2;
+    tx=window.innerWidth/2-cx*sc; ty=window.innerHeight/2-cy*sc;
+    applyT();
+  });
+});
+
+// Touch support
+let touches={};
+vp.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  [...e.touches].forEach(t=>touches[t.identifier]={x:t.clientX,y:t.clientY});
+},{passive:false});
+vp.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1){
+    const t=e.touches[0];
+    const prev=touches[t.identifier];
+    if(prev){tx+=t.clientX-prev.x;ty+=t.clientY-prev.y;applyT();}
+    touches[t.identifier]={x:t.clientX,y:t.clientY};
+  } else if(e.touches.length===2){
+    const [a,b]=[e.touches[0],e.touches[1]];
+    const pa=touches[a.identifier], pb=touches[b.identifier];
+    if(pa&&pb){
+      const prevDist=Math.hypot(pa.x-pb.x,pa.y-pb.y);
+      const newDist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+      const f=newDist/prevDist;
+      const cx=(a.clientX+b.clientX)/2, cy=(a.clientY+b.clientY)/2;
+      const ns=Math.min(2.5,Math.max(0.2,sc*f));
+      tx=cx-(cx-tx)*(ns/sc); ty=cy-(cy-ty)*(ns/sc); sc=ns; applyT();
+    }
+    touches[a.identifier]={x:a.clientX,y:a.clientY};
+    touches[b.identifier]={x:b.clientX,y:b.clientY};
+  }
+},{passive:false});
+vp.addEventListener('touchend',e=>{[...e.changedTouches].forEach(t=>delete touches[t.identifier]);});
+
+applyT();
+</script>
+</body>
+</html>
