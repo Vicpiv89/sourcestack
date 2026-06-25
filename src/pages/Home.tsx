@@ -1,46 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import FaceZoneMap from "../components/FaceZoneMap";
+import TutorialModal, { STORAGE_KEY } from "../components/TutorialModal";
 import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
 import { scoreMatch } from "../data/synonyms";
-
-const HOW_STEPS = [
-  {
-    num: '01',
-    title: 'Identify what to fix',
-    body: 'Search by symptom or tap a zone on the face map. You\'ll see which treatments target that exact concern.',
-    to: '/issues',
-    cta: 'Browse issues',
-    accent: 'rgba(96,165,250,0.5)',
-  },
-  {
-    num: '02',
-    title: 'Read the full protocol',
-    body: 'Each treatment page breaks down the exact steps, dosage, safety notes, and a realistic timeline.',
-    to: '/treatments',
-    cta: 'Browse treatments',
-    accent: 'rgba(167,139,250,0.5)',
-  },
-  {
-    num: '03',
-    title: 'Build your stack',
-    body: 'Add compounds to the Stack Builder. Get interaction warnings and a visual AM/PM daily schedule.',
-    to: '/stack',
-    cta: 'Stack Builder',
-    accent: 'rgba(52,211,153,0.5)',
-  },
-  {
-    num: '04',
-    title: 'Source from vetted vendors',
-    body: 'Unlock direct vendor links with trust scores, COA checks, and monthly cost estimates. No guessing.',
-    to: null,
-    cta: 'Pro feature',
-    accent: 'rgba(251,191,36,0.5)',
-  },
-];
 
 const TESTIMONIALS = [
   {
@@ -60,7 +26,12 @@ const TESTIMONIALS = [
 export default function Home() {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"issue" | "treatment">("issue");
+  const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!localStorage.getItem(STORAGE_KEY)) setShowTutorial(true);
+  }, []);
 
   const issueResults = query
     ? issues
@@ -93,6 +64,7 @@ export default function Home() {
   const results = mode === "issue" ? issueResults : treatmentResults;
 
   return (
+    <>
     <div className="min-h-screen bg-[#0a0a0a] text-[#e5e5e5]">
       <SEO
         title="Your Protocol, Sourced"
@@ -132,8 +104,19 @@ export default function Home() {
           </div>
         </div>
 
+        {/* First time button */}
+        <div className="flex justify-center mb-6 animate-fade-up-delay-2">
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.02] text-xs text-white/35 hover:text-white/60 hover:border-white/15 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 shrink-0" style={{ animation: 'arrowPulse 2.5s ease-in-out infinite' }} />
+            First time here? Learn how SourceStack works
+          </button>
+        </div>
+
         {/* Mode toggle */}
-        <div className="flex items-center justify-center gap-1 mb-5 bg-white/5 rounded-xl p-1 w-fit mx-auto animate-fade-up-delay-2">
+        <div className="flex items-center justify-center gap-1 mb-5 bg-white/5 rounded-xl p-1 w-fit mx-auto animate-fade-up-delay-3">
           <button
             onClick={() => setMode("issue")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -153,7 +136,7 @@ export default function Home() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-lg mx-auto animate-fade-up-delay-3">
+        <div className="relative max-w-lg mx-auto animate-fade-up-delay-4">
           <input
             type="text"
             value={query}
@@ -204,73 +187,6 @@ export default function Home() {
           <p className="text-white/30 text-sm">Hover any area — see what's causing it and how to fix it.</p>
         </div>
         <FaceZoneMap />
-      </div>
-
-      {/* ── How it works ─────────────────────────────── */}
-      <div className="px-6 pb-20 max-w-5xl mx-auto">
-        <p className="text-white/20 text-[10px] uppercase tracking-widest text-center mb-8">How it works</p>
-
-        {/* Desktop: 4-col row with connecting line. Mobile: 2-col grid */}
-        <div className="hidden lg:flex items-stretch gap-0 relative">
-          {/* Background connector line */}
-          <div className="absolute top-[36px] left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-px bg-white/[0.06]" />
-          {HOW_STEPS.map((step) => (
-            <div key={step.num} className="flex-1 flex flex-col items-center text-center px-5">
-              {/* Step circle */}
-              <div
-                className="relative z-10 w-11 h-11 rounded-full bg-[#0f0f0f] border border-white/10 flex items-center justify-center mb-5 shrink-0"
-                style={{ boxShadow: `0 0 0 3px rgba(10,10,10,1)` }}
-              >
-                <span className="text-[10px] font-bold text-white/40 tracking-[0.12em]">{step.num}</span>
-              </div>
-              <p className="text-white text-sm font-semibold mb-2 leading-snug">{step.title}</p>
-              <p className="text-white/35 text-xs leading-relaxed mb-4 flex-1">{step.body}</p>
-              {step.to ? (
-                <Link
-                  to={step.to}
-                  className="text-[10px] uppercase tracking-widest transition-colors"
-                  style={{ color: step.accent }}
-                >
-                  {step.cta} →
-                </Link>
-              ) : (
-                <span className="text-[10px] uppercase tracking-widest" style={{ color: step.accent }}>
-                  {step.cta}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Mobile: stacked steps with left border line */}
-        <div className="lg:hidden flex flex-col relative pl-8">
-          <div className="absolute left-3.5 top-3 bottom-3 w-px bg-white/[0.07]" />
-          {HOW_STEPS.map((step, idx) => (
-            <div key={step.num} className={`relative flex flex-col gap-1.5 ${idx < HOW_STEPS.length - 1 ? 'mb-8' : ''}`}>
-              {/* Circle on the line */}
-              <div
-                className="absolute -left-[25px] top-0 w-7 h-7 rounded-full bg-[#0f0f0f] border border-white/10 flex items-center justify-center"
-              >
-                <span className="text-[9px] font-bold text-white/40 tracking-[0.1em]">{step.num}</span>
-              </div>
-              <p className="text-white text-sm font-semibold leading-snug">{step.title}</p>
-              <p className="text-white/35 text-xs leading-relaxed">{step.body}</p>
-              {step.to ? (
-                <Link
-                  to={step.to}
-                  className="text-[10px] uppercase tracking-widest transition-colors w-fit"
-                  style={{ color: step.accent }}
-                >
-                  {step.cta} →
-                </Link>
-              ) : (
-                <span className="text-[10px] uppercase tracking-widest" style={{ color: step.accent }}>
-                  {step.cta}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* ── Browse sections ───────────────────────────── */}
@@ -368,5 +284,8 @@ export default function Home() {
         </div>
       </div>
     </div>
+
+      {showTutorial && <TutorialModal onClose={() => setShowTutorial(false)} />}
+    </>
   );
 }
