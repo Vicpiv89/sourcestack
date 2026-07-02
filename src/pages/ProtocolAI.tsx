@@ -225,7 +225,7 @@ export default function ProtocolAI() {
       <SEO
         title="Protocol AI — SourceStack"
         description="Chat-based protocol recommendations powered by the SourceStack treatment database. Direct answers, real dosages, no safety theater."
-        canonical="/ai"
+        path="/ai"
       />
 
       <div className="flex flex-col h-[calc(100vh-57px)]">
