@@ -120,7 +120,7 @@ function FaceLines() {
     <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
       {/* Face outline */}
       <path
-        d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 C 132 224 118 238 100 248 C 82 238 68 224 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
+        d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
         stroke="rgba(255,255,255,0.2)" strokeWidth="0.9"
       />
       {/* Hairline */}
@@ -352,12 +352,12 @@ function TransformLayer({ type }: { type: AnimType }) {
       return (
         <>
           <path
-            d="M 54 208 C 64 220 80 238 100 248 C 120 238 136 220 146 208"
+            d="M 54 208 A 55 32 0 0 0 146 208"
             fill="none" stroke="rgba(251,191,36,0.45)" strokeWidth="1.5" strokeLinecap="round"
             style={{ animation: pOut }}
           />
           <path
-            d="M 54 208 L 100 248 L 146 208"
+            d="M 54 208 L 100 232 L 146 208"
             fill="none" stroke="rgba(251,191,36,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             style={{ animation: aIn, opacity: 0 }}
           />

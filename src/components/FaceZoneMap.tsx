@@ -101,7 +101,7 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-export default function FaceZoneMap() {
+export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -112,7 +112,7 @@ export default function FaceZoneMap() {
 
   return (
     <div className="flex flex-col items-center gap-5 select-none w-full">
-      <div className="relative mx-auto" style={{ width: '100%', maxWidth: 220 }}>
+      <div className="relative mx-auto" style={{ width: '100%', maxWidth }}>
         <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block' }}>
           <defs>
             <filter id="face-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -130,7 +130,7 @@ export default function FaceZoneMap() {
 
           {/* ── Face fill ─────────────────────────────── */}
           <path
-            d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 C 132 224 118 238 100 248 C 82 238 68 224 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
+            d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
             fill="url(#face-grad)"
           />
 
@@ -138,7 +138,7 @@ export default function FaceZoneMap() {
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
             {/* Outline */}
             <path
-              d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 C 132 224 118 238 100 248 C 82 238 68 224 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
+              d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
               stroke="rgba(255,255,255,0.2)"
               strokeWidth="0.8"
             />

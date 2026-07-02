@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { treatments } from "../data/treatments";
 import { scoreMatch } from "../data/synonyms";
 import SEO from "../components/SEO";
@@ -15,8 +15,11 @@ const CATEGORIES = [
 ];
 
 export default function Treatments() {
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState(
+    CATEGORIES.includes(searchParams.get("category") ?? "") ? (searchParams.get("category") as string) : "All"
+  );
 
   const scored = query
     ? treatments
