@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import FaceZoneMap from "../components/FaceZoneMap";
@@ -10,286 +10,242 @@ import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
 import { scoreMatch } from "../data/synonyms";
 
-const TESTIMONIALS = [
-  {
-    quote: "Finally a site that just tells you what to buy and where. Spent 3 hours on Reddit trying to find a legit minoxidil source — found it here in 30 seconds.",
-    handle: "u/MaxxingProgress",
-  },
-  {
-    quote: "The protocol pages alone are worth bookmarking. No fluff, no selling me a course, just the actual protocol.",
-    handle: "u/FrameGoals",
-  },
-  {
-    quote: "Solid vendor vetting. I'd been using a sketchy peptide source for months — switched based on the COA criteria here and the quality difference was noticeable.",
-    handle: "u/PeptideStack",
-  },
-];
-
 export default function Home() {
   const { user, loading } = useAuth();
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<"issue" | "treatment">("issue");
   const [showTutorial, setShowTutorial] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  // Show every visit for non-logged-in users — the only escape is signing up
-  // Wait for auth to finish loading so we don't flash the tutorial for logged-in users
   useEffect(() => {
     if (!loading && !user) setShowTutorial(true);
   }, [user, loading]);
 
   const issueResults = query
     ? issues
-        .map((i) => ({
-          item: i,
-          score: scoreMatch(
-            { name: i.name, body: i.description, slugs: i.treatmentSlugs },
-            query
-          ),
-        }))
+        .map((i) => ({ item: i, score: scoreMatch({ name: i.name, body: i.description, slugs: i.treatmentSlugs }, query) }))
         .filter((x) => x.score > 0)
         .sort((a, b) => b.score - a.score)
+        .slice(0, 4)
         .map((x) => x.item)
     : [];
 
   const treatmentResults = query
     ? treatments
-        .map((t) => ({
-          item: t,
-          score: scoreMatch(
-            { name: t.name, body: `${t.summary} ${t.category}`, slugs: [t.slug, ...t.issueSlugs] },
-            query
-          ),
-        }))
+        .map((t) => ({ item: t, score: scoreMatch({ name: t.name, body: `${t.summary} ${t.category}`, slugs: [t.slug, ...t.issueSlugs] }, query) }))
         .filter((x) => x.score > 0)
         .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
         .map((x) => x.item)
     : [];
 
-  const results = mode === "issue" ? issueResults : treatmentResults;
+  const hasResults = issueResults.length > 0 || treatmentResults.length > 0;
 
   return (
     <>
-    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
-      <SEO
-        title="Your Protocol, Sourced"
-        description="Search by issue or compound — get vetted protocols, interaction warnings, and trusted vendor sources for hair loss, skincare, peptides, and supplements."
-        path="/"
-      />
+      <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
+        <SEO
+          title="Your Protocol, Sourced"
+          description="Search by issue or compound — get vetted protocols, interaction warnings, and trusted vendor sources for hair loss, skincare, peptides, and supplements."
+          path="/"
+        />
 
-      {/* ── Hero ──────────────────────────────────────── */}
-      <div className="px-6 pt-16 pb-8 max-w-3xl mx-auto text-center animate-fade-up">
-        <h1 className="text-5xl font-bold text-white tracking-tight mb-3">
-          Your protocol, sourced.
-        </h1>
-        <p className="text-white/40 text-lg mb-8">
-          Search by issue to find treatments, or search by compound to find vetted sources and protocols.
-        </p>
-
-        {/* Stats bar */}
-        <div className="flex items-center justify-center gap-6 mb-10 flex-wrap animate-fade-up-delay-1">
-          <div className="text-center">
-            <p className="text-white font-bold text-xl">{treatments.length}+</p>
-            <p className="text-white/30 text-xs">treatments</p>
-          </div>
-          <div className="w-px h-6 bg-white/10" />
-          <div className="text-center">
-            <p className="text-white font-bold text-xl">{vendors.length}</p>
-            <p className="text-white/30 text-xs">vetted vendors</p>
-          </div>
-          <div className="w-px h-6 bg-white/10" />
-          <div className="text-center">
-            <p className="text-white font-bold text-xl">{issues.length}</p>
-            <p className="text-white/30 text-xs">issues covered</p>
-          </div>
-          <div className="w-px h-6 bg-white/10" />
-          <div className="text-center">
-            <p className="text-white font-bold text-xl">100%</p>
-            <p className="text-white/30 text-xs">independent</p>
-          </div>
-        </div>
-
-        {/* First time button */}
-        <div className="flex justify-center mb-6 animate-fade-up-delay-2">
-          <button
-            onClick={() => setShowTutorial(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.08] bg-white/[0.02] text-xs text-white/35 hover:text-white/60 hover:border-white/15 transition-colors"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 shrink-0" style={{ animation: 'arrowPulse 2.5s ease-in-out infinite' }} />
-            First time here? Learn how SourceStack works
-          </button>
-        </div>
-
-        {/* Mode toggle */}
-        <div className="flex items-center justify-center gap-1 mb-5 bg-white/5 rounded-xl p-1 w-fit mx-auto animate-fade-up-delay-3">
-          <button
-            onClick={() => setMode("issue")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-              mode === "issue" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
-            }`}
-          >
-            I have an issue
-          </button>
-          <button
-            onClick={() => setMode("treatment")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
-              mode === "treatment" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
-            }`}
-          >
-            I know what I want
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="relative max-w-lg mx-auto animate-fade-up-delay-4">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              mode === "issue"
-                ? "e.g. thin brows, under-eye hollows, beard..."
-                : "e.g. minoxidil, BPC-157, creatine..."
-            }
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/30 transition-colors"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-xs"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        {/* Search results */}
-        {query && results.length > 0 && (
-          <div className="max-w-lg mx-auto mt-2 bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden">
-            {results.map((r) => (
-              <button
-                key={r.slug}
-                onClick={() => navigate(`/${mode === "issue" ? "issues" : "treatments"}/${r.slug}`)}
-                className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
-              >
-                <p className="text-white text-sm font-medium">{r.name}</p>
-                <p className="text-white/40 text-xs mt-0.5 line-clamp-1">
-                  {"description" in r ? r.description : r.summary}
-                </p>
-              </button>
-            ))}
-          </div>
-        )}
-        {query && results.length === 0 && (
-          <p className="text-white/25 text-sm mt-4">No results for "{query}"</p>
-        )}
-      </div>
-
-      {/* ── Face Zone Map ─────────────────────────────── */}
-      <div className="px-6 pb-16 max-w-xl mx-auto animate-fade-up-delay-4">
-        <div className="text-center mb-6">
-          <h2 className="text-white font-semibold text-lg mb-1">Navigate by face zone</h2>
-          <p className="text-white/30 text-sm">Hover any area — see what's causing it and how to fix it.</p>
-        </div>
-        <FaceZoneMap />
-      </div>
-
-      {/* ── Browse sections ───────────────────────────── */}
-      <div className="px-6 pb-24 max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Issues */}
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-white font-semibold">Browse by Issue</h2>
-              <Link to="/issues" className="text-xs text-white/30 hover:text-white/60 transition-colors">
-                View all →
-              </Link>
-            </div>
-            <div className="flex flex-col gap-2">
-              {issues.slice(0, 5).map((issue) => (
-                <Link
-                  key={issue.slug}
-                  to={`/issues/${issue.slug}`}
-                  className="card-hover flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
-                >
-                  <div>
-                    <p className="text-white text-sm font-medium">{issue.name}</p>
-                    <p className="text-white/30 text-xs mt-0.5">
-                      {issue.treatmentSlugs.length} treatment{issue.treatmentSlugs.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">→</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Treatments */}
-          <div>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-white font-semibold">Browse by Treatment</h2>
-              <Link to="/treatments" className="text-xs text-white/30 hover:text-white/60 transition-colors">
-                View all →
-              </Link>
-            </div>
-            <div className="flex flex-col gap-2">
-              {treatments.slice(0, 5).map((t) => (
-                <Link
-                  key={t.slug}
-                  to={`/treatments/${t.slug}`}
-                  className="card-hover flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:border-white/20 transition-colors group"
-                >
-                  <div>
-                    <p className="text-white text-sm font-medium">{t.name}</p>
-                    <p className="text-white/30 text-xs mt-0.5">{t.category}</p>
-                  </div>
-                  <span className="text-white/20 group-hover:text-white/50 transition-colors text-sm">→</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Quiz / Stack promo */}
-        <div className="mt-16 border border-white/10 rounded-2xl px-8 py-10 bg-white/[0.02] text-center card-hover">
-          <p className="text-white font-semibold text-xl mb-2">Not sure where to start?</p>
-          <p className="text-white/40 text-sm mb-6">
-            Answer 3 questions and get a curated starter protocol based on your goal and experience level.
+        {/* ── Hero ─────────────────────────────────────── */}
+        <div className="px-4 sm:px-6 pt-16 pb-10 max-w-2xl mx-auto text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3 leading-tight">
+            Your protocol, sourced.
+          </h1>
+          <p className="text-white/40 text-base sm:text-lg mb-10">
+            Search any issue or compound — protocols, safety notes, and vetted vendors.
           </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Link
-              to="/quiz"
-              className="px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-lg hover:bg-white/90 transition-colors"
-            >
-              Build my stack →
-            </Link>
-            <Link
-              to="/stack"
-              className="px-5 py-2.5 border border-white/20 text-white text-sm rounded-lg hover:border-white/40 transition-colors"
-            >
-              Stack Builder
-            </Link>
-          </div>
-        </div>
 
-        {/* Testimonials */}
-        <div className="mt-16">
-          <h2 className="text-white font-semibold mb-6 text-center">What the community says</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {TESTIMONIALS.map((t, i) => (
-              <div
-                key={i}
-                className="card-hover bg-white/[0.03] border border-white/10 rounded-xl px-5 py-5 flex flex-col gap-4"
-              >
-                <p className="text-white/55 text-sm leading-relaxed italic">"{t.quote}"</p>
-                <p className="text-white/25 text-xs mt-auto">{t.handle}</p>
+          {/* Stats */}
+          <div className="flex items-center justify-center gap-5 sm:gap-8 mb-10 flex-wrap">
+            {([
+              [String(treatments.length) + "+", "treatments"],
+              [String(vendors.length), "vetted vendors"],
+              [String(issues.length), "issues covered"],
+            ] as [string, string][]).map(([n, l]) => (
+              <div key={l} className="text-center">
+                <p className="text-white font-bold text-lg sm:text-xl">{n}</p>
+                <p className="text-white/30 text-xs">{l}</p>
               </div>
             ))}
           </div>
+
+          {/* Search */}
+          <div className="relative max-w-xl mx-auto">
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 150)}
+              placeholder="Search — hair loss, minoxidil, BPC-157, skin texture…"
+              className="w-full bg-white/[0.05] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/25 transition-colors"
+            />
+            {query && (
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { setQuery(""); setOpen(false); inputRef.current?.focus(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-xs"
+              >
+                ✕
+              </button>
+            )}
+
+            {/* Unified results dropdown */}
+            {open && query && (
+              <div className="absolute top-full mt-1 left-0 right-0 bg-[#191919] border border-white/10 rounded-2xl overflow-hidden z-50 shadow-2xl text-left">
+                {!hasResults && (
+                  <p className="px-5 py-4 text-white/30 text-sm">No results for "{query}"</p>
+                )}
+                {issueResults.length > 0 && (
+                  <>
+                    <p className="px-5 pt-3 pb-1 text-[10px] font-semibold tracking-widest uppercase text-white/25">Issues</p>
+                    {issueResults.map((r) => (
+                      <button
+                        key={r.slug}
+                        onMouseDown={() => navigate(`/issues/${r.slug}`)}
+                        className="w-full text-left px-5 py-3 hover:bg-white/[0.05] transition-colors border-b border-white/[0.04] last:border-0 flex items-center justify-between gap-3"
+                      >
+                        <div>
+                          <p className="text-white text-sm font-medium">{r.name}</p>
+                          <p className="text-white/35 text-xs mt-0.5 line-clamp-1">{r.description}</p>
+                        </div>
+                        <span className="text-white/20 shrink-0 text-xs whitespace-nowrap">{r.treatmentSlugs.length} treatments →</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+                {treatmentResults.length > 0 && (
+                  <>
+                    <p className="px-5 pt-3 pb-1 text-[10px] font-semibold tracking-widest uppercase text-white/25">Compounds</p>
+                    {treatmentResults.map((r) => (
+                      <button
+                        key={r.slug}
+                        onMouseDown={() => navigate(`/treatments/${r.slug}`)}
+                        className="w-full text-left px-5 py-3 hover:bg-white/[0.05] transition-colors border-b border-white/[0.04] last:border-0 flex items-center justify-between gap-3"
+                      >
+                        <div>
+                          <p className="text-white text-sm font-medium">{r.name}</p>
+                          <p className="text-white/35 text-xs mt-0.5">{r.category}</p>
+                        </div>
+                        <span className="text-white/20 shrink-0 text-xs">Protocol →</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Quick chips */}
+          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+            {["hair loss", "tretinoin", "skin clarity", "jaw", "BPC-157"].map((q) => (
+              <button
+                key={q}
+                onClick={() => { setQuery(q); setOpen(true); setTimeout(() => inputRef.current?.focus(), 0); }}
+                className="px-3 py-1 rounded-full border border-white/[0.08] text-xs text-white/30 hover:text-white/60 hover:border-white/20 transition-colors"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Entry points ─────────────────────────────── */}
+        <div className="px-4 sm:px-6 pb-16 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              to="/issues"
+              className="group flex flex-col gap-3 px-5 py-5 bg-white/[0.03] border border-white/[0.08] rounded-2xl hover:border-white/[0.15] transition-colors"
+            >
+              <span className="text-2xl">🔍</span>
+              <div>
+                <p className="text-white font-semibold text-sm mb-1">Browse by Issue</p>
+                <p className="text-white/40 text-xs leading-relaxed">
+                  Start with what's bothering you — get every treatment that addresses it.
+                </p>
+              </div>
+              <span className="text-white/20 group-hover:text-white/50 text-xs mt-auto transition-colors">
+                {issues.length} issues →
+              </span>
+            </Link>
+
+            <Link
+              to="/treatments"
+              className="group flex flex-col gap-3 px-5 py-5 bg-white/[0.03] border border-white/[0.08] rounded-2xl hover:border-white/[0.15] transition-colors"
+            >
+              <span className="text-2xl">💊</span>
+              <div>
+                <p className="text-white font-semibold text-sm mb-1">Browse Compounds</p>
+                <p className="text-white/40 text-xs leading-relaxed">
+                  Already know what you want — protocol, safety notes, and vetted sources.
+                </p>
+              </div>
+              <span className="text-white/20 group-hover:text-white/50 text-xs mt-auto transition-colors">
+                {treatments.length} compounds →
+              </span>
+            </Link>
+
+            <Link
+              to="/ai"
+              className="group flex flex-col gap-3 px-5 py-5 bg-emerald-500/[0.04] border border-emerald-500/[0.15] rounded-2xl hover:border-emerald-500/30 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🤖</span>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-400/60">New</span>
+              </div>
+              <div>
+                <p className="text-white font-semibold text-sm mb-1">Protocol AI</p>
+                <p className="text-white/40 text-xs leading-relaxed">
+                  Describe your goal in plain language — get a protocol straight from the database.
+                </p>
+              </div>
+              <span className="text-emerald-400/40 group-hover:text-emerald-400/70 text-xs mt-auto transition-colors">
+                Ask anything →
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* ── Face zone map ─────────────────────────────── */}
+        <div className="px-4 sm:px-6 pb-16 max-w-lg mx-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-white font-semibold text-base mb-1">Or navigate by face zone</h2>
+            <p className="text-white/30 text-sm">Tap any area to see what's causing it and how to fix it.</p>
+          </div>
+          <FaceZoneMap />
+        </div>
+
+        {/* ── Stack / Quiz promo ────────────────────────── */}
+        <div className="px-4 sm:px-6 pb-24 max-w-2xl mx-auto">
+          <div className="border border-white/[0.08] rounded-2xl px-6 sm:px-8 py-8 text-center">
+            <p className="text-white font-semibold text-lg mb-2">Build your stack</p>
+            <p className="text-white/40 text-sm mb-6 max-w-sm mx-auto">
+              Answer 3 questions and get a curated starter protocol — or build your own in the Stack Builder.
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link
+                to="/quiz"
+                className="px-5 py-2.5 bg-white text-black text-sm font-semibold rounded-xl hover:bg-white/90 transition-colors"
+              >
+                Take the quiz →
+              </Link>
+              <Link
+                to="/stack"
+                className="px-5 py-2.5 border border-white/15 text-white/70 text-sm rounded-xl hover:border-white/30 hover:text-white transition-colors"
+              >
+                Stack Builder
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
       {showTutorial && (
         <TutorialModal

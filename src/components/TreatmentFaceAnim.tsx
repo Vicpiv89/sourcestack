@@ -118,19 +118,19 @@ const RIGHT_LASHES_X = [112, 116, 120, 124, 128, 132, 136];
 function FaceLines() {
   return (
     <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-      {/* Face outline — wide cheekbones, angular jaw */}
+      {/* Face outline */}
       <path
-        d="M 100 42 C 118 44 132 52 143 68 C 157 82 165 110 165 136 C 165 160 160 185 143 208 L 100 254 L 57 208 C 40 185 35 160 35 136 C 35 110 43 82 57 68 C 68 52 82 44 100 42 Z"
+        d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 C 132 224 118 238 100 248 C 82 238 68 224 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
         stroke="rgba(255,255,255,0.2)" strokeWidth="0.9"
       />
       {/* Hairline */}
-      <path d="M 57 68 C 70 52 84 44 100 42 C 116 44 130 52 143 68"
+      <path d="M 50 68 C 64 52 80 44 100 42 C 120 44 136 52 150 68"
         stroke="rgba(255,255,255,0.1)" strokeWidth="0.6" />
       {/* Left ear */}
-      <path d="M 35 136 C 31 126 27 134 31 144 C 33 150 35 147"
+      <path d="M 28 136 C 24 126 20 134 24 144 C 26 150 28 147"
         stroke="rgba(255,255,255,0.1)" strokeWidth="0.6" />
       {/* Right ear */}
-      <path d="M 165 136 C 169 126 173 134 169 144 C 167 150 165 147"
+      <path d="M 172 136 C 176 126 180 134 176 144 C 174 150 172 147"
         stroke="rgba(255,255,255,0.1)" strokeWidth="0.6" />
       {/* Left eye — outer canthus (x=63) higher than inner (x=89): positive canthal tilt */}
       <path d="M 63 126 Q 76 120 89 130 Q 76 134 63 126 Z"
@@ -352,12 +352,12 @@ function TransformLayer({ type }: { type: AnimType }) {
       return (
         <>
           <path
-            d="M 62 208 C 68 218 80 234 100 243 C 120 234 132 218 138 208"
+            d="M 54 208 C 64 220 80 238 100 248 C 120 238 136 220 146 208"
             fill="none" stroke="rgba(251,191,36,0.45)" strokeWidth="1.5" strokeLinecap="round"
             style={{ animation: pOut }}
           />
           <path
-            d="M 57 208 L 100 254 L 143 208"
+            d="M 54 208 L 100 248 L 146 208"
             fill="none" stroke="rgba(251,191,36,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             style={{ animation: aIn, opacity: 0 }}
           />

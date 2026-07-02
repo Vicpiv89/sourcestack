@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { to: "/issues",     label: "Issues" },
   { to: "/treatments", label: "Treatments" },
   { to: "/stack",      label: "Stack Builder" },
+  { to: "/ai",         label: "Protocol AI" },
   { to: "/about",      label: "About" },
 ];
 
