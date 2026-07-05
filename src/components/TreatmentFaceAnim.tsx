@@ -113,15 +113,13 @@ const LEFT_LASHES_X  = [65, 69, 73, 76, 80, 84, 88];
 const RIGHT_LASHES_X = [112, 116, 120, 124, 128, 132, 136];
 
 // ── Model-tier face line art ──────────────────────────────────────────────────
-// Angular jaw (L commands), positive canthal tilt (outer eye corner higher),
-// wide cheekbones as widest point, defined pointed chin.
 function FaceLines() {
   return (
     <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
       {/* Face outline */}
       <path
         d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
-        stroke="rgba(255,255,255,0.2)" strokeWidth="0.9"
+        stroke="rgba(255,255,255,0.22)" strokeWidth="0.9"
       />
       {/* Hairline */}
       <path d="M 50 68 C 64 52 80 44 100 42 C 120 44 136 52 150 68"
@@ -132,30 +130,37 @@ function FaceLines() {
       {/* Right ear */}
       <path d="M 172 136 C 176 126 180 134 176 144 C 174 150 172 147"
         stroke="rgba(255,255,255,0.1)" strokeWidth="0.6" />
-      {/* Left eye — outer canthus (x=63) higher than inner (x=89): positive canthal tilt */}
-      <path d="M 63 126 Q 76 120 89 130 Q 76 134 63 126 Z"
-        stroke="rgba(255,255,255,0.26)" strokeWidth="0.8" fill="rgba(255,255,255,0.04)" />
-      {/* Right eye — outer canthus (x=137) higher than inner (x=111) */}
-      <path d="M 137 126 Q 124 120 111 130 Q 124 134 137 126 Z"
-        stroke="rgba(255,255,255,0.26)" strokeWidth="0.8" fill="rgba(255,255,255,0.04)" />
+
+      {/* Left eye — fox eye, outer corner (62,121) well above inner (90,130) */}
+      <path d="M 62 121 Q 72 113 90 130 Q 76 136 62 121 Z"
+        stroke="rgba(255,255,255,0.32)" strokeWidth="0.9" fill="rgba(255,255,255,0.03)" />
+      {/* Right eye */}
+      <path d="M 138 121 Q 128 113 110 130 Q 124 136 138 121 Z"
+        stroke="rgba(255,255,255,0.32)" strokeWidth="0.9" fill="rgba(255,255,255,0.03)" />
+      {/* Iris rings */}
+      <circle cx="75" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+      <circle cx="125" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
       {/* Pupils */}
-      <circle cx="76" cy="127" r="2" fill="rgba(255,255,255,0.2)" />
-      <circle cx="124" cy="127" r="2" fill="rgba(255,255,255,0.2)" />
-      {/* Left brow — strong horizontal */}
-      <path d="M 60 113 C 70 107 80 106 91 110"
-        stroke="rgba(255,255,255,0.27)" strokeWidth="1.3" />
+      <circle cx="75" cy="124" r="2.5" fill="rgba(255,255,255,0.28)" />
+      <circle cx="125" cy="124" r="2.5" fill="rgba(255,255,255,0.28)" />
+
+      {/* Left brow — straight, thick, sits close over the eye */}
+      <path d="M 59 110 C 68 106 78 105 91 109"
+        stroke="rgba(255,255,255,0.38)" strokeWidth="1.6" />
       {/* Right brow */}
-      <path d="M 109 110 C 120 106 130 107 140 113"
-        stroke="rgba(255,255,255,0.27)" strokeWidth="1.3" />
+      <path d="M 109 109 C 122 105 132 106 141 110"
+        stroke="rgba(255,255,255,0.38)" strokeWidth="1.6" />
+
       {/* Nose bridge + nostrils */}
-      <path d="M 97 136 C 95 149 91 163 91 168 C 91 172 95 174 100 174 C 105 174 109 172 109 168 C 109 163 105 149 103 136"
+      <path d="M 98 136 C 96 150 93 162 93 167 C 93 172 96 174 100 174 C 104 174 107 172 107 167 C 107 162 104 150 102 136"
         stroke="rgba(255,255,255,0.12)" strokeWidth="0.6" />
-      {/* Upper lip (Cupid's bow) */}
-      <path d="M 85 191 C 91 186 96 184 100 186 C 104 184 109 186 115 191"
-        stroke="rgba(255,255,255,0.2)" strokeWidth="0.7" />
+
+      {/* Upper lip — Cupid's bow */}
+      <path d="M 84 190 C 90 184 95 182 100 184 C 105 182 110 184 116 190"
+        stroke="rgba(255,255,255,0.26)" strokeWidth="0.85" />
       {/* Lower lip */}
-      <path d="M 85 191 C 93 199 107 199 115 191"
-        stroke="rgba(255,255,255,0.2)" strokeWidth="0.7" />
+      <path d="M 84 190 Q 100 201 116 190"
+        stroke="rgba(255,255,255,0.26)" strokeWidth="0.85" />
     </g>
   );
 }
