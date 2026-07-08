@@ -30,9 +30,10 @@ export default function UpgradeModal({ onClose }: Props) {
     setLoading(true);
     setError("");
     try {
+      // identity is derived server-side from the auth token
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-checkout-session",
-        { body: { userId: user.id, email: user.email } }
+        { body: {} }
       );
       if (fnError) throw new Error(fnError.message);
       if (!data?.url) throw new Error("No checkout URL returned");
