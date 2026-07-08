@@ -171,6 +171,30 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── Face Scan promo ───────────────────────────── */}
+      <div className="px-4 sm:px-6 pb-4 max-w-5xl mx-auto">
+        <Link
+          to="/scan"
+          className="group flex items-center justify-between gap-4 px-6 py-5 bg-white/[0.04] border border-white/[0.15] rounded-2xl hover:border-white/35 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+              <span className="text-sm">📷</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-white font-semibold text-sm">Face Scan</p>
+                <span className="text-[9px] font-bold tracking-widest uppercase text-white/60 bg-white/10 px-1.5 py-0.5 rounded-full border border-white/15">New</span>
+              </div>
+              <p className="text-white/35 text-xs">
+                One photo → 12 facial ratios measured → your protocol. Runs in your browser, nothing uploaded.
+              </p>
+            </div>
+          </div>
+          <span className="text-white/30 group-hover:text-white/70 text-sm transition-colors shrink-0">→</span>
+        </Link>
+      </div>
+
       {/* ── Protocol AI promo ─────────────────────────── */}
       <div className="px-4 sm:px-6 pb-10 max-w-5xl mx-auto">
         <Link

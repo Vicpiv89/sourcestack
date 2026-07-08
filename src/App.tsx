@@ -16,6 +16,7 @@ import StackBuilder from "./pages/StackBuilder";
 import Compare from "./pages/Compare";
 import Quiz from "./pages/Quiz";
 import ProtocolAI from "./pages/ProtocolAI";
+import FaceScan from "./pages/FaceScan";
 
 // Handles Supabase email confirmation redirect (hash contains type=signup)
 function AuthCallbackHandler() {
@@ -54,6 +55,7 @@ export default function App() {
                 <Route path="/compare" element={<Compare />} />
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/ai" element={<ProtocolAI />} />
+                <Route path="/scan" element={<FaceScan />} />
               </Routes>
             </div>
             <Footer />
