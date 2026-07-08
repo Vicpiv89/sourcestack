@@ -25,7 +25,7 @@ export default function Footer() {
             Disclaimer
           </Link>
           <a
-            href="mailto:hello@sourcestack.io"
+            href="mailto:hello@sourcestack.app"
             className="hover:text-white/50 transition-colors"
           >
             Contact

@@ -27,7 +27,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     body: [
       "SourceStack Pro is a paid subscription billed monthly at the price shown at checkout (currently $19/month). Your subscription renews automatically each month until you cancel. Payments are processed by Stripe; we never see or store your card details.",
       "You can cancel anytime from your Account page (Manage / cancel subscription), which opens Stripe's secure billing portal. Cancellation stops future renewals; you keep access until the end of the period you already paid for.",
-      "If you believe you were billed in error, contact us at hello@sourcestack.io and we'll sort it out. Refund requests are handled case by case.",
+      "If you believe you were billed in error, contact us at hello@sourcestack.app and we'll sort it out. Refund requests are handled case by case.",
     ],
   },
   {
@@ -51,7 +51,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "8. Changes",
     body: [
-      "We may update these terms as the service evolves. Material changes will be reflected on this page with continued use constituting acceptance. Questions: hello@sourcestack.io.",
+      "We may update these terms as the service evolves. Material changes will be reflected on this page with continued use constituting acceptance. Questions: hello@sourcestack.app.",
     ],
   },
 ];

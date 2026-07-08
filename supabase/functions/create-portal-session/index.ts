@@ -7,7 +7,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
 
 function corsFor(req: Request) {
   const origin = req.headers.get("Origin") ?? "";
-  const allowed = [Deno.env.get("SITE_URL"), "http://localhost:5173", "http://localhost:5174"];
+  const allowed = [Deno.env.get("SITE_URL"), "https://sourcestack.onrender.com", "http://localhost:5173", "http://localhost:5174"];
   return {
     "Access-Control-Allow-Origin": allowed.includes(origin) ? origin : Deno.env.get("SITE_URL") ?? "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",

@@ -242,7 +242,7 @@ export default function TreatmentDetail() {
             <p className="text-white/30 text-sm">
               No vetted sources yet for this treatment.{" "}
               <a
-                href="mailto:hello@sourcestack.io"
+                href="mailto:hello@sourcestack.app"
                 className="text-white/50 hover:text-white transition-colors"
               >
                 Submit one →

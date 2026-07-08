@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-const BASE_URL = "https://sourcestack.onrender.com";
+const BASE_URL = "https://sourcestack.app";
 const DEFAULT_TITLE = "SourceStack — Looksmaxxing Protocol & Vendor Hub";
 const DEFAULT_DESC =
   "Vetted protocols and trusted vendor sources for hair loss, skincare, peptides, and supplements. 55 compounds, 14 verified vendors. Built by practitioners.";
