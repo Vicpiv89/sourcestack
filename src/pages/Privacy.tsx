@@ -31,12 +31,12 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "Deleting your data",
     body: [
-      "You can delete saved scans from your Account page at any time. To delete your account and all associated data, email hello@sourcestack.app from your account email and we'll remove it.",
+      "You can delete saved scans from your Account page at any time. To delete your account and all associated data, email support@sourcestack.app from your account email and we'll remove it.",
     ],
   },
   {
     title: "Contact",
-    body: ["Questions about privacy: hello@sourcestack.app."],
+    body: ["Questions about privacy: support@sourcestack.app."],
   },
 ];
 
