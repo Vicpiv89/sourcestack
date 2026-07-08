@@ -5,6 +5,7 @@ import { treatments } from "../data/treatments";
 import { useAuth } from "../context/AuthContext";
 import UpgradeModal from "../components/UpgradeModal";
 import SEO from "../components/SEO";
+import { supabase } from "../lib/supabase";
 import { analyzeFace, loadFaceLandmarker, type ScanResult } from "../lib/faceScan";
 
 const MAX_DIM = 1100;
@@ -39,12 +40,13 @@ function fixNamesFor(issueSlugs: string[]): string[] {
 }
 
 export default function FaceScan() {
-  const { isPro } = useAuth();
+  const { user, isPro } = useAuth();
   const [state, setState] = useState<"idle" | "analyzing" | "done" | "error">("idle");
   const [error, setError] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
   const [selfReported, setSelfReported] = useState<string[]>([]);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [dragOver, setDragOver] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -168,8 +170,22 @@ export default function FaceScan() {
     setResult(null);
     setError("");
     setSelfReported([]);
+    setSaveState("idle");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  async function saveScan() {
+    if (!result || !user) return;
+    setSaveState("saving");
+    const { error: insertError } = await supabase.from("scans").insert({
+      user_id: user.id,
+      overall: result.overall,
+      tier: result.tier,
+      metrics: result.metrics.map(({ id, name, display, ideal, score }) => ({ id, name, display, ideal, score })),
+      goals: selfReported,
+    });
+    setSaveState(insertError ? "error" : "saved");
+  }
 
   return (
     <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
@@ -253,6 +269,28 @@ export default function FaceScan() {
               >
                 Scan a different photo
               </button>
+              {isPro && user ? (
+                <button
+                  onClick={saveScan}
+                  disabled={saveState === "saving" || saveState === "saved"}
+                  className="mt-2 w-full py-2.5 bg-white/[0.06] border border-white/15 text-white/70 text-xs rounded-xl hover:border-white/35 hover:text-white transition-colors disabled:opacity-60"
+                >
+                  {saveState === "saved" ? "✓ Saved to your account" :
+                   saveState === "saving" ? "Saving…" :
+                   saveState === "error" ? "Save failed — try again" :
+                   "Save scan to track progress"}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowUpgrade(true)}
+                  className="mt-2 w-full py-2.5 bg-white/[0.04] border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/60 transition-colors"
+                >
+                  🔒 Save scans & track progress — Pro
+                </button>
+              )}
+              <p className="text-white/20 text-[10px] mt-2 text-center">
+                Saves measurements only — never your photo.
+              </p>
             </div>
 
             {result && (
@@ -298,7 +336,7 @@ export default function FaceScan() {
                 {weakest.length > 0 && (
                   <div className="mb-10">
                     <h2 className="text-white font-semibold text-sm mb-1">What you can improve, ranked</h2>
-                    <p className="text-white/30 text-xs mb-3">Every one of these has a known fix. Highest impact first.</p>
+                    <p className="text-white/30 text-xs mb-3">Each maps to protocol options in the database. Highest impact first.</p>
                     <div className="flex flex-col gap-2.5">
                       {weakest.map((m, i) => {
                         const fixes = fixNamesFor(m.issueSlugs);
@@ -311,7 +349,7 @@ export default function FaceScan() {
                             <p className="text-white/40 text-xs mt-1 leading-relaxed">{m.note}</p>
                             {fixes.length > 0 && (
                               <p className="text-emerald-400/80 text-xs mt-2">
-                                Fix exists: {fixes.join(" · ")} — exact protocol in your plan ↓
+                                Protocol options: {fixes.join(" · ")} — details in your plan ↓
                               </p>
                             )}
                           </div>
@@ -388,7 +426,7 @@ export default function FaceScan() {
                                   {issue.description.split(". ")[0]}.
                                 </p>
                                 <p className="text-emerald-400/80 text-xs mt-2">
-                                  The fix: {fixNames.join(" · ")}
+                                  Protocol options: {fixNames.join(" · ")}
                                   {issue.treatmentSlugs.length > 3 ? ` +${issue.treatmentSlugs.length - 3} more` : ""}
                                 </p>
                               </div>
@@ -438,12 +476,12 @@ export default function FaceScan() {
                             <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Pro</span>
                           </span>
                           <p className="text-white text-lg font-bold mb-3 leading-tight">
-                            Your scan found the problems.<br />Pro hands you the fixes.
+                            Your scan found the targets.<br />Pro hands you the protocols.
                           </p>
                           <ul className="text-left flex flex-col gap-1.5 mb-5">
                             {[
-                              "Exact doses + AM/PM timing for every fix above",
-                              "Vetted vendors — real prices, trust scores, no scams",
+                              "Step-by-step protocols with AM/PM timing for every target above",
+                              "Community-vetted vendor directory — prices + trust notes",
                               "Interaction warnings before you combine compounds",
                               "Monthly cost breakdown — built for a budget",
                             ].map((f) => (
@@ -459,7 +497,7 @@ export default function FaceScan() {
                             Unlock my plan — $19/mo →
                           </button>
                           <p className="text-white/25 text-[11px] mt-2.5">
-                            Cancel anytime. Cheaper than one wasted vendor order.
+                            Renews monthly, cancel anytime. Cheaper than one wasted vendor order.
                           </p>
                         </div>
                       </div>
@@ -476,7 +514,8 @@ export default function FaceScan() {
 
                 <p className="text-white/20 text-[11px] mt-8 leading-relaxed">
                   Ratios are estimated from a single 2D photo — lighting, lens distance, and angle all
-                  shift results. Not medical advice. Structural metrics describe geometry, not worth.
+                  shift results. For informational and educational purposes only; not medical advice,
+                  diagnosis, or treatment. Structural metrics describe geometry, not worth.
                 </p>
               </div>
             )}

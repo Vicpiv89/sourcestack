@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { supabase } from "../lib/supabase";
 
 type Props = {
   onClose: () => void;
@@ -11,26 +12,46 @@ export default function AuthModal({ onClose, initialTab = "signin" }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const { signIn, signUp } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setLoading(true);
 
     if (tab === "signin") {
       const { error } = await signIn(email, password);
       if (error) setError(error);
       else onClose();
-    } else {
-      const { error } = await signUp(email, password);
-      if (error) setError(error);
-      else setSuccess("Check your email to confirm your account.");
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // Paid-only signup: account creation flows straight into Stripe checkout.
+    const { error } = await signUp(email, password);
+    if (error) {
+      setError(error);
+      setLoading(false);
+      return;
+    }
+    setRedirecting(true);
+    // the session was created milliseconds ago — attach the token explicitly
+    // rather than racing the auth client's internal header propagation
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    const { data, error: fnError } = await supabase.functions.invoke(
+      "create-checkout-session",
+      { body: {}, headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+    );
+    if (fnError || !data?.url) {
+      setRedirecting(false);
+      setLoading(false);
+      setError("Account created, but checkout didn't open. Hit Upgrade to finish subscribing.");
+      return;
+    }
+    window.location.href = data.url;
   }
 
   return (
@@ -55,7 +76,7 @@ export default function AuthModal({ onClose, initialTab = "signin" }: Props) {
                 tab === "signup" ? "bg-white text-black" : "text-white/40 hover:text-white/70"
               }`}
             >
-              Sign up
+              Join Pro
             </button>
           </div>
           <button
@@ -66,31 +87,19 @@ export default function AuthModal({ onClose, initialTab = "signin" }: Props) {
           </button>
         </div>
 
-        {success ? (
-          <div className="flex flex-col items-center text-center py-4 gap-4">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M20 6L9 17l-5-5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-semibold mb-2">Check your inbox</p>
-              <p className="text-white/40 text-sm leading-relaxed">
-                We sent a confirmation link to{' '}
-                <span className="text-white/70">{email}</span>.
-                Click it to activate your account.
-              </p>
-            </div>
-            <p className="text-white/20 text-xs">Didn't get it? Check your spam folder.</p>
-            <button
-              onClick={onClose}
-              className="text-xs text-white/30 hover:text-white/60 transition-colors mt-1"
-            >
-              Close
-            </button>
+        {redirecting ? (
+          <div className="flex flex-col items-center text-center py-6 gap-4">
+            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <p className="text-white/60 text-sm">Opening secure checkout…</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {tab === "signup" && (
+              <p className="text-white/40 text-xs leading-relaxed -mt-1">
+                SourceStack is a paid membership — <span className="text-white/70 font-medium">$19/month</span>.
+                Create your account and you'll go straight to secure checkout.
+              </p>
+            )}
             <input
               type="email"
               placeholder="Email"
@@ -114,8 +123,15 @@ export default function AuthModal({ onClose, initialTab = "signin" }: Props) {
               disabled={loading}
               className="bg-white text-black font-semibold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors disabled:opacity-50"
             >
-              {loading ? "..." : tab === "signin" ? "Sign in" : "Create account"}
+              {loading ? "..." : tab === "signin" ? "Sign in" : "Continue to checkout →"}
             </button>
+            {tab === "signup" && (
+              <p className="text-white/25 text-[11px] leading-relaxed text-center">
+                Renews monthly until canceled — cancel anytime from your account.
+                By subscribing you agree to the{" "}
+                <a href="/terms" className="text-white/40 hover:text-white/70 underline">Terms</a>.
+              </p>
+            )}
           </form>
         )}
       </div>

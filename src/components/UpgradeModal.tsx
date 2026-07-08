@@ -8,11 +8,11 @@ type Props = {
 };
 
 const FEATURES = [
-  "Full protocols — exact dosages, timing, cycling",
-  "Vetted vendor directory — prices, trust scores, direct links",
-  "9 vetted vendors across 55+ treatments",
-  "Stack tracker — log what you're running",
-  "Cheapest source finder for your stack",
+  "Full protocols — dosing references, timing, cycling",
+  "Community-vetted vendor directory — prices, trust notes, direct links",
+  "Face scan history — save scans, track progress over time",
+  "Interaction warnings before you combine compounds",
+  "Monthly cost breakdown for your full stack",
   "New compounds added as the community validates them",
 ];
 
@@ -103,7 +103,8 @@ export default function UpgradeModal({ onClose }: Props) {
           {error && <p className="text-red-400 text-xs text-center">{error}</p>}
           {user && !error && (
             <p className="text-white/25 text-xs text-center">
-              Cancel anytime. No hidden fees.
+              Renews monthly until canceled — cancel anytime from your account.{" "}
+              <a href="/terms" className="text-white/40 hover:text-white/70 underline">Terms</a>
             </p>
           )}
           {!user && (

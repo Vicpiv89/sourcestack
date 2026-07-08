@@ -15,6 +15,12 @@ export default function Footer() {
           </p>
         </div>
         <div className="flex gap-4 text-xs text-white/25">
+          <Link to="/terms" className="hover:text-white/50 transition-colors">
+            Terms
+          </Link>
+          <Link to="/privacy" className="hover:text-white/50 transition-colors">
+            Privacy
+          </Link>
           <Link to="/disclaimer" className="hover:text-white/50 transition-colors">
             Disclaimer
           </Link>

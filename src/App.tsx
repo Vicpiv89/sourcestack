@@ -17,6 +17,9 @@ import Compare from "./pages/Compare";
 import Quiz from "./pages/Quiz";
 import ProtocolAI from "./pages/ProtocolAI";
 import FaceScan from "./pages/FaceScan";
+import Account from "./pages/Account";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 // Handles Supabase email confirmation redirect (hash contains type=signup)
 function AuthCallbackHandler() {
@@ -124,6 +127,9 @@ export default function App() {
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/ai" element={<ProtocolAI />} />
                 <Route path="/scan" element={<FaceScan />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
               </Routes>
             </div>
             <Footer />

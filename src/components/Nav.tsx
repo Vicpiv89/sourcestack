@@ -64,15 +64,16 @@ export default function Nav() {
                   Upgrade
                 </button>
               )}
-              <span className="text-white/25 text-xs max-w-[120px] truncate hidden lg:block">
-                {user.email?.split('@')[0]}
-              </span>
-              <button
-                onClick={() => signOut()}
-                className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/25 transition-colors"
+              <Link
+                to="/account"
+                className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${
+                  pathname === "/account"
+                    ? "text-white border-white/25"
+                    : "text-white/50 hover:text-white border-white/10 hover:border-white/25"
+                }`}
               >
-                Sign out
-              </button>
+                Account
+              </Link>
             </>
           ) : (
             <button
@@ -140,6 +141,13 @@ export default function Nav() {
               {user ? (
                 <>
                   <p className="px-3 text-xs text-white/20 truncate">{user.email}</p>
+                  <Link
+                    to="/account"
+                    onClick={closeMenu}
+                    className="px-3 py-2.5 border border-white/10 rounded-xl text-sm text-white/60 hover:text-white hover:border-white/25 transition-colors text-center"
+                  >
+                    Account & subscription
+                  </Link>
                   <button
                     onClick={() => { signOut(); closeMenu(); }}
                     className="px-3 py-2.5 border border-white/10 rounded-xl text-sm text-white/60 hover:text-white hover:border-white/25 transition-colors text-center"

@@ -401,8 +401,9 @@ export function analyzeFace(
   const totalWeight = metrics.reduce((s, m) => s + m.weight, 0);
   const weightedMean = metrics.reduce((s, m) => s + m.score * m.weight, 0) / totalWeight;
   // most faces land near-ideal on most ratios, so the raw mean clusters 8–9.5;
-  // stretch it so the overall score actually differentiates faces
-  const overall = Math.max(1, Math.min(10, 1.5 * weightedMean - 5.7));
+  // stretch it hard so the overall score actually differentiates faces:
+  // garbage photos ~3, average ~5–7, strong 8+, ceiling 9.4
+  const overall = Math.max(2.9, Math.min(9.4, 1.9 * weightedMean - 8.6));
 
   return {
     overall,
