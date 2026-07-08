@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { issues } from "../data/issues";
+import { treatments } from "../data/treatments";
+import { useAuth } from "../context/AuthContext";
+import UpgradeModal from "../components/UpgradeModal";
 import SEO from "../components/SEO";
 import { analyzeFace, loadFaceLandmarker, type ScanResult } from "../lib/faceScan";
 
@@ -27,11 +30,21 @@ function scoreColor(s: number): string {
   return "#f87171";
 }
 
+// name up to 3 real treatments that fix a set of issues — the tease
+function fixNamesFor(issueSlugs: string[]): string[] {
+  return [...new Set(issueSlugs.flatMap((s) => issues.find((i) => i.slug === s)?.treatmentSlugs ?? []))]
+    .slice(0, 3)
+    .map((slug) => treatments.find((t) => t.slug === slug)?.name)
+    .filter(Boolean) as string[];
+}
+
 export default function FaceScan() {
+  const { isPro } = useAuth();
   const [state, setState] = useState<"idle" | "analyzing" | "done" | "error">("idle");
   const [error, setError] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
   const [selfReported, setSelfReported] = useState<string[]>([]);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +79,8 @@ export default function FaceScan() {
         return;
       }
 
-      const scan = analyzeFace(detection.faceLandmarks[0], w, h);
+      // sample skin/brow pixels before the overlay is drawn on top
+      const scan = analyzeFace(detection.faceLandmarks[0], w, h, ctx);
       drawOverlay(ctx, scan, w);
       setResult(scan);
       setState("done");
@@ -146,7 +160,7 @@ export default function FaceScan() {
   const stackSlugs = [...new Set(matchedIssues.flatMap((i) => i.treatmentSlugs.slice(0, 2)))].slice(0, 10);
 
   const weakest = result
-    ? [...result.metrics].sort((a, b) => a.score - b.score).slice(0, 3).filter((m) => m.score < 7)
+    ? [...result.metrics].sort((a, b) => a.score - b.score).slice(0, 4).filter((m) => m.score < 7)
     : [];
 
   const reset = () => {
@@ -161,7 +175,7 @@ export default function FaceScan() {
     <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Face Scan — Photo to Protocol"
-        description="Upload a photo, get your facial ratios measured against ideal ranges — canthal tilt, fWHR, jaw taper, symmetry and more — then a protocol targeting your weakest points. Runs 100% in your browser."
+        description="Upload a photo, get 14 facial measurements scored — canthal tilt, fWHR, jaw taper, symmetry, skin clarity, brow density — then a protocol targeting exactly what you can improve. Runs 100% in your browser."
         path="/scan"
       />
       <div className="px-6 pt-12 pb-24 max-w-4xl mx-auto">
@@ -171,9 +185,9 @@ export default function FaceScan() {
             <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Face Scan</p>
             <h1 className="text-3xl font-bold text-white mb-2">Photo → protocol.</h1>
             <p className="text-white/40 text-sm mb-8 leading-relaxed">
-              One front-facing photo. We measure 12 facial ratios against ideal ranges —
-              canthal tilt, fWHR, jaw taper, thirds, symmetry — then build a protocol
-              targeting your weakest points.
+              One front-facing photo. We measure 14 facial metrics — canthal tilt, fWHR,
+              jaw taper, symmetry, skin clarity, brow density — and show you exactly
+              what can be improved, with the fix for each.
             </p>
 
             <div
@@ -280,28 +294,40 @@ export default function FaceScan() {
                   ))}
                 </div>
 
-                {/* Weakest points */}
+                {/* Weakest points — framed as what's improvable */}
                 {weakest.length > 0 && (
                   <div className="mb-10">
-                    <h2 className="text-white font-semibold text-sm mb-3">Your levers, ranked</h2>
+                    <h2 className="text-white font-semibold text-sm mb-1">What you can improve, ranked</h2>
+                    <p className="text-white/30 text-xs mb-3">Every one of these has a known fix. Highest impact first.</p>
                     <div className="flex flex-col gap-2.5">
-                      {weakest.map((m, i) => (
-                        <div key={m.id} className="px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/10">
-                          <p className="text-white text-sm font-medium">
-                            <span className="text-white/30 mr-2">#{i + 1}</span>
-                            {m.name} — {m.display}
-                          </p>
-                          <p className="text-white/40 text-xs mt-1 leading-relaxed">{m.note}</p>
-                        </div>
-                      ))}
+                      {weakest.map((m, i) => {
+                        const fixes = fixNamesFor(m.issueSlugs);
+                        return (
+                          <div key={m.id} className="px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+                            <p className="text-white text-sm font-medium">
+                              <span className="text-white/30 mr-2">#{i + 1}</span>
+                              {m.name} — {m.display}
+                            </p>
+                            <p className="text-white/40 text-xs mt-1 leading-relaxed">{m.note}</p>
+                            {fixes.length > 0 && (
+                              <p className="text-emerald-400/80 text-xs mt-2">
+                                Fix exists: {fixes.join(" · ")} — exact protocol in your plan ↓
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* Self report */}
-                <div className="mb-10">
-                  <h2 className="text-white font-semibold text-sm mb-1">What the camera can't see</h2>
-                  <p className="text-white/30 text-xs mb-3">Tap anything you're dealing with — it gets added to your protocol.</p>
+                {/* Goal selection */}
+                <div className="mb-10 px-4 py-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04]">
+                  <h2 className="text-white font-semibold text-sm mb-1">What do you want to improve?</h2>
+                  <p className="text-white/40 text-xs mb-3.5 leading-relaxed">
+                    The scan reads your ratios, skin, and brows — but you know the rest.
+                    Select everything you're working on and your plan gets built around it.
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {SELF_REPORT.map(({ slug, label }) => {
                       const on = selfReported.includes(slug);
@@ -315,46 +341,136 @@ export default function FaceScan() {
                           }
                           className={`px-3.5 py-2 rounded-full text-xs border transition-colors ${
                             on
-                              ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300"
-                              : "border-white/10 bg-white/[0.02] text-white/40 hover:border-white/25"
+                              ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-300 font-medium"
+                              : "border-white/15 bg-white/[0.03] text-white/50 hover:border-white/30 hover:text-white/80"
                           }`}
                         >
-                          {label}
+                          {on ? "✓ " : "+ "}{label}
                         </button>
                       );
                     })}
                   </div>
+                  {selfReported.length > 0 && (
+                    <p className="text-emerald-400/70 text-xs mt-3">
+                      {selfReported.length} goal{selfReported.length > 1 ? "s" : ""} added to your plan ↓
+                    </p>
+                  )}
                 </div>
 
-                {/* Protocol */}
-                {matchedIssues.length > 0 && (
+                {/* The plan — listicle */}
+                {matchedIssues.length > 0 ? (
                   <div>
-                    <h2 className="text-white font-semibold text-sm mb-3">
-                      Your protocol targets — {matchedIssues.length} issue{matchedIssues.length > 1 ? "s" : ""}
+                    <h2 className="text-white font-semibold text-base mb-1">
+                      Your plan — {matchedIssues.length} target{matchedIssues.length > 1 ? "s" : ""}
                     </h2>
-                    <div className="flex flex-col gap-2.5 mb-6">
-                      {matchedIssues.map((issue) => (
-                        <Link
-                          key={issue.slug}
-                          to={`/issues/${issue.slug}`}
-                          className="flex items-center justify-between px-4 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/25 transition-colors group"
-                        >
-                          <div>
-                            <p className="text-white text-sm font-medium">{issue.name}</p>
-                            <p className="text-white/30 text-xs mt-0.5">
-                              {issue.treatmentSlugs.length} treatment option{issue.treatmentSlugs.length > 1 ? "s" : ""}
-                            </p>
-                          </div>
-                          <span className="text-white/20 group-hover:text-white/50 text-sm transition-colors">→</span>
-                        </Link>
-                      ))}
+                    <p className="text-white/30 text-xs mb-4">
+                      Built from your scan + your goals. Each one maps to a protocol in the database.
+                    </p>
+                    <div className="flex flex-col gap-2.5 mb-8">
+                      {matchedIssues.map((issue, i) => {
+                        const fixNames = issue.treatmentSlugs
+                          .slice(0, 3)
+                          .map((s) => treatments.find((t) => t.slug === s)?.name)
+                          .filter(Boolean);
+                        return (
+                          <Link
+                            key={issue.slug}
+                            to={`/issues/${issue.slug}`}
+                            className="px-4 py-4 rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/25 transition-colors group block"
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="w-6 h-6 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/40 text-xs shrink-0 mt-0.5">
+                                {i + 1}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-white text-sm font-medium">{issue.name}</p>
+                                <p className="text-white/35 text-xs mt-1 leading-relaxed line-clamp-2">
+                                  {issue.description.split(". ")[0]}.
+                                </p>
+                                <p className="text-emerald-400/80 text-xs mt-2">
+                                  The fix: {fixNames.join(" · ")}
+                                  {issue.treatmentSlugs.length > 3 ? ` +${issue.treatmentSlugs.length - 3} more` : ""}
+                                </p>
+                              </div>
+                              <span className="text-white/20 group-hover:text-white/50 text-sm transition-colors shrink-0">→</span>
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
-                    <Link
-                      to={`/stack?t=${stackSlugs.join(",")}`}
-                      className="block w-full py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-white/90 transition-colors text-center"
-                    >
-                      Build my full protocol →
-                    </Link>
+
+                    {/* Conversion gate / Pro CTA */}
+                    {isPro ? (
+                      <Link
+                        to={`/stack?t=${stackSlugs.join(",")}`}
+                        className="block w-full py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-white/90 transition-colors text-center"
+                      >
+                        Open my full protocol in Stack Builder →
+                      </Link>
+                    ) : (
+                      <div className="relative rounded-2xl border border-white/[0.07] overflow-hidden">
+                        {/* Blurred personalized preview */}
+                        <div className="pointer-events-none select-none blur-[5px] opacity-25 px-5 pt-5 pb-2 flex flex-col gap-3">
+                          <div className="border border-white/10 rounded-xl p-4">
+                            <p className="text-amber-400/80 text-xs font-semibold uppercase tracking-widest mb-3">Morning (AM)</p>
+                            {stackSlugs.slice(0, 3).map((slug, i) => (
+                              <div key={slug} className="flex gap-3 mb-2">
+                                <span className="text-white/15 font-mono text-xs w-4">{i + 1}</span>
+                                <span className="text-white/60 text-sm">
+                                  {treatments.find((t) => t.slug === slug)?.name} — exact dose + timing
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="border border-white/10 rounded-xl p-4">
+                            <p className="text-blue-400/80 text-xs font-semibold uppercase tracking-widest mb-2">Evening (PM)</p>
+                            <div className="h-9 bg-white/[0.04] rounded-lg" />
+                          </div>
+                          <div className="border border-white/10 rounded-xl p-4">
+                            <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-2">Vetted sources + monthly cost</p>
+                            <div className="h-8 bg-white/[0.03] rounded" />
+                          </div>
+                        </div>
+
+                        {/* Overlay pitch */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/92 to-[#111]/20 flex flex-col items-center justify-end pb-8 px-6 text-center">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full border border-white/10 bg-white/5 mb-3">
+                            <span className="text-white/40 text-[10px] uppercase tracking-widest font-medium">Pro</span>
+                          </span>
+                          <p className="text-white text-lg font-bold mb-3 leading-tight">
+                            Your scan found the problems.<br />Pro hands you the fixes.
+                          </p>
+                          <ul className="text-left flex flex-col gap-1.5 mb-5">
+                            {[
+                              "Exact doses + AM/PM timing for every fix above",
+                              "Vetted vendors — real prices, trust scores, no scams",
+                              "Interaction warnings before you combine compounds",
+                              "Monthly cost breakdown — built for a budget",
+                            ].map((f) => (
+                              <li key={f} className="flex items-start gap-2 text-xs text-white/60">
+                                <span className="text-emerald-400 shrink-0">✓</span>{f}
+                              </li>
+                            ))}
+                          </ul>
+                          <button
+                            onClick={() => setShowUpgrade(true)}
+                            className="w-full max-w-xs py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-white/90 transition-colors"
+                          >
+                            Unlock my plan — $19/mo →
+                          </button>
+                          <p className="text-white/25 text-[11px] mt-2.5">
+                            Cancel anytime. Cheaper than one wasted vendor order.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="px-5 py-6 rounded-2xl border border-white/10 bg-white/[0.02] text-center">
+                    <p className="text-white text-sm font-medium mb-1">Clean scan — nothing flagged.</p>
+                    <p className="text-white/35 text-xs leading-relaxed">
+                      Select what you want to improve above, and your plan builds itself.
+                    </p>
                   </div>
                 )}
 
@@ -367,6 +483,7 @@ export default function FaceScan() {
           </div>
         </div>
       </div>
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );
 }

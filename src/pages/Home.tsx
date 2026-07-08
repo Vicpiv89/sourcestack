@@ -62,9 +62,24 @@ export default function Home() {
             <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3 leading-tight">
               The looksmaxxing<br />protocol database.
             </h1>
-            <p className="text-white/40 text-sm sm:text-base mb-8 leading-relaxed max-w-sm">
+            <p className="text-white/40 text-sm sm:text-base mb-6 leading-relaxed max-w-sm">
               Search any issue or compound — get exact dosing protocols, safety notes, and vetted sources. No fluff.
             </p>
+
+            {/* Face Scan CTA */}
+            <Link
+              to="/scan"
+              className="group flex items-center justify-between gap-3 w-full mb-6 px-4 py-3.5 bg-white text-black rounded-xl hover:bg-white/90 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-base">📷</span>
+                <div>
+                  <p className="text-sm font-semibold leading-tight">Scan your face — see what to improve</p>
+                  <p className="text-black/50 text-[11px] mt-0.5">Free · 100% private · 30 seconds</p>
+                </div>
+              </div>
+              <span className="text-black/40 group-hover:text-black text-sm transition-colors shrink-0">→</span>
+            </Link>
 
             {/* Search */}
             <div className="relative">
@@ -187,7 +202,7 @@ export default function Home() {
                 <span className="text-[9px] font-bold tracking-widest uppercase text-white/60 bg-white/10 px-1.5 py-0.5 rounded-full border border-white/15">New</span>
               </div>
               <p className="text-white/35 text-xs">
-                One photo → 12 facial ratios measured → your protocol. Runs in your browser, nothing uploaded.
+                One photo → 14 facial metrics measured → exactly what you can improve, with the fix for each. Nothing uploaded.
               </p>
             </div>
           </div>

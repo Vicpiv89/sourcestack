@@ -13,7 +13,14 @@ const LM = {
   rMouth: 61, lMouth: 291,
   rBrowMedial: 107, rBrowPeak: 105, rBrowTail: 70,
   lBrowMedial: 336, lBrowPeak: 334, lBrowTail: 300,
+  rCheekSkin: 50, lCheekSkin: 280, foreheadSkin: 151,
 };
+
+// brow landmark rows for thickness/density sampling (medial → tail)
+const R_BROW_UPPER = [107, 66, 105, 63, 70];
+const R_BROW_LOWER = [55, 65, 52, 53, 46];
+const L_BROW_UPPER = [336, 296, 334, 293, 300];
+const L_BROW_LOWER = [285, 295, 282, 283, 276];
 
 interface Pt { x: number; y: number }
 
@@ -84,6 +91,33 @@ function band(value: number, lo: number, hi: number, unit: number): number {
   return Math.max(1, Math.min(10, 10 - d / unit));
 }
 
+/** mean luminance, luminance std, and redness of a square patch centered on (cx, cy) */
+function samplePatch(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, size: number,
+  imgW: number, imgH: number
+): { mean: number; std: number; redness: number } {
+  const s = Math.max(4, Math.round(size));
+  const x = Math.round(Math.max(0, Math.min(imgW - s, cx - s / 2)));
+  const y = Math.round(Math.max(0, Math.min(imgH - s, cy - s / 2)));
+  const data = ctx.getImageData(x, y, s, s).data;
+  let sum = 0, sumSq = 0, rSum = 0, gbSum = 0, n = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    sum += lum;
+    sumSq += lum * lum;
+    rSum += data[i];
+    gbSum += (data[i + 1] + data[i + 2]) / 2;
+    n++;
+  }
+  const mean = sum / n;
+  return {
+    mean,
+    std: Math.sqrt(Math.max(0, sumSq / n - mean * mean)),
+    redness: rSum / Math.max(1, gbSum),
+  };
+}
+
 function rotate(p: Pt, origin: Pt, rad: number): Pt {
   const cos = Math.cos(rad), sin = Math.sin(rad);
   const dx = p.x - origin.x, dy = p.y - origin.y;
@@ -101,7 +135,8 @@ export function tierFor(overall: number): string {
 export function analyzeFace(
   rawLandmarks: { x: number; y: number }[],
   imgW: number,
-  imgH: number
+  imgH: number,
+  ctx?: CanvasRenderingContext2D
 ): ScanResult {
   // to pixel coords
   const px = (i: number): Pt => ({ x: rawLandmarks[i].x * imgW, y: rawLandmarks[i].y * imgH });
@@ -298,6 +333,70 @@ export function analyzeFace(
       "Balanced length-to-width.",
     issueSlugs: faceIndex < 1.18 ? ["facial-puffiness"] : [],
   });
+
+  // ── pixel-based metrics (need the un-annotated canvas) ──
+  if (ctx) {
+    // 13 · Skin clarity — texture (local luminance variation) + tone evenness
+    const patchSize = faceW * 0.09;
+    const patches = [LM.rCheekSkin, LM.lCheekSkin, LM.foreheadSkin].map((i) => {
+      const p = px(i);
+      return samplePatch(ctx, p.x, p.y, patchSize, imgW, imgH);
+    });
+    const texture = (patches.reduce((s, p) => s + p.std / Math.max(1, p.mean), 0) / patches.length) * 100;
+    const meanLum = patches.reduce((s, p) => s + p.mean, 0) / patches.length;
+    const tone =
+      (Math.sqrt(patches.reduce((s, p) => s + (p.mean - meanLum) ** 2, 0) / patches.length) /
+        Math.max(1, meanLum)) * 100;
+    const skinValue = 0.65 * texture + 0.35 * tone;
+    const skinScore = band(-skinValue, -6, 0, 2.5);
+    if (meanLum < 60)
+      warnings.push("Low light — skin reading is unreliable in this photo.");
+    add({
+      id: "skin-clarity", name: "Skin Clarity (est.)",
+      display: `${Math.max(0, Math.min(100, 100 - (skinValue - 4) * 6)).toFixed(0)}%`,
+      ideal: "75%+",
+      score: skinScore, weight: 1.1,
+      note: skinScore >= 8 ? "Even texture and tone — skin is carrying you." :
+        skinScore >= 6 ? "Some texture or unevenness reads on camera. A basic actives routine moves this fast." :
+        "Texture/tone variation is visible — this is the most fixable metric on the list.",
+      issueSlugs: skinScore < 7 ? ["skin-clarity", "skin-texture"] : [],
+    });
+
+    // 14 · Brow density — brow-vs-forehead contrast + physical thickness
+    const browPairs: [number, number][] = [];
+    R_BROW_UPPER.forEach((u, i) => browPairs.push([u, R_BROW_LOWER[i]]));
+    L_BROW_UPPER.forEach((u, i) => browPairs.push([u, L_BROW_LOWER[i]]));
+    const thicknessPx =
+      browPairs.reduce((s, [u, l]) => s + dist(px(u), px(l)), 0) / browPairs.length;
+    const browThickness = thicknessPx / eyeWidth;
+    // sample the middle segments of each brow (upper/lower landmark pairs)
+    const browMidPairs: [number, number][] = [
+      [66, 65], [105, 52], [63, 53],
+      [296, 295], [334, 282], [293, 283],
+    ];
+    const browLum =
+      browMidPairs.reduce((s, [u, l]) => {
+        const m = mid(px(u), px(l));
+        return s + samplePatch(ctx, m.x, m.y, thicknessPx * 0.8, imgW, imgH).mean;
+      }, 0) / browMidPairs.length;
+    const foreLum =
+      browMidPairs.reduce((s, [u]) => {
+        const p = px(u);
+        return s + samplePatch(ctx, p.x, p.y - thicknessPx * 2, thicknessPx * 0.8, imgW, imgH).mean;
+      }, 0) / browMidPairs.length;
+    const contrast = ((foreLum - browLum) / Math.max(1, foreLum)) * 100;
+    const browScore = Math.min(10, 0.7 * band(contrast, 38, 100, 5) + 0.3 * band(browThickness, 0.22, 0.5, 0.04));
+    add({
+      id: "brow-density", name: "Brow Density (est.)",
+      display: `${Math.max(0, contrast).toFixed(0)}%`,
+      ideal: "38%+ contrast",
+      score: browScore, weight: 0.9,
+      note: browScore >= 8 ? "Full, dense brows — strong eye-area frame." :
+        browScore >= 6 ? "Brows read slightly light. Density is one of the highest-ROI fixes — minoxidil on the tails is the standard play." :
+        "Brows read sparse or light on camera. Density protocols show results in 8–12 weeks.",
+      issueSlugs: browScore < 7 ? ["thin-brows"] : [],
+    });
+  }
 
   const totalWeight = metrics.reduce((s, m) => s + m.weight, 0);
   const weightedMean = metrics.reduce((s, m) => s + m.score * m.weight, 0) / totalWeight;
