@@ -22,7 +22,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'hair loss · dandruff · density',
     issueSlugs: ['hair-loss', 'dandruff'],
     color: '#10b981',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 50, rx: 50, ry: 22 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 46, rx: 48, ry: 24 }],
   },
   {
     id: 'forehead',
@@ -30,7 +30,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'clarity · texture · melasma',
     issueSlugs: ['skin-clarity', 'skin-texture', 'melasma'],
     color: '#60a5fa',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 88, rx: 40, ry: 20 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 88, rx: 42, ry: 19 }],
   },
   {
     id: 'brows',
@@ -39,8 +39,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['thin-brows'],
     color: '#c084fc',
     shapes: [
-      { type: 'ellipse', cx: 76, cy: 113, rx: 16, ry: 7 },
-      { type: 'ellipse', cx: 124, cy: 113, rx: 16, ry: 7 },
+      { type: 'ellipse', cx: 73, cy: 112, rx: 17, ry: 6 },
+      { type: 'ellipse', cx: 127, cy: 112, rx: 17, ry: 6 },
     ],
   },
   {
@@ -50,8 +50,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['under-eye-hollows', 'dark-circles', 'eyelash-growth'],
     color: '#818cf8',
     shapes: [
-      { type: 'ellipse', cx: 76, cy: 132, rx: 15, ry: 10 },
-      { type: 'ellipse', cx: 124, cy: 132, rx: 15, ry: 10 },
+      { type: 'ellipse', cx: 73, cy: 139, rx: 15, ry: 9 },
+      { type: 'ellipse', cx: 127, cy: 139, rx: 15, ry: 9 },
     ],
   },
   {
@@ -61,8 +61,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['skin-clarity', 'oily-skin', 'enlarged-pores', 'facial-puffiness', 'acne-scarring'],
     color: '#fb923c',
     shapes: [
-      { type: 'ellipse', cx: 51, cy: 162, rx: 20, ry: 24 },
-      { type: 'ellipse', cx: 149, cy: 162, rx: 20, ry: 24 },
+      { type: 'ellipse', cx: 59, cy: 158, rx: 15, ry: 22 },
+      { type: 'ellipse', cx: 141, cy: 158, rx: 15, ry: 22 },
     ],
   },
   {
@@ -71,7 +71,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'enlarged pores · excess oil',
     issueSlugs: ['enlarged-pores', 'oily-skin'],
     color: '#94a3b8',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 157, rx: 13, ry: 17 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 155, rx: 12, ry: 19 }],
   },
   {
     id: 'beard',
@@ -80,8 +80,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['beard-growth', 'razor-bumps'],
     color: '#a3e635',
     shapes: [
-      { type: 'ellipse', cx: 73, cy: 216, rx: 18, ry: 13 },
-      { type: 'ellipse', cx: 127, cy: 216, rx: 18, ry: 13 },
+      { type: 'ellipse', cx: 79, cy: 209, rx: 15, ry: 12 },
+      { type: 'ellipse', cx: 121, cy: 209, rx: 15, ry: 12 },
     ],
   },
   {
@@ -90,9 +90,23 @@ const ZONES: ZoneDef[] = [
     sublabel: 'definition · hormonal acne',
     issueSlugs: ['jawline-definition', 'androgenic-acne'],
     color: '#fbbf24',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 234, rx: 28, ry: 15 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 227, rx: 24, ry: 13 }],
   },
 ];
+
+// One head outline, shared by the fill and the line art.
+// Cranium dome → temple taper → cheekbones (widest) → jaw taper → chin.
+const HEAD_PATH =
+  'M 100 18 ' +
+  'C 128 18 152 34 158 66 ' +
+  'C 162 84 163 106 161 124 ' +
+  'C 158 150 150 172 138 196 ' +
+  'C 130 214 122 234 110 241 ' +
+  'C 104 244 96 244 90 241 ' +
+  'C 78 234 70 214 62 196 ' +
+  'C 50 172 42 150 39 124 ' +
+  'C 37 106 38 84 42 66 ' +
+  'C 48 34 72 18 100 18 Z';
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -129,71 +143,66 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
           </defs>
 
           {/* ── Face fill ─────────────────────────────── */}
-          <path
-            d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
-            fill="url(#face-grad)"
-          />
+          <path d={HEAD_PATH} fill="url(#face-grad)" />
 
           {/* ── Face line art (non-interactive) ───────── */}
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
             {/* Outline */}
+            <path d={HEAD_PATH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+            {/* Hairline — inside the skull */}
             <path
-              d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
-              stroke="rgba(255,255,255,0.22)"
-              strokeWidth="0.8"
-            />
-            {/* Hairline */}
-            <path
-              d="M 50 68 C 64 52 80 44 100 42 C 120 44 136 52 150 68"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="0.6"
+              d="M 52 80 C 62 60 80 51 100 51 C 120 51 138 60 148 80"
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth="0.7"
             />
             {/* Left ear */}
             <path
-              d="M 28 136 C 24 126 20 134 24 144 C 26 150 28 147"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="0.6"
+              d="M 40 122 C 32 116 28 127 33 139 C 36 147 41 149 42 143"
+              stroke="rgba(255,255,255,0.14)"
+              strokeWidth="0.7"
             />
             {/* Right ear */}
             <path
-              d="M 172 136 C 176 126 180 134 176 144 C 174 150 172 147"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="0.6"
+              d="M 160 122 C 168 116 172 127 167 139 C 164 147 159 149 158 143"
+              stroke="rgba(255,255,255,0.14)"
+              strokeWidth="0.7"
             />
-            {/* Left eye — fox eye, strong positive canthal tilt */}
+            {/* Left eye — almond, positive canthal tilt */}
             <path
-              d="M 62 121 Q 72 113 90 130 Q 76 136 62 121 Z"
+              d="M 58 125 Q 70 116 87 128 Q 71 135 58 125 Z"
               stroke="rgba(255,255,255,0.32)"
               strokeWidth="0.9"
               fill="rgba(255,255,255,0.03)"
             />
             {/* Right eye */}
             <path
-              d="M 138 121 Q 128 113 110 130 Q 124 136 138 121 Z"
+              d="M 142 125 Q 130 116 113 128 Q 129 135 142 125 Z"
               stroke="rgba(255,255,255,0.32)"
               strokeWidth="0.9"
               fill="rgba(255,255,255,0.03)"
             />
-            {/* Iris rings */}
-            <circle cx="75" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
-            <circle cx="125" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
-            {/* Pupils */}
-            <circle cx="75" cy="124" r="2.5" fill="rgba(255,255,255,0.28)" />
-            <circle cx="125" cy="124" r="2.5" fill="rgba(255,255,255,0.28)" />
-            {/* Left brow — straight, thick, close to eye */}
-            <path d="M 59 110 C 68 106 78 105 91 109" stroke="rgba(255,255,255,0.38)" strokeWidth="1.6" />
-            {/* Right brow */}
-            <path d="M 109 109 C 122 105 132 106 141 110" stroke="rgba(255,255,255,0.38)" strokeWidth="1.6" />
-            {/* Nose bridge + nostrils */}
+            {/* Irises + pupils */}
+            <circle cx="72" cy="126" r="4.5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+            <circle cx="128" cy="126" r="4.5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+            <circle cx="72" cy="126" r="2.2" fill="rgba(255,255,255,0.28)" />
+            <circle cx="128" cy="126" r="2.2" fill="rgba(255,255,255,0.28)" />
+            {/* Brows — thick, tail slightly higher than head */}
+            <path d="M 89 114 C 78 109 66 108 56 111" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
+            <path d="M 111 114 C 122 109 134 108 144 111" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
+            {/* Nose — bridge, tip, nostril hints */}
             <path
-              d="M 98 136 C 96 150 93 162 93 167 C 93 172 96 174 100 174 C 104 174 107 172 107 167 C 107 162 104 150 102 136"
+              d="M 97 132 C 96 146 92 158 90 166 C 89 171 93 174 100 174 C 107 174 111 171 110 166 C 108 158 104 146 103 132"
               stroke="rgba(255,255,255,0.12)"
-              strokeWidth="0.6"
+              strokeWidth="0.7"
             />
-            {/* Upper lip — Cupid's bow */}
-            <path d="M 84 190 C 90 184 95 182 100 184 C 105 182 110 184 116 190" stroke="rgba(255,255,255,0.26)" strokeWidth="0.85" />
-            {/* Lower lip */}
-            <path d="M 84 190 Q 100 201 116 190" stroke="rgba(255,255,255,0.26)" strokeWidth="0.85" />
+            <path d="M 90 166 Q 85 168 87 171" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
+            <path d="M 110 166 Q 115 168 113 171" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
+            {/* Lips — Cupid's bow + fuller lower lip */}
+            <path d="M 83 196 C 90 190 96 189 100 191 C 104 189 110 190 117 196" stroke="rgba(255,255,255,0.26)" strokeWidth="0.9" />
+            <path d="M 83 196 Q 100 208 117 196" stroke="rgba(255,255,255,0.26)" strokeWidth="0.9" />
+            {/* Cheekbone hints */}
+            <path d="M 45 140 C 50 152 56 159 62 162" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
+            <path d="M 155 140 C 150 152 144 159 138 162" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
           </g>
 
           {/* ── Interactive zones ─────────────────────── */}
@@ -270,9 +279,25 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
             </div>
           </>
         ) : (
-          <p className="text-white/20 text-xs text-center pt-3">
-            Hover a zone to explore treatments
-          </p>
+          <>
+            <p className="text-white/25 text-xs mb-2.5">Popular right now</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { slug: 'hair-loss', name: 'Hair Loss' },
+                { slug: 'skin-clarity', name: 'Acne & Clarity' },
+                { slug: 'jawline-definition', name: 'Jawline' },
+                { slug: 'dark-circles', name: 'Dark Circles' },
+              ].map((i) => (
+                <button
+                  key={i.slug}
+                  onClick={() => navigate(`/issues/${i.slug}`)}
+                  className="px-2.5 py-1 rounded-full text-xs text-white/40 border border-white/10 hover:text-white/70 hover:border-white/25 transition-colors"
+                >
+                  {i.name} →
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

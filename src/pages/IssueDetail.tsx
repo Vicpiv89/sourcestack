@@ -6,6 +6,7 @@ import VendorCard from "../components/VendorCard";
 import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
 import SEO from "../components/SEO";
+import BackLink from "../components/BackLink";
 import { useAuth } from "../context/AuthContext";
 
 export default function IssueDetail() {
@@ -39,12 +40,11 @@ export default function IssueDetail() {
         path={`/issues/${issue.slug}`}
       />
       <div className="px-6 pt-12 pb-24 max-w-3xl mx-auto">
-        <Link
-          to="/issues"
+        <BackLink
+          fallback="/issues"
+          fallbackLabel="Issues"
           className="text-white/30 text-sm hover:text-white/60 transition-colors mb-8 block"
-        >
-          ← Issues
-        </Link>
+        />
         <DisclaimerBanner />
 
         <h1 className="text-3xl font-bold text-white tracking-tight mb-3">

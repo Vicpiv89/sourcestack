@@ -6,7 +6,7 @@ import type { Treatment } from "../data/treatments";
 import { scoreMatch } from "../data/synonyms";
 
 interface UserMsg { role: "user"; text: string }
-interface AIMsg   { role: "ai"; intro: string; results: Treatment[]; note?: string }
+interface AIMsg   { role: "ai"; intro: string; results: Treatment[]; note?: string; suggestions?: string[] }
 type Msg = UserMsg | AIMsg;
 
 const SUGGESTIONS = [
@@ -27,8 +27,28 @@ const CAT_COLORS: Record<string, string> = {
   "Mechanical":          "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
+const FALLBACK_CHIPS = [
+  "Red / irritated cheeks",
+  "Thinning hair at the temples",
+  "Acne on my jawline",
+  "Dark circles",
+  "Sharper jawline",
+  "Better sleep",
+];
+
 function buildResponse(query: string): AIMsg {
   const lower = query.toLowerCase();
+
+  // greetings / small talk get a greeting, not an error
+  if (/^(yo+|hey+|hi+|hello+|sup|wassup|whats? ?up|hola|howdy)[\s!.?]*$/i.test(lower)) {
+    return {
+      role: "ai",
+      intro:
+        "Hey. Tell me what you're working on — hair, skin, jawline, sleep, energy — and I'll pull the exact protocol from the database. Or tap one of these:",
+      results: [],
+      suggestions: FALLBACK_CHIPS,
+    };
+  }
 
   const scored = treatments
     .map((t) => ({
@@ -47,8 +67,9 @@ function buildResponse(query: string): AIMsg {
     return {
       role: "ai",
       intro:
-        "No direct match in the database for that. Try describing the issue — hair thinning, skin clarity, under-eye hollows, jaw definition, recovery, hormones, etc.",
+        "I couldn't map that to anything in the database yet. Give me a bit more detail — what part of your face or body, and what's bothering you about it? Or start from one of these:",
       results: [],
+      suggestions: FALLBACK_CHIPS,
     };
   }
 
@@ -133,7 +154,7 @@ function TreatmentCard({ t }: { t: Treatment }) {
   );
 }
 
-function AIBubble({ msg }: { msg: AIMsg }) {
+function AIBubble({ msg, onSuggest }: { msg: AIMsg; onSuggest?: (s: string) => void }) {
   return (
     <div className="flex gap-3 max-w-3xl">
       <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
@@ -152,6 +173,19 @@ function AIBubble({ msg }: { msg: AIMsg }) {
           <p className="text-[11px] text-amber-400/70 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2">
             ⚠ {msg.note}
           </p>
+        )}
+        {msg.suggestions && onSuggest && (
+          <div className="flex gap-2 flex-wrap">
+            {msg.suggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => onSuggest(s)}
+                className="text-xs text-white/50 border border-white/10 rounded-full px-3 py-1.5 hover:text-white/80 hover:border-white/25 transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -192,7 +226,7 @@ export default function ProtocolAI() {
     {
       role: "ai",
       intro:
-        "Ask me about any issue, treatment, or goal. I'll pull the protocol directly from the SourceStack database — no safety theater, just what the data actually says.",
+        "Ask me about any issue, treatment, or goal — I'll pull the protocol straight from the SourceStack database. Direct answers, real dosing references, sources included.",
       results: [],
     },
   ]);
@@ -224,7 +258,7 @@ export default function ProtocolAI() {
     <>
       <SEO
         title="Protocol AI — SourceStack"
-        description="Chat-based protocol recommendations powered by the SourceStack treatment database. Direct answers, real dosages, no safety theater."
+        description="Chat-based protocol recommendations powered by the SourceStack treatment database. Direct answers with dosing references and vetted sources."
         path="/ai"
       />
 
@@ -242,7 +276,7 @@ export default function ProtocolAI() {
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
           {messages.map((msg, i) =>
             msg.role === "ai"
-              ? <AIBubble key={i} msg={msg} />
+              ? <AIBubble key={i} msg={msg} onSuggest={send} />
               : <UserBubble key={i} msg={msg} />
           )}
           {typing && <TypingIndicator />}

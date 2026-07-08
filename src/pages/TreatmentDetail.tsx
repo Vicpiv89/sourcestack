@@ -7,6 +7,7 @@ import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
 import TreatmentFaceAnim from "../components/TreatmentFaceAnim";
 import SEO from "../components/SEO";
+import BackLink from "../components/BackLink";
 import { useAuth } from "../context/AuthContext";
 
 export default function TreatmentDetail() {
@@ -63,12 +64,7 @@ export default function TreatmentDetail() {
         path={`/treatments/${treatment.slug}`}
       />
       <div className="px-4 sm:px-6 pt-10 pb-24 max-w-3xl mx-auto">
-        <Link
-          to="/treatments"
-          className="text-white/30 text-sm hover:text-white/60 transition-colors mb-6 block"
-        >
-          ← Treatments
-        </Link>
+        <BackLink fallback="/treatments" fallbackLabel="Treatments" />
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={toggleStack}

@@ -200,16 +200,74 @@ const SYNONYM_MAP: Record<string, string[]> = {
   fadogia: ["fadogia agrestis", "testosterone", "lh"],
   enclomiphene: ["serm", "testosterone", "clomid", "fertility"],
   clomid: ["enclomiphene", "clomiphene", "testosterone", "serm"],
+
+  // Redness / sensitivity
+  red: ["redness", "azelaic acid", "niacinamide", "centella", "snail mucin", "skin clarity"],
+  redness: ["azelaic acid", "niacinamide", "centella", "cica", "skin barrier", "skin clarity"],
+  rosacea: ["azelaic acid", "niacinamide", "centella", "redness"],
+  flushed: ["redness", "azelaic acid", "niacinamide"],
+  flushing: ["redness", "azelaic acid", "niacinamide"],
+  irritated: ["skin barrier", "centella", "snail mucin", "niacinamide"],
+  irritation: ["skin barrier", "centella", "snail mucin", "niacinamide"],
+  inflamed: ["redness", "azelaic acid", "centella", "skin clarity"],
+  sensitive: ["skin barrier", "centella", "snail mucin", "hyaluronic acid"],
+
+  // Face areas
+  cheek: ["skin clarity", "acne", "redness", "facial puffiness", "pores"],
+  cheeks: ["skin clarity", "acne", "redness", "facial puffiness", "pores"],
+  forehead: ["skin clarity", "acne", "skin texture"],
+  nose: ["pores", "oily skin", "blackheads"],
+
+  // Hair extras
+  norwood: ["hair loss", "hairline", "finasteride", "minoxidil"],
+  "widows peak": ["hairline", "hair loss", "minoxidil"],
+  crown: ["hair loss", "thinning", "minoxidil"],
+  temples: ["hairline", "hair loss", "minoxidil"],
+  dandruff: ["ketoconazole", "seborrheic", "flaking", "zinc"],
+  flakes: ["dandruff", "ketoconazole", "seborrheic"],
+  flaky: ["dandruff", "ketoconazole"],
+  "itchy scalp": ["dandruff", "ketoconazole"],
+
+  // Aging / dryness / eyes
+  wrinkles: ["tretinoin", "collagen", "anti-aging", "fine lines"],
+  "fine lines": ["tretinoin", "collagen peptides", "hyaluronic acid"],
+  "crows feet": ["tretinoin", "caffeine eye cream", "collagen"],
+  dry: ["hyaluronic acid", "snail mucin", "skin barrier", "moisturizer"],
+  dehydrated: ["hyaluronic acid", "skin barrier"],
+  bags: ["under-eye hollows", "dark circles", "caffeine eye cream"],
+  eyebags: ["under-eye hollows", "dark circles", "caffeine eye cream"],
+  tired: ["poor sleep", "dark circles", "caffeine eye cream"],
+
+  // Energy / body
+  fatigue: ["poor sleep", "rhodiola", "vitamin d3", "cognitive performance"],
+  energy: ["cognitive performance", "rhodiola", "vitamin d3", "l-theanine"],
+  skinny: ["muscle mass", "creatine", "protein"],
+
+  // Slang / community
+  "glow up": ["skin clarity", "vitamin c", "jawline definition", "hair loss"],
+  glowup: ["skin clarity", "vitamin c", "jawline definition", "hair loss"],
+  looksmax: ["skin clarity", "jawline definition", "hair loss"],
+  looksmaxxing: ["skin clarity", "jawline definition", "hair loss"],
+  mewing: ["jawline definition", "mastic gum", "falim"],
+  "face fat": ["facial puffiness", "jawline definition", "gua sha"],
+  "moon face": ["facial puffiness", "gua sha", "sodium"],
 };
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export function expandQuery(raw: string): { direct: string; synonyms: string[] } {
   const q = raw.toLowerCase().trim();
   const exactSynonyms = SYNONYM_MAP[q] ?? [];
   const partialMatches: string[] = [];
   for (const [key, vals] of Object.entries(SYNONYM_MAP)) {
-    if (key !== q && (q.includes(key) || key.includes(q))) {
-      partialMatches.push(...vals);
-    }
+    if (key === q) continue;
+    // short keys ("red", "jaw") must match as whole words, or "tired"
+    // would trigger redness and "bulk" would trigger nothing useful
+    const inQuery = key.length >= 6
+      ? q.includes(key)
+      : new RegExp(`\\b${escapeRe(key)}\\b`).test(q);
+    const queryInKey = q.length >= 4 && key.includes(q);
+    if (inQuery || queryInKey) partialMatches.push(...vals);
   }
   return { direct: q, synonyms: [...exactSynonyms, ...partialMatches] };
 }
