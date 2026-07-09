@@ -1,90 +1,83 @@
-# SourceStack — Growth Plan
+# SourceStack — Growth Plan v2 (July 8, 2026)
 
-## The one question to answer first
+## What changed since v1
 
-Before any distribution: **what does SourceStack do that you can't just Google?**
+The old plan said: *"what does SourceStack do that you can't just Google?"* — that question is **answered and shipped**. Everything below assumes the current reality:
 
-The honest answer right now is "not much." The marketing map has the hook idea baked in: face photo → protocol. Cal AI equivalent for looksmaxxing. You built the scoring system yourself, you live this — that's a genuine edge no competitor has. If you build that before pushing distribution, conversion rate goes from "cool site" to "I need this." Without it, you're seeding traffic into a leaky bucket. Worth a quick decision: ship the hook first, or seed traffic now and iterate.
+| Asset | Status |
+|---|---|
+| Face Scan — photo → 14 measured ratios → personalized plan | ✅ LIVE. In-browser, private, free. **This is the hook. Every seed leads with it.** |
+| Payments | ✅ LIVE — US$19/mo Stripe, paid-only membership, cancel via portal |
+| Domain | ✅ sourcestack.app (real email: support@sourcestack.app) |
+| Reddit account | ✅ **13k karma — seeding can start TODAY. No warm-up needed.** |
+| Florida July 11–19 | **8 working days.** No detailing, no distractions. Most focused block of the summer. |
 
-Everything below assumes you're moving now regardless. Build the hook in parallel if possible.
+## The funnel (memorize this)
+
+**Reddit/TikTok comment → free Face Scan (wow moment, "photo never leaves your browser") → results show exactly what's fixable → "Unlock my plan" gate → $19/mo.**
+
+You are never selling a database in a comment. You're offering a free 30-second scan. The scan sells the plan.
+
+## The one funnel gap (build when you get 2 hours)
+
+Accounts are paid-only now, which is right — but it means **zero lead capture from people who scan and leave.** Add an email field on scan results: *"Email me my results + a 30-day starter protocol."* Store in a `leads` table. That list becomes your nurture engine when Resend is set up. Until then, every non-buyer evaporates.
 
 ---
 
-## Phase 1 — Foundation (Now → July 10, 5 days)
+## Phase 1 — Before the flight (July 9–10)
 
-**Goal:** Get indexed, set up tracking, lay the SEO surface before going dark for Florida.
+Half a day total. Do in this order:
 
-| Action | Time | Why |
+1. **GSC**: add `sourcestack.app` property → submit sitemap → URL-inspect + request indexing for: home, /scan, top 5 treatments, top 3 issues. (30 min)
+2. **Stripe toggles** (if not done): customer receipt emails ON, failed-payment emails ON, customer portal saved. (5 min)
+3. **support@ forwarding** at the registrar → your Gmail. Send yourself a test. (10 min)
+4. **Thread hunting** (60 min): search Reddit for live threads matching the queries below. Save 10+ into the CRM's thread tracker. Sort by: posted <30 days ago, >5 comments, no good answer yet.
+   - "minoxidil beard routine", "RU58841 source", "is [vendor] legit", "tretinoin vs adapalene", "canthal tilt", "jawline routine", "rate my stack", "where to buy BPC-157"
+5. **Warm presence** (20 min): from the 13k account, drop 2–3 genuinely helpful **no-link** comments in r/tressless / r/Peptides today. Recent activity in-sub = credibility when the linked comments start.
+6. **Analytics decision**: GSC only shows Google traffic. For Reddit/TikTok you're blind. Either add a free GoatCounter/umami script (30 min), or rely on UTM + Stripe. Recommended: add it.
+
+## Phase 2 — Florida sprint (July 11–19)
+
+**Daily block — 60–90 min, non-negotiable, tracked in the CRM:**
+
+| # | Action | Rule |
 |---|---|---|
-| Submit sitemap to Google Search Console | 30 min | Unlocks indexing data — flying blind without this |
-| Request URL indexing for top 10 pages (GSC URL Inspection) | 30 min | Speeds up crawl on treatment + issue pages |
-| Build programmatic SEO pages for "vs" queries | 1 day dev | "Tretinoin vs Adapalene", "RU58841 vs Pyrilutamide" — high intent, almost no competition ranking |
-| Build "where to buy" pages | Half day dev | "Where to buy RU58841 Canada", "Where to buy BPC-157" — these search terms are wide open |
-| Set up Resend (free tier) to capture existing Supabase signups | 2 hrs | Own the emails you've already captured. Without this they're dead data. |
-| Research: identify 5 top Reddit threads to seed | 1 hr | Find the exact threads first, don't go in blind. r/tressless, r/Peptides, r/Tretinoin |
+| 1 | 3 helpful Reddit comments in target threads | 2 with a deep link, 1 pure value (no link). Best answer in the thread or don't post. |
+| 2 | 2 TikTok/IG comment replies on looksmaxxing content | Lead with the scan: "there's a free browser tool that measures this from a photo" |
+| 3 | 1 creator DM (10k–100k followers) | 1/day beats 20 in one day — no spam flags, real conversations |
+| 4 | Reply to every response on your comments/DMs | Same day. Conversations convert; drive-bys don't. |
+| 5 | Scoreboard check: GSC clicks, scans, Stripe MRR | 2 minutes. Numbers move = fuel. |
 
-Don't start seeding yet with a Reddit account that has zero karma — get aged. If you have an old account, use it. If not, create one now and start commenting on unrelated threads to build karma this week.
+**One-time plays (spread across the week):**
 
----
+- **Day 1–2 — Mod wiki DMs**: r/tressless, r/Peptides, r/SkincareAddiction + any looksmaxxing sub with a resources wiki. One polite DM each (template in CRM). A wiki listing is permanent passive traffic — highest ROI/hour on this list.
+- **Day 3–4 — Value post #1** (r/looksmaxxing or similar): the scan, framed as show-and-tell, not promo: *"I built a free tool that measures 14 facial ratios from one photo — runs in your browser, photo never uploads. Roast it."* Builders showing work get upvotes; promoters get banned. Answer every comment.
+- **Day 6–7 — Value post #2** (r/tressless or r/Peptides): data post: *"I compared 15 vendors on price + shipping for the 10 most common compounds — here's the table."* Post the actual table in the post body; link at the end. Data posts travel.
+- **Throughout**: screenshot your own scan results for TikTok — 3-slide format: scan overlay → "what it found" → protocol. Post 2–3 during the trip. Zero-follower accounts can pull views on this format; the scan visual is inherently shareable.
 
-## Phase 2 — Seeding (Florida, July 11–19)
+**Rules of engagement:** never argue, never post the same link twice in one sub per day, never copy-paste comments (write fresh, reference the thread), disclose "I built this" when linking — Reddit rewards builders and destroys marketers.
 
-**Goal:** First real visitors, first signups, first signal that people want this.
+## Phase 3 — Back home (July 20+)
 
-**Daily (30–45 min, non-negotiable):**
-- Comment seeding: find threads asking exactly what SourceStack answers — "legit RU58841 source", "minoxidil beard protocol", "tretinoin vs adapalene" — drop a genuinely helpful reply with a deep link to the specific treatment page. Not a promo. A better answer than anything else in the thread. Do this on Reddit and TikTok replies every day. Compounds. A good Reddit comment from 2 years ago still drives clicks.
-
-**One-time (first 2 days of trip):**
-- 15–20 DMs to TikTok/YouTube creators: 10k–100k followers, looksmaxxing/hair loss/skincare. "Built a free protocol hub I think your audience would genuinely find useful — no affiliation." Some post for free because their audience thanks them.
-- Mod DMs for subreddit wiki listings: r/tressless, r/SkincareAddiction, r/Peptides. "Can we get SourceStack listed in the wiki resources?" One DM per sub. Permanent passive traffic if approved — highest ROI per hour of anything on the list.
-
-**1–2 Reddit value posts during trip:**
-- Genuine content, not promo. "I tracked 55 looksmaxxing compounds — here's what I found on vendor trust and pricing." Link to SourceStack naturally. These can hit 5k–20k visitors from a single post if they land on a subreddit front page.
-
----
-
-## Phase 3 — Amplification (Late July – August)
-
-**Goal:** First paying users. Establish the organic flywheel.
-
-- **Product Hunt launch** — proper prep: write a strong headline/description, line up 5+ people to upvote within the first hour (don't wing this). Pick a Tuesday or Wednesday. The biohacking/self-optimization crowd overlaps heavily with PH. Target Top 5 for the day — drives 2k–8k visitors and journalists browse PH for stories.
-- **Discord seeding** — join r/tressless and r/Peptides Discords. Be genuinely helpful for 1–2 weeks. Drop the link in relevant conversations. Getting pinned in a Discord resources channel is permanent.
-- **Shareable stack polish** — the URL sharing is already built. Add a clean text summary on copy: "My stack: Minoxidil · RU58841 · Tretinoin — sourcestack.io/stack?t=..." so shares look intentional. Native looksmaxxing behavior ("rate my stack") drives this for free.
-- **First email send** — to everyone who's signed up. Introduce SourceStack, show what's new, pitch Pro. Don't let captured emails go cold.
-
----
+- **Product Hunt launch** — Tuesday July 22 or Wed July 23. Prep during Florida downtime: headline ("Measure your face. Get your protocol."), 6 gallery screenshots, first-comment writeup, 5 friends primed to engage in hour 1. Target top 5 of the day.
+- **First email send** to the leads list (needs Resend + the capture field above).
+- **Discord seeding**: tressless/peptides Discords — 2 weeks of being helpful, then the link lands naturally.
+- **Double down on whatever the CRM scoreboard says worked.** Kill what didn't.
 
 ## Phase 4 — Scale (September+, back at Western)
 
-**Goal:** 10k+ monthly visitors. First $500+ MRR. Stack paid on top of proven organic.
-
-- **Blog content** — 3–5 cornerstone guides: "Complete Hair Loss Protocol", "Skincare Routine for Men: The Full Stack", "How to Source Peptides Safely." These rank for years. Can outsource at ~$50/article once you know what's converting.
-- **Cross-promotion** — looksmax.org, men's health Substacks, umax-adjacent apps. Link for link. Backlinks boost domain authority and exact audience.
-- **Reddit Ads** — only once organic comment seeding is converting. Retarget subreddit visitors. $150/mo minimum. Cheap CPMs, exact subreddit targeting.
-- **Google Search Ads** — bid on "where to buy RU58841", "tretinoin protocol", "bpc-157 protocol." Highest intent possible. $300/mo minimum to get real data. Only after organic SEO is producing data so you know what terms convert.
-- **Affiliate links** — wire in once you're at 1k+ monthly visitors. iHerb, Amazon Associates, BulkSupplements, Nootropics Depot. $200–800/mo passive at that traffic level. Not urgent before traffic exists — that's why it's Phase 4.
-- **Meta Ads** — last. You know the platform from Diamond Detail. Only once the quiz → email capture → upgrade funnel is proven. Interest targeting: men 18–30, fitness/skincare/hair loss/biohacking.
+Unchanged from v1, in order: cornerstone blog guides → backlink swaps → affiliate links (once 1k+ visitors/mo) → Reddit Ads → Google Search Ads on "where to buy X" → Meta last. Paid only goes on top of proven organic.
 
 ---
 
-## What to track (scoreboard)
+## Scoreboard (July targets)
 
-| Metric | Tool | Target |
+| Metric | Where | Target by Aug 1 |
 |---|---|---|
-| Monthly organic visitors | Google Search Console | 0 → 500 (Month 1) → 2k (Month 3) |
-| Signups | Supabase dashboard | Track weekly |
-| Pro conversions | Stripe | First by end of August |
-| Comment seeding clicks | UTM params on deep links | Directional signal on which threads convert |
-| Email list size | Resend/Mailchimp | Every signup captured |
+| Site visitors | GoatCounter/GSC | 1,500 |
+| Scans run | analytics event | 400 |
+| Leads captured | Supabase `leads` | 150 |
+| **Paying subscribers** | **Stripe** | **10 = $190 MRR** |
+| Wiki listings | manual | 1+ |
 
-Add UTM params to all seeded links (`?utm_source=reddit&utm_medium=comment&utm_campaign=seeding`) so you can see in your analytics exactly which threads are driving signups.
-
----
-
-## Priority order (right now)
-
-1. GSC sitemap submission + URL indexing — 30 min, unlock the data
-2. Programmatic SEO pages — 1.5 days dev, highest long-term ROI per hour of dev work
-3. Reddit account karma building — start today, needs time before seeding
-4. Resend setup — capture the emails you're already getting
-5. Everything in Phase 2 when you land in Florida
+First paying stranger is the only milestone that matters. Everything above exists to produce it. UTM every seeded link: `?utm_source=reddit&utm_medium=comment&utm_campaign=florida`.

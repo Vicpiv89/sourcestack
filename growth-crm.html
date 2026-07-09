@@ -3,884 +3,272 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SourceStack Growth CRM</title>
+<title>SourceStack — Growth CRM v2</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0a;--s1:#111;--s2:#161616;--s3:#1c1c1c;
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);
-  --t:rgba(255,255,255,.85);--m:rgba(255,255,255,.42);--d:rgba(255,255,255,.2);
-  --g:#34d399;--b:#60a5fa;--a:#fbbf24;--r:#f87171;--p:#a78bfa;
-  --nav-h:56px;
-}
-html{background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;scroll-behavior:smooth}
-body{margin:0;padding:0}
-
-/* ---- NAV ---- */
-#nav{
-  position:fixed;top:0;left:0;right:0;height:var(--nav-h);
-  background:rgba(10,10,10,.92);border-bottom:1px solid var(--b1);
-  backdrop-filter:blur(12px);z-index:100;
-  display:flex;align-items:center;gap:0;padding:0 20px;
-}
-.nav-logo{font-size:13px;font-weight:700;color:white;letter-spacing:-.02em;margin-right:20px;white-space:nowrap}
-.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
-.nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{
-  font-size:12px;padding:6px 12px;border-radius:7px;cursor:pointer;
-  color:var(--m);white-space:nowrap;transition:all .15s;border:none;background:none;
-}
-.nav-tab:hover{color:white;background:rgba(255,255,255,.06)}
-.nav-tab.active{color:white;background:rgba(255,255,255,.1)}
-.nav-right{display:flex;align-items:center;gap:8px;margin-left:12px;flex-shrink:0}
-.nav-prog{font-size:11px;color:var(--d);white-space:nowrap}
-.nav-prog strong{color:var(--g)}
-#nav-date{font-size:11px;color:var(--d);white-space:nowrap}
-
-/* ---- LAYOUT ---- */
-#page{padding-top:calc(var(--nav-h) + 28px);max-width:820px;margin:0 auto;padding-left:20px;padding-right:20px;padding-bottom:80px}
-
-/* ---- SCOREBOARD ---- */
-#scoreboard{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
-  margin-bottom:28px;
-}
-.stat{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:12px 14px;text-align:center}
-.stat label{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--d);display:block;margin-bottom:5px}
-.stat-val{font-size:22px;font-weight:700;color:white;outline:none;display:block;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.prog-wrap{background:var(--s3);border-radius:999px;height:4px;overflow:hidden;margin-top:4px}
-.prog-fill{height:100%;background:var(--g);border-radius:999px;transition:width .35s;width:0%}
-
-/* ---- SECTION ---- */
-.section{margin-bottom:40px;scroll-margin-top:calc(var(--nav-h) + 20px)}
-.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--b1)}
-.sec-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.sec-hdr h2{font-size:15px;font-weight:700;color:white;letter-spacing:-.02em;flex:1}
-.sec-tag{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
-.sec-desc{font-size:13px;color:var(--m);line-height:1.7;margin-bottom:14px}
-
-/* ---- DAILY ROUTINE ---- */
-.daily-box{background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.14);border-radius:11px;padding:16px 18px;margin-bottom:8px}
-.daily-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.daily-hdr h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:rgba(251,191,36,.7)}
-.daily-reset-label{font-size:11px;color:var(--d)}
-.daily-row{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.daily-row:last-child{border-bottom:none;padding-bottom:0}
-.daily-check{
-  width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(255,255,255,.18);
-  flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .15s;background:transparent;
-}
-.daily-check.done{background:var(--g);border-color:var(--g)}
-.daily-check .ck{display:none}
-.daily-check.done .ck{display:block}
-.daily-time{font-size:11px;font-weight:700;color:var(--a);width:55px;flex-shrink:0;padding-top:3px}
-.daily-content{flex:1}
-.daily-title{font-size:13px;font-weight:600;color:white;margin-bottom:3px;line-height:1.35}
-.daily-row.done-row .daily-title{color:var(--m);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.18)}
-.daily-sub{font-size:12px;color:var(--m);line-height:1.6}
-
-/* ---- CARD ---- */
-.card{background:var(--s1);border:1px solid var(--b1);border-radius:11px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
-.card:hover{border-color:var(--b2)}
-.card.done{border-color:rgba(52,211,153,.22)}
-.card-top{display:flex;align-items:center;gap:11px;padding:13px 15px;cursor:pointer;user-select:none}
-.check{
-  width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(255,255,255,.18);
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  transition:all .15s;cursor:pointer;background:transparent;
-}
-.card.done .check{background:var(--g);border-color:var(--g)}
-.ck{display:none}
-.card.done .ck{display:block}
-.card-num{font-size:11px;color:var(--d);font-weight:600;width:22px;flex-shrink:0}
-.card-title{font-size:13px;font-weight:600;color:white;flex:1;line-height:1.35}
-.card.done .card-title{color:var(--m);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.18)}
-.chips{display:flex;gap:5px;flex-shrink:0}
-.chip{font-size:10px;padding:2px 7px;border-radius:999px;border:1px solid;white-space:nowrap}
-.chip-t{color:var(--b);border-color:rgba(96,165,250,.22);background:rgba(96,165,250,.05)}
-.chip-d{color:var(--a);border-color:rgba(251,191,36,.22);background:rgba(251,191,36,.05)}
-.chip-w{color:var(--p);border-color:rgba(167,139,250,.22);background:rgba(167,139,250,.05)}
-.chip-0{color:var(--g);border-color:rgba(52,211,153,.22);background:rgba(52,211,153,.05)}
-.chevron{color:var(--d);font-size:10px;transition:transform .2s;flex-shrink:0}
-.card.open .chevron{transform:rotate(180deg)}
-
-/* ---- CARD BODY ---- */
-.card-body{display:none;padding:0 15px 15px;border-top:1px solid var(--b1)}
-.card.open .card-body{display:block}
-.body-inner{padding-top:13px;display:flex;flex-direction:column;gap:11px}
-.why{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7}
-
-.steps-wrap{background:var(--s2);border-radius:9px;padding:14px 16px}
-.steps-wrap h4{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--d);margin-bottom:11px}
-.steps-list{list-style:none;counter-reset:sc;display:flex;flex-direction:column;gap:8px}
-.steps-list li{font-size:12.5px;color:rgba(255,255,255,.58);padding-left:22px;position:relative;line-height:1.65;counter-increment:sc}
-.steps-list li::before{content:counter(sc);position:absolute;left:0;color:var(--g);font-size:10px;font-weight:700;top:3px;width:14px;text-align:center}
-.steps-list li strong{color:rgba(255,255,255,.82)}
-.steps-list li code{background:rgba(255,255,255,.07);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:11px;color:rgba(255,255,255,.55)}
-
-.tmpl{background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.1);border-radius:9px;padding:14px 16px}
-.tmpl h4{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:rgba(96,165,250,.6);margin-bottom:10px}
-.tmpl pre{font-size:12px;color:rgba(255,255,255,.45);white-space:pre-wrap;font-family:inherit;line-height:1.7}
-
-.targets{background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.12);border-radius:9px;padding:14px 16px}
-.targets h4{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:rgba(167,139,250,.6);margin-bottom:10px}
-.targets ul{list-style:none;display:flex;flex-direction:column;gap:5px}
-.targets ul li{font-size:12px;color:rgba(255,255,255,.5);padding-left:16px;position:relative;line-height:1.5}
-.targets ul li::before{content:'→';position:absolute;left:0;color:var(--p);font-size:10px;top:1px}
-
-.warn{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:9px;padding:12px 14px;font-size:12.5px;color:rgba(251,191,36,.7);line-height:1.65}
-.result{background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.12);border-radius:9px;padding:12px 14px;font-size:12.5px;color:rgba(52,211,153,.75);line-height:1.65}
-
-@media(max-width:540px){
-  #scoreboard{grid-template-columns:repeat(2,1fr)}
-  .chips{display:none}
-  .nav-right{display:none}
-}
+  :root{--bg:#111;--card:#191919;--card2:#1f1f1f;--border:rgba(255,255,255,0.09);--text:#e5e5e5;--muted:rgba(255,255,255,0.38);--faint:rgba(255,255,255,0.22);--green:#34d399;--amber:#fbbf24;--red:#f87171}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;padding-bottom:80px}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px}
+  header{padding:36px 0 8px}
+  h1{font-size:22px;font-weight:700;letter-spacing:-0.02em}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .phase-banner{margin-top:14px;padding:10px 16px;border-radius:12px;border:1px solid rgba(52,211,153,0.25);background:rgba(52,211,153,0.06);font-size:13px;color:var(--green);font-weight:600}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:34px 0 12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px}
+  .row{display:flex;align-items:flex-start;gap:12px;padding:9px 4px;border-radius:8px;cursor:pointer;user-select:none}
+  .row:hover{background:rgba(255,255,255,0.02)}
+  .box{width:19px;height:19px;border:1.5px solid rgba(255,255,255,0.25);border-radius:6px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;transition:all .15s}
+  .row.done .box{background:var(--green);border-color:var(--green)}
+  .row.done .box::after{content:"✓";font-weight:700}
+  .row.done .t{text-decoration:line-through;color:var(--faint)}
+  .t{font-size:14px}
+  .d{font-size:12px;color:var(--muted);margin-top:1px}
+  .row.done .d{color:rgba(255,255,255,0.14)}
+  /* scoreboard */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+  .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px}
+  .stat input{width:100%;background:transparent;border:none;outline:none;color:#fff;font-size:24px;font-weight:700;font-family:inherit}
+  .stat .target{font-size:11px;color:var(--faint);margin-top:2px}
+  .bar{height:3px;background:rgba(255,255,255,0.08);border-radius:99px;margin-top:8px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green);border-radius:99px;transition:width .3s}
+  /* threads */
+  .thread{display:flex;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .thread:last-child{border-bottom:none}
+  .thread a{color:var(--text);font-size:13px;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .thread a:hover{color:var(--green)}
+  .thread select{background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:11px;padding:4px 6px;outline:none}
+  .thread .x{color:var(--faint);cursor:pointer;font-size:13px;padding:2px 6px}
+  .thread .x:hover{color:var(--red)}
+  .addbar{display:flex;gap:8px;margin-top:10px}
+  .addbar input{flex:1;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:#fff;font-size:13px;outline:none}
+  .addbar input::placeholder{color:var(--faint)}
+  .addbar button{background:#fff;color:#000;border:none;border-radius:10px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer}
+  /* templates */
+  .tpl{position:relative}
+  .tpl pre{white-space:pre-wrap;font-family:inherit;font-size:13px;color:rgba(255,255,255,0.65);background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px}
+  .tpl .name{font-size:13px;font-weight:600;color:#fff}
+  .tpl .use{font-size:11px;color:var(--muted);margin-left:8px}
+  .copy{position:absolute;top:16px;right:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:var(--muted);font-size:11px;border-radius:8px;padding:4px 10px;cursor:pointer}
+  .copy:hover{color:#fff}
+  .note{font-size:12px;color:var(--muted);background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.15);border-radius:10px;padding:10px 14px;margin-bottom:10px}
+  .progress-pill{font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:99px;padding:3px 10px;margin-left:8px}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <h1>SourceStack Growth CRM <span class="progress-pill" id="phase-days"></span></h1>
+    <p class="sub">The funnel: comment → free Face Scan → results → "Unlock my plan" → $19/mo. You're never selling the database — the scan sells the plan.</p>
+    <div class="phase-banner" id="banner"></div>
+  </header>
 
-<!-- NAV -->
-<nav id="nav">
-  <div class="nav-logo">SourceStack CRM</div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="scrollTo('s-daily')">📅 Daily</button>
-    <button class="nav-tab" onclick="scrollTo('s-firstusers')">🎯 First Users</button>
-    <button class="nav-tab" onclick="scrollTo('s-setup')">⚙️ Setup</button>
-    <button class="nav-tab" onclick="scrollTo('s-amplify')">📣 Amplify</button>
-    <button class="nav-tab" onclick="scrollTo('s-scale')">🚀 Scale</button>
+  <h2>Scoreboard — update daily, targets = Aug 1</h2>
+  <div class="stats">
+    <div class="stat"><div class="k">Visitors</div><input data-k="v" placeholder="0"/><div class="target">target 1,500</div><div class="bar"><i id="b-v"></i></div></div>
+    <div class="stat"><div class="k">Scans run</div><input data-k="s" placeholder="0"/><div class="target">target 400</div><div class="bar"><i id="b-s"></i></div></div>
+    <div class="stat"><div class="k">Leads</div><input data-k="l" placeholder="0"/><div class="target">target 150</div><div class="bar"><i id="b-l"></i></div></div>
+    <div class="stat"><div class="k">Subscribers</div><input data-k="m" placeholder="0"/><div class="target">target 10 = $190 MRR</div><div class="bar"><i id="b-m"></i></div></div>
   </div>
-  <div class="nav-right">
-    <div id="nav-date"></div>
-    <div class="nav-prog">Steps: <strong id="nav-prog-label">0/20</strong></div>
-  </div>
-</nav>
 
-<div id="page">
+  <h2>Daily block — 60–90 min, resets every midnight</h2>
+  <div class="card" id="daily"></div>
 
-  <!-- SCOREBOARD -->
-  <div id="scoreboard">
-    <div class="stat">
-      <label>Visitors / mo</label>
-      <span class="stat-val" contenteditable="true" data-k="v" spellcheck="false">0</span>
-      <div class="prog-wrap"><div class="prog-fill" id="pb-v"></div></div>
-    </div>
-    <div class="stat">
-      <label>Total Signups</label>
-      <span class="stat-val" contenteditable="true" data-k="s" spellcheck="false">0</span>
-      <div class="prog-wrap"><div class="prog-fill" id="pb-s"></div></div>
-    </div>
-    <div class="stat">
-      <label>Pro Users</label>
-      <span class="stat-val" contenteditable="true" data-k="p" spellcheck="false">0</span>
-      <div class="prog-wrap"><div class="prog-fill" id="pb-p"></div></div>
-    </div>
-    <div class="stat">
-      <label>MRR</label>
-      <span class="stat-val" contenteditable="true" data-k="m" spellcheck="false">$0</span>
-      <div class="prog-wrap"><div class="prog-fill" id="pb-m"></div></div>
+  <h2>Pre-Florida checklist (July 9–10)</h2>
+  <div class="card" id="prep"></div>
+
+  <h2>One-time plays (Florida, July 11–19)</h2>
+  <div class="card" id="plays"></div>
+
+  <h2>Thread tracker — save targets here, work through them daily</h2>
+  <div class="card">
+    <div class="note">Good target = posted &lt;30 days ago · &gt;5 comments · no good answer yet. Queries: "minoxidil beard routine" · "RU58841 source" · "is [vendor] legit" · "tretinoin vs adapalene" · "jawline routine" · "rate my stack"</div>
+    <div id="threads"></div>
+    <div class="addbar">
+      <input id="turl" placeholder="Paste Reddit/TikTok thread URL…"/>
+      <input id="tnote" placeholder="Note (what they're asking)" style="max-width:220px"/>
+      <button onclick="addThread()">Add</button>
     </div>
   </div>
 
-  <!-- ===== DAILY ROUTINE ===== -->
-  <div class="section" id="s-daily">
-    <div class="sec-hdr">
-      <div class="sec-dot" style="background:#fbbf24"></div>
-      <h2>Daily Routine</h2>
-      <div class="sec-tag" style="color:#fbbf24;border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.06)">Resets every day at midnight</div>
-    </div>
-    <p class="sec-desc">45 minutes every day. These reset automatically at midnight so you get a fresh checklist each morning. The comment seeding compounds — every day you skip is a missed permanent link.</p>
+  <h2>Templates — starting points, always rewrite to fit the thread</h2>
+  <div class="note">Rules: best answer in the thread or don't post · disclose "I built this" · never paste the same comment twice · UTM every link.</div>
+  <div class="card tpl">
+    <span class="name">Comment — scan link</span><span class="use">when they ask about ratios/jawline/what to fix</span>
+    <button class="copy" onclick="cp(this)">Copy</button>
+    <pre>[2–3 sentences actually answering their question with specifics first.]
 
-    <div class="daily-box">
-      <div class="daily-hdr">
-        <h3>Today's checklist</h3>
-        <div class="daily-reset-label" id="daily-reset-label">Resets tomorrow</div>
-      </div>
+I built a free tool for exactly this — measures 14 facial ratios from one photo, runs in your browser so the photo never uploads, then maps what it finds to protocols: https://sourcestack.app/scan?utm_source=reddit&utm_medium=comment&utm_campaign=florida
 
-      <div class="daily-row" id="dr-1">
-        <div class="daily-check" id="dc-1" onclick="toggleDaily('dc-1','dr-1')"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="daily-time">20 min</div>
-        <div class="daily-content">
-          <div class="daily-title">Reddit live hunting — 3 comments minimum</div>
-          <div class="daily-sub">Sort r/tressless, r/Peptides, r/Tretinoin, r/looksmax by New. Find posts from the last 24 hrs asking about sourcing or protocols. Reply with a genuine helpful answer + deep treatment page link.</div>
-        </div>
-      </div>
-
-      <div class="daily-row" id="dr-2">
-        <div class="daily-check" id="dc-2" onclick="toggleDaily('dc-2','dr-2')"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="daily-time">10 min</div>
-        <div class="daily-content">
-          <div class="daily-title">Reddit DMs — 5 people with no good answers</div>
-          <div class="daily-sub">Find posts from the last week that asked a sourcing/protocol question and got weak replies. DM those users personally with 2–3 sentences and a direct treatment page link.</div>
-        </div>
-      </div>
-
-      <div class="daily-row" id="dr-3">
-        <div class="daily-check" id="dc-3" onclick="toggleDaily('dc-3','dr-3')"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="daily-time">10 min</div>
-        <div class="daily-content">
-          <div class="daily-title">TikTok reply bombing — 5 replies</div>
-          <div class="daily-sub">Search 2 keywords (rotate: "ru58841 results", "minoxidil beard", "tretinoin routine men", "hair loss treatment"). Find videos 50k+ views. Reply to comments in the section with your deep link.</div>
-        </div>
-      </div>
-
-      <div class="daily-row" id="dr-4">
-        <div class="daily-check" id="dc-4" onclick="toggleDaily('dc-4','dr-4')"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="daily-time">5 min</div>
-        <div class="daily-content">
-          <div class="daily-title">Check numbers — update scoreboard above</div>
-          <div class="daily-sub">Open Supabase (signups), Stripe (Pro/MRR), Google Analytics (visitors). Update the scoreboard at the top. The scoreboard is your momentum signal.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- WEEKLY -->
-    <div class="daily-box" style="background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.14)">
-      <div class="daily-hdr">
-        <h3 style="color:rgba(167,139,250,.7)">Weekly — pick 2 days</h3>
-        <div class="daily-reset-label" id="weekly-reset-label">Resets Monday</div>
-      </div>
-
-      <div class="daily-row" id="wr-1">
-        <div class="daily-check" id="wc-1" onclick="toggleWeekly('wc-1','wr-1')" style="border-color:rgba(167,139,250,.3)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="daily-time" style="color:var(--p)">20 min</div>
-        <div class="daily-content">
-          <div class="daily-title">Discord check-in — answer questions, drop link where relevant</div>
-          <div class="daily-sub">Open r/tressless Discord, r/Peptides Discord, looksmax.org Discord. Scroll recent activity. Answer any sourcing/protocol questions. If you've been active 1+ week, drop the SourceStack link naturally.</div>
-        </div>
-      </div>
-
-      <div class="daily-row" id="wr-2">
-        <div class="daily-check" id="wc-2" onclick="toggleWeekly('wc-2','wr-2')" style="border-color:rgba(167,139,250,.3)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="daily-time" style="color:var(--p)">15 min</div>
-        <div class="daily-content">
-          <div class="daily-title">YouTube comment drops — 5 comments on review videos</div>
-          <div class="daily-sub">Search "RU58841 results", "minoxidil beard results", "tretinoin before after". Find 50k+ view videos. Reply to comments asking about sourcing. Drop deep treatment page links.</div>
-        </div>
-      </div>
-    </div>
+Full disclosure: my project. The scan part is free.</pre>
   </div>
+  <div class="card tpl">
+    <span class="name">Comment — treatment deep link</span><span class="use">when they ask about a specific compound</span>
+    <button class="copy" onclick="cp(this)">Copy</button>
+    <pre>[Answer with the actual protocol basics — dose, timing, one warning.]
 
-  <!-- ===== FIRST USERS ===== -->
-  <div class="section" id="s-firstusers">
-    <div class="sec-hdr">
-      <div class="sec-dot" style="background:#f87171"></div>
-      <h2>Get Your First Users</h2>
-      <div class="sec-tag" style="color:#f87171;border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.06)">One-time blitzes</div>
-    </div>
-    <p class="sec-desc">These are one-time campaigns to run alongside the daily routine. Do them once, they pay off for weeks.</p>
-
-    <!-- CARD 1 -->
-    <div class="card" data-step="1">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">01</span>
-        <span class="card-title">DM 20 micro-influencers — ask for a free mention</span>
-        <div class="chips"><span class="chip chip-t">2 hrs · one-time</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">One TikTok creator with 50k followers in looksmaxxing who posts about SourceStack can drive more signups in 48 hours than a month of comment seeding. Offer a free Pro account — it converts way more than a cold ask.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>TikTok search: <strong>"looksmaxxing routine"</strong>, <strong>"ru58841 results"</strong>, <strong>"minoxidil beard"</strong>, <strong>"hair loss stack"</strong>. Find 20 creators with 10k–300k followers actively posting (last post within 30 days).</li>
-            <li>For each: note username, follower count, and their most relevant video. You'll reference it in the DM.</li>
-            <li>Send all 20 DMs in one session. <strong>Personalize the first line every time</strong> — reference a specific video. Copy-paste DMs get ignored.</li>
-            <li>Offer a free Pro account so they can actually use it before mentioning it. This closes way more deals.</li>
-            <li>If someone wants payment: for creators under 100k in this niche, $50–100 for a mention is reasonable. One post from a 50k-follower niche account can drive 500+ signups.</li>
-            <li>Track in Notes: username → DM sent → response → outcome. Follow up once after 1 week.</li>
-          </ol>
-        </div>
-        <div class="tmpl">
-          <h4>DM template — personalize first line every time</h4>
-          <pre>Hey [name] — [specific thing about a specific video, e.g. "your RU58841 6-month update was the most honest breakdown I've seen on this"].
-
-I built a free looksmaxxing protocol database — 55 treatments, vetted vendor directory with trust scores, stack builder. No affiliate nonsense, just straight info.
-
-sourcestack.onrender.com
-
-Thought your audience would genuinely find it useful. Happy to give you a free Pro account to check it out first. No strings.</pre>
-        </div>
-        <div class="result">Expected: 3–5 replies from 20 DMs, 1–2 posts. One post from a relevant creator = 500–2,000 signups in 48 hours.</div>
-      </div></div>
-    </div>
-
-    <!-- CARD 2 -->
-    <div class="card" data-step="2">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">02</span>
-        <span class="card-title">Post 2 Reddit value posts — genuine content, link at the end</span>
-        <div class="chips"><span class="chip chip-t">2 hrs each · 2 total</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">A genuinely useful Reddit post can hit the subreddit front page and drive 5,000–20,000 visitors in 48 hours. The post must stand alone — SourceStack is mentioned at the end, not the reason for the post.</p>
-        <div class="steps-wrap">
-          <h4>Post 1 — r/tressless</h4>
-          <ol class="steps-list">
-            <li>Title: <strong>"I tracked and vetted 14 looksmaxxing vendors — here's what I found on trust and sourcing"</strong></li>
-            <li>Content: write from your real experience building SourceStack. Which categories have worst sourcing risk. What you look for in a vendor. 3–4 consistently trusted vendors and why. Be specific with names and numbers.</li>
-            <li>Include a summary table in the post body — valuable even without the link. End with: <em>"Turned this into a full searchable database at sourcestack.onrender.com — full vendor breakdown, protocols, stack builder."</em></li>
-            <li>Post Tuesday–Thursday, 9am–12pm EST for peak traffic.</li>
-          </ol>
-        </div>
-        <div class="steps-wrap">
-          <h4>Post 2 — r/Peptides (4–5 days after Post 1)</h4>
-          <ol class="steps-list">
-            <li>Title: <strong>"Complete peptide sourcing guide 2026 — vendor trust scores, pricing, what to actually check"</strong></li>
-            <li>Content: peptide-specific. COA verification, pharmaceutical vs research grade, pricing comparison across your trusted vendors, red flags to look for. Real numbers.</li>
-            <li>Never post both on the same day. Space them out.</li>
-          </ol>
-        </div>
-        <div class="warn">Do not post "I built a site, check it out." That gets downvoted and removed. The post has to be valuable on its own. SourceStack is mentioned at the end as a natural follow-up.</div>
-        <div class="result">Front page hit: 5k–20k visitors in 48 hours. Average post: 500–2k. Also builds account credibility for future comments.</div>
-      </div></div>
-    </div>
-
-    <!-- CARD 3 -->
-    <div class="card" data-step="3">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">03</span>
-        <span class="card-title">Subreddit wiki listings — DM 4 mods, get pinned permanently</span>
-        <div class="chips"><span class="chip chip-t">1 hr · one-time</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">r/tressless has 300k members. Every new member reads the wiki. Getting listed there is permanent passive traffic forever from your exact audience. One DM. Highest ROI per hour on this entire list.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Go to each subreddit → About → Moderators. Click the first mod listed → Send Message or ModMail.</li>
-            <li>Send the template below. Keep it short — mods are volunteers.</li>
-            <li>Target: <code>r/tressless</code>, <code>r/SkincareAddiction</code>, <code>r/Peptides</code>, <code>r/looksmax</code>.</li>
-            <li>Wait 1 week. One follow-up is fine. Don't pester.</li>
-          </ol>
-        </div>
-        <div class="tmpl">
-          <h4>Mod DM template</h4>
-          <pre>Hey — I built a free looksmaxxing protocol database called SourceStack (sourcestack.onrender.com). Vetted vendor directory with trust scores, full treatment protocols, stack builder for compounds like RU58841, Minoxidil, peptides, Tretinoin, etc.
-
-A lot of questions in this sub are about sourcing and protocols. Would it be appropriate to add to the sub wiki or resources? Happy to answer questions about how vendor vetting works.</pre>
-        </div>
-        <div class="result">One approved listing = 200–500 steady monthly visitors forever. Four listings = up to 2,000 passive monthly visitors. Zero ongoing effort.</div>
-      </div></div>
-    </div>
-
-    <!-- CARD 4 -->
-    <div class="card" data-step="4">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">04</span>
-        <span class="card-title">Join 3 Discord servers — warm up, then drop link in resources</span>
-        <div class="chips"><span class="chip chip-w">Weekly · 3 weeks</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Discord moves in real time. These users are the most serious practitioners — highest conversion rate of any channel. Getting pinned in a #resources channel is permanent passive traffic.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Find and join: <strong>r/tressless Discord</strong> (linked in sub sidebar), <strong>r/Peptides Discord</strong>, <strong>looksmax.org Discord</strong>.</li>
-            <li>Week 1: don't mention SourceStack. Answer questions. Be genuinely helpful. Get known.</li>
-            <li>Week 2+: when someone asks a sourcing or protocol question, reply with your answer + deep link naturally: <em>"Sourcestack has a full vendor list for this — [link]"</em></li>
-            <li>Look for a <strong>#resources</strong> or <strong>#tools</strong> channel. Post SourceStack there once you've been active for a week.</li>
-          </ol>
-        </div>
-        <div class="result">Small numbers, very high quality. Discord users who find SourceStack through a helpful reply have the highest conversion-to-Pro rate.</div>
-      </div></div>
-    </div>
+There's a full protocol writeup with sourcing notes here if you want the details: https://sourcestack.app/treatments/[SLUG]?utm_source=reddit&utm_medium=comment&utm_campaign=florida (my site, fwiw)</pre>
   </div>
-
-  <!-- ===== SETUP ===== -->
-  <div class="section" id="s-setup">
-    <div class="sec-hdr">
-      <div class="sec-dot" style="background:#60a5fa"></div>
-      <h2>Setup</h2>
-      <div class="sec-tag" style="color:#60a5fa;border-color:rgba(96,165,250,.25);background:rgba(96,165,250,.06)">Do before Florida · July 6–10</div>
-    </div>
-    <p class="sec-desc">Infrastructure that pays off permanently. Do all of this before you leave.</p>
-
-    <!-- CARD 5 -->
-    <div class="card" data-step="5">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">05</span>
-        <span class="card-title">Google Search Console — submit sitemap + request indexing for top 10 pages</span>
-        <div class="chips"><span class="chip chip-t">1 hr · one-time</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Without GSC you have no data on what people search to find you. Takes 1 hour, unlocks everything.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Go to <code>search.google.com/search-console</code> → Add Property → URL prefix → <code>https://sourcestack.onrender.com</code>.</li>
-            <li>Verify via HTML tag. Copy tag → paste into <code>&lt;head&gt;</code> of <code>index.html</code> → deploy to Render → Verify in GSC.</li>
-            <li>Sitemaps → Submit <code>sitemap.xml</code>.</li>
-            <li>URL Inspection tool → paste each URL → click <strong>Request Indexing</strong>: homepage, <code>/treatments/minoxidil</code>, <code>/treatments/tretinoin</code>, <code>/treatments/ru58841</code>, <code>/treatments/finasteride</code>, <code>/treatments/bpc-157</code>, <code>/issues/hair-loss</code>, <code>/issues/acne</code>, <code>/stack</code>, <code>/quiz</code>.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 6 -->
-    <div class="card" data-step="6">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">06</span>
-        <span class="card-title">Build "vs" comparison pages + "where to buy" pages</span>
-        <div class="chips"><span class="chip chip-t">1.5 days dev</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">"RU58841 vs Pyrilutamide" and "where to buy RU58841 Canada" get thousands of monthly searches with almost no quality results ranking. Your data already exists — just needs the right URLs.</p>
-        <div class="steps-wrap">
-          <h4>vs pages — <code>/compare/ru58841-vs-pyrilutamide</code></h4>
-          <ol class="steps-list">
-            <li>Add route <code>/compare/:slug1-vs-:slug2</code>. Reads slugs from URL, renders the existing Compare component.</li>
-            <li>Unique title + meta per page via react-helmet-async. Title: <em>"RU58841 vs Pyrilutamide — Protocol & Vendor Comparison | SourceStack"</em>.</li>
-            <li>Build 8 first: ru58841-vs-pyrilutamide, tretinoin-vs-adapalene, minoxidil-vs-finasteride, dutasteride-vs-finasteride, bpc-157-vs-tb-500, ashwagandha-vs-tongkat-ali, glycolic-acid-vs-salicylic-acid, rosemary-oil-vs-minoxidil.</li>
-            <li>Add all to sitemap.xml.</li>
-          </ol>
-        </div>
-        <div class="steps-wrap">
-          <h4>where to buy pages — <code>/buy/ru58841</code></h4>
-          <ol class="steps-list">
-            <li>Add route <code>/buy/:treatmentSlug</code>. Renders: H1 = "Where to Buy [Treatment]", vendor cards, brief treatment intro with link to full treatment page.</li>
-            <li>Title: <em>"Where to Buy [Treatment] in Canada (2026) — SourceStack"</em>.</li>
-            <li>Build 6 first: ru58841, bpc-157, tretinoin, minoxidil, finasteride, tb-500.</li>
-            <li>Add to sitemap. Submit in GSC.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 7 -->
-    <div class="card" data-step="7">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">07</span>
-        <span class="card-title">Resend + 3-email welcome sequence</span>
-        <div class="chips"><span class="chip chip-t">2–3 hrs</span><span class="chip chip-0">Free to 3k/mo</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Every signup gives you their email. Right now those emails sit in Supabase doing nothing. A 3-email sequence converts signups into Pro on autopilot.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Sign up at <code>resend.com</code> → API key → add to Render as <code>RESEND_API_KEY</code>.</li>
-            <li>Supabase → Database → Webhooks → webhook on INSERT to <code>auth.users</code> → POST to new endpoint <code>/api/email/welcome</code> in <code>api/src/index.ts</code>.</li>
-            <li><strong>Email 1 (immediate):</strong> welcome + links to stack, quiz, treatments. CTA: upgrade.</li>
-            <li><strong>Email 2 (day 3):</strong> "The 3 treatments people source wrong most often." Vendor breakdown teaser. CTA: Pro.</li>
-            <li><strong>Email 3 (day 7):</strong> "What Pro unlocks." Full Pro feature list. Direct upgrade link.</li>
-            <li>Export existing Supabase users → send Email 1 as broadcast right now. Don't let them go cold.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 8 -->
-    <div class="card" data-step="8">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">08</span>
-        <span class="card-title">Reddit account karma build + UTM tracking setup</span>
-        <div class="chips"><span class="chip chip-d">20 min/day till July 10</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Reddit shadowbans fresh accounts that drop links. Need 100+ karma before seeding. UTM params tell you which channels convert.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Use an old Reddit account if you have one. If not, create one today.</li>
-            <li>20 min/day: comment on r/AskReddit, r/worldnews, r/nfl — unrelated to SourceStack. 3–5 genuine comments/day. Build to 100+ karma.</li>
-            <li>Add UTM to every link: <code>?utm_source=reddit&utm_medium=comment&utm_campaign=seeding</code> for Reddit, <code>?utm_source=tiktok&utm_medium=reply&utm_campaign=seeding</code> for TikTok.</li>
-            <li>Add GA4 snippet to <code>index.html</code> if not already done — 10 min. Without this, UTMs track nothing.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
+  <div class="card tpl">
+    <span class="name">Creator DM</span><span class="use">1/day, 10k–100k followers, looksmax/hair/skin niche</span>
+    <button class="copy" onclick="cp(this)">Copy</button>
+    <pre>Yo [name] — your [specific video/post] was solid. I built a free browser tool that measures 14 facial ratios from one photo (fully private, nothing uploads) and turns it into a protocol. Feels like something your audience would actually run themselves — want a look? No strings, just think it fits your content: https://sourcestack.app/scan</pre>
   </div>
-
-  <!-- ===== AMPLIFY ===== -->
-  <div class="section" id="s-amplify">
-    <div class="sec-hdr">
-      <div class="sec-dot" style="background:#a78bfa"></div>
-      <h2>Amplify</h2>
-      <div class="sec-tag" style="color:#a78bfa;border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.06)">Late July – August</div>
-    </div>
-    <p class="sec-desc">Run these after Florida once you have real signups coming in from seeding.</p>
-
-    <!-- CARD 9 -->
-    <div class="card" data-step="9">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">09</span>
-        <span class="card-title">Product Hunt launch</span>
-        <div class="chips"><span class="chip chip-t">3 hrs prep + launch day</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">One solid PH launch on a Tuesday = 2k–8k visitors on launch day. Permanent listing. Journalists browse PH for stories.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Create account at <code>producthunt.com</code>.</li>
-            <li>Tagline (under 60 chars): <em>"The looksmaxxing protocol database"</em>. Description: lead with problem (bad TikTok info, safety-limited AI), then solution, then what's different.</li>
-            <li>4–5 screenshots: homepage face zone map, treatment detail page, stack builder, quiz results.</li>
-            <li><strong>Line up 5+ people to upvote within the first hour.</strong> Text Eddy, Harley, Toni, existing users. Tell them the exact date and time.</li>
-            <li>Publish at 12:01am PST on a Tuesday. Text everyone immediately. Reply to every comment throughout the day.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 10 -->
-    <div class="card" data-step="10">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">10</span>
-        <span class="card-title">First broadcast email to all signups</span>
-        <div class="chips"><span class="chip chip-t">1 hr</span><span class="chip chip-0">$0</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">By now you have real signups from seeding. Email them. This is your first direct shot at Pro conversions.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Export Supabase users. Remove anyone already in your Resend welcome sequence.</li>
-            <li>Broadcast in Resend. Subject: <em>"SourceStack got a lot better since you signed up."</em></li>
-            <li>3 bullets on what's new. One CTA: upgrade to Pro. Under 150 words.</li>
-            <li>Send Tuesday or Wednesday, 9am–12pm EST.</li>
-            <li>Next day: check open rate + Pro conversion. Under 2% conversion = Pro pitch needs tightening.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
+  <div class="card tpl">
+    <span class="name">Mod wiki DM</span><span class="use">r/tressless · r/Peptides · r/SkincareAddiction</span>
+    <button class="copy" onclick="cp(this)">Copy</button>
+    <pre>Hey — active member here. I built a free resource that might fit the wiki/resources list: SourceStack (sourcestack.app) — protocol database + free in-browser face measurement tool. No login needed for the free parts, photos never upload. If it's not a fit as-is, happy to adjust whatever would make it wiki-appropriate. Thanks either way.</pre>
   </div>
+  <div class="card tpl">
+    <span class="name">Value post #1 — show &amp; tell (day 3–4)</span><span class="use">r/looksmaxxing or similar</span>
+    <button class="copy" onclick="cp(this)">Copy</button>
+    <pre>Title: I built a free tool that measures 14 facial ratios from one photo — runs entirely in your browser. Roast it.
 
-  <!-- ===== SCALE ===== -->
-  <div class="section" id="s-scale">
-    <div class="sec-hdr">
-      <div class="sec-dot" style="background:#f87171"></div>
-      <h2>Scale</h2>
-      <div class="sec-tag" style="color:#f87171;border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.06)">September+ · Only after organic converts</div>
-    </div>
-    <p class="sec-desc">Don't touch this section until you can see in analytics that organic traffic is converting to Pro subscribers. Paid amplifies what's working — it doesn't fix a broken funnel.</p>
+Body: got tired of inconsistent TikTok advice, so I built the thing I wanted: upload one photo → canthal tilt, fWHR, jaw taper, thirds, symmetry, skin + brow reads → ranked list of what's actually improvable. The photo never leaves your browser (it's all on-device ML — check the network tab).
 
-    <!-- CARD 11 -->
-    <div class="card" data-step="11">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">11</span>
-        <span class="card-title">Blog — 3 cornerstone SEO guides</span>
-        <div class="chips"><span class="chip chip-t">4 hrs each</span><span class="chip chip-0">$0 or $50/article</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">3 guides ranking on Google can drive 3k–15k monthly visitors forever. Write for the keywords you're already getting impressions on in GSC.</p>
-        <div class="targets">
-          <h4>3 guides to write</h4>
-          <ul>
-            <li>"Complete Hair Loss Stack 2026 — RU58841, Minoxidil, Finasteride: What Actually Works"</li>
-            <li>"How to Source Peptides Safely — Vendor Trust Guide for BPC-157, TB-500, Ipamorelin"</li>
-            <li>"Skincare Stack for Men 2026 — Tretinoin, Niacinamide, Vitamin C: The Full Protocol"</li>
-          </ul>
-        </div>
-        <div class="steps-wrap">
-          <h4>Structure for each</h4>
-          <ol class="steps-list">
-            <li>1,500–2,500 words. H1 = exact keyword. H2s answer follow-up questions.</li>
-            <li>3–5 internal links to relevant treatment pages.</li>
-            <li>End with CTA: <em>"Build your complete [topic] stack on SourceStack →"</em></li>
-            <li>Can outsource on Upwork for $50/article. Give them your treatment data as source material. Review for accuracy.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
+[screenshot of your own scan]
 
-    <!-- CARD 12 -->
-    <div class="card" data-step="12">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">12</span>
-        <span class="card-title">Affiliate links — wire into vendor cards</span>
-        <div class="chips"><span class="chip chip-t">2 hrs · one-time</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Do this at 500+ monthly visitors. Monetizes every free user who clicks through to buy. $200–500/mo passive at 1k+ visitors.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li>Sign up: iHerb Affiliates (<code>affiliates.iherb.com</code>), Amazon Associates, BulkSupplements affiliate, Nootropics Depot affiliate.</li>
-            <li>Update vendor card URLs in <code>src/data/vendors.ts</code> with affiliate tracking links.</li>
-            <li>Add footer disclosure: <em>"Some vendor links are affiliate links. Commissions don't affect vendor rankings."</em></li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 13 -->
-    <div class="card" data-step="13">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">13</span>
-        <span class="card-title">Reddit Ads — subreddit targeting at $5/day</span>
-        <div class="chips"><span class="chip chip-t">2 hrs setup</span><span class="chip chip-0">$150/mo min</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Prerequisite: organic Reddit is converting. Ads amplify what's already working.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li><code>ads.reddit.com</code> → Campaign type: Traffic → CPM bidding.</li>
-            <li>Community targeting: r/tressless, r/SkincareAddiction, r/Peptides, r/looksmax.</li>
-            <li>Ad format: Text + link. Copy: <em>"For practitioners — the looksmaxxing protocol database. Vetted vendors, real protocols, stack builder."</em></li>
-            <li>Budget: $5/day. Run 2 weeks. Check CTR and signup rate. Scale what converts.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 14 -->
-    <div class="card" data-step="14">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">14</span>
-        <span class="card-title">Google Search Ads — buy intent keywords</span>
-        <div class="chips"><span class="chip chip-t">3 hrs setup</span><span class="chip chip-0">$300/mo min</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">Highest-intent traffic possible. "Where to buy RU58841 Canada" = someone about to spend money.</p>
-        <div class="steps-wrap">
-          <h4>Exact steps</h4>
-          <ol class="steps-list">
-            <li><code>ads.google.com</code> → Search campaign → Website traffic.</li>
-            <li>Keywords (exact match): [where to buy ru58841], [ru58841 source canada], [bpc 157 vendor], [where to buy tretinoin], [ru58841 vs pyrilutamide], [tretinoin protocol men].</li>
-            <li>Max CPC: $2.00–3.00. Budget: $10/day to start.</li>
-            <li>Send each keyword to the matching treatment/comparison page — not homepage.</li>
-            <li>Run 30 days. Cut non-converters. Scale converters.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
-
-    <!-- CARD 15 -->
-    <div class="card" data-step="15">
-      <div class="card-top" onclick="toggle(this)">
-        <div class="check" onclick="toggleDone(event,this)"><svg class="ck" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span class="card-num">15</span>
-        <span class="card-title">Meta Ads — last in the stack</span>
-        <div class="chips"><span class="chip chip-t">Ongoing</span><span class="chip chip-0">$500/mo min</span></div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="card-body"><div class="body-inner">
-        <p class="why">You know Meta from Diamond Detail. Last lever — only once the quiz → email → Pro funnel is proven end-to-end.</p>
-        <div class="warn">Don't run Meta before the funnel is proven. Organic first, paid when the numbers work.</div>
-        <div class="steps-wrap">
-          <h4>When ready</h4>
-          <ol class="steps-list">
-            <li>Campaign objective: Lead or Conversion. Not Traffic.</li>
-            <li>Audience: Men 18–30, fitness, hair loss, men's skincare, biohacking, supplements.</li>
-            <li>Creative: short video demo of face zone map + protocol builder. Show the product — don't describe it.</li>
-            <li>Send to <code>/quiz</code> page — lowest friction, email capture, highest engagement.</li>
-            <li>Start $15–20/day. Scale only when quiz → email → Pro funnel is profitable.</li>
-          </ol>
-        </div>
-      </div></div>
-    </div>
+It's free, no login for the scan. Genuinely want feedback on the measurements — what's off, what's missing? Link: https://sourcestack.app/scan?utm_source=reddit&utm_medium=post&utm_campaign=florida</pre>
   </div>
+  <div class="card tpl">
+    <span class="name">Value post #2 — vendor data (day 6–7)</span><span class="use">r/tressless or r/Peptides</span>
+    <button class="copy" onclick="cp(this)">Copy</button>
+    <pre>Title: I compared 15 vendors on price + shipping for the 10 most common compounds — table inside
 
-</div><!-- end page -->
+Body: [paste the actual table — prices, shipping, notes. The value lives IN the post.]
+
+Methodology: [2 lines on how you checked.]
+
+I keep this updated with trust notes here: https://sourcestack.app?utm_source=reddit&utm_medium=post&utm_campaign=florida (my project)</pre>
+  </div>
+</div>
 
 <script>
-// ---- DATE ----
-function todayStr(){return new Date().toISOString().split('T')[0]}
-function mondayStr(){
-  const d=new Date();
-  const day=d.getDay();
-  const diff=d.getDate()-(day===0?6:day-1);
-  const mon=new Date(d.setDate(diff));
-  return mon.toISOString().split('T')[0];
-}
-function nextMidnight(){
-  const t=new Date();t.setHours(24,0,0,0);
-  const h=Math.round((t-new Date())/3600000);
-  return h<=1?'Resets in <1 hr':`Resets in ${h} hrs`;
-}
-function nextMonday(){
-  const d=new Date();
-  const day=d.getDay();
-  const daysUntil=day===1?7:(8-day)%7;
-  if(daysUntil<=1)return'Resets tomorrow';
-  return`Resets in ${daysUntil} days`;
-}
+// ── data ──────────────────────────────────────────
+const DAILY = [
+  ["3 Reddit comments in target threads", "2 with a deep link, 1 pure value. Best answer in the thread or don't post."],
+  ["2 TikTok/IG replies on looksmax content", "Lead with the scan: 'free browser tool measures this from a photo'"],
+  ["1 creator DM", "10k–100k followers. One real conversation beats 20 spam DMs."],
+  ["Reply to every response", "Same day. Conversations convert, drive-bys don't."],
+  ["Scoreboard check", "GSC clicks · scans · Stripe. Update the numbers above."],
+];
+const PREP = [
+  ["GSC: add sourcestack.app + submit sitemap + request indexing top 10", "30 min — home, /scan, top 5 treatments, top 3 issues"],
+  ["Stripe: receipt + failed-payment emails ON, customer portal saved", "5 min in dashboard settings"],
+  ["support@sourcestack.app forwarding → Gmail, send test", "10 min at registrar"],
+  ["Hunt + save 10 target threads into the tracker below", "60 min — use the queries listed there"],
+  ["2–3 no-link warm-up comments in r/tressless / r/Peptides", "20 min — recent in-sub activity = credibility later"],
+  ["Add analytics (GoatCounter/umami) or accept UTM+Stripe only", "30 min — you're blind to Reddit traffic without it"],
+];
+const PLAYS = [
+  ["Mod wiki DMs ×3 (day 1–2)", "tressless, Peptides, SkincareAddiction — template below. Permanent traffic if approved."],
+  ["Value post #1 — scan show & tell (day 3–4)", "Builder framing, answer every comment, screenshot your own scan"],
+  ["Value post #2 — vendor price table (day 6–7)", "Data in the post body, link at the end"],
+  ["2–3 TikToks: scan screenshot format", "3 slides: overlay → what it found → protocol"],
+  ["Product Hunt prep (trip downtime)", "Headline, 6 screenshots, first comment, 5 friends primed — launch Tue Jul 22"],
+  ["Build: email capture on scan results → leads table", "2 hrs dev — without it every non-buyer evaporates"],
+];
 
-// ---- DAILY RESET ----
-const DAILY_IDS=['dc-1','dc-2','dc-3','dc-4'];
-const WEEKLY_IDS=['wc-1','wc-2'];
-
-function loadDailies(){
-  const today=todayStr();
-  const stored=JSON.parse(localStorage.getItem('ss_daily')||'{}');
-  if(stored.date!==today){
-    localStorage.setItem('ss_daily',JSON.stringify({date:today,checks:{}}));
-    return;
-  }
-  DAILY_IDS.forEach(id=>{
-    if(stored.checks&&stored.checks[id]){
-      applyDailyDone(id);
-    }
-  });
+// ── render checklists ─────────────────────────────
+function render(id, items, store){
+  const el = document.getElementById(id);
+  const saved = JSON.parse(localStorage.getItem(store) || "{}");
+  el.innerHTML = items.map(([t, d], i) => `
+    <div class="row ${saved[i] ? "done" : ""}" onclick="toggle('${store}',${i},this)">
+      <div class="box"></div>
+      <div><div class="t">${t}</div><div class="d">${d}</div></div>
+    </div>`).join("");
 }
-
-function loadWeeklies(){
-  const mon=mondayStr();
-  const stored=JSON.parse(localStorage.getItem('ss_weekly')||'{}');
-  if(stored.week!==mon){
-    localStorage.setItem('ss_weekly',JSON.stringify({week:mon,checks:{}}));
-    return;
-  }
-  WEEKLY_IDS.forEach(id=>{
-    if(stored.checks&&stored.checks[id]){
-      applyDailyDone(id);
-    }
-  });
+function toggle(store, i, row){
+  const saved = JSON.parse(localStorage.getItem(store) || "{}");
+  saved[i] = !saved[i];
+  localStorage.setItem(store, JSON.stringify(saved));
+  row.classList.toggle("done");
 }
-
-function applyDailyDone(id){
-  const el=document.getElementById(id);
-  if(!el)return;
-  el.classList.add('done');
-  const row=el.closest('.daily-row');
-  if(row)row.classList.add('done-row');
+// daily resets at midnight via date-keyed store
+const today = new Date().toISOString().slice(0, 10);
+const dailyStore = JSON.parse(localStorage.getItem("ss2_daily") || "{}");
+if (dailyStore.date !== today) localStorage.setItem("ss2_daily", JSON.stringify({ date: today }));
+function renderDaily(){
+  const el = document.getElementById("daily");
+  const saved = JSON.parse(localStorage.getItem("ss2_daily") || "{}");
+  el.innerHTML = DAILY.map(([t, d], i) => `
+    <div class="row ${saved["i" + i] ? "done" : ""}" onclick="toggleDaily(${i},this)">
+      <div class="box"></div>
+      <div><div class="t">${t}</div><div class="d">${d}</div></div>
+    </div>`).join("");
 }
-
-function toggleDaily(id,rowId){
-  const el=document.getElementById(id);
-  const row=document.getElementById(rowId);
-  const isDone=el.classList.contains('done');
-  el.classList.toggle('done');
-  if(row)row.classList.toggle('done-row');
-  const stored=JSON.parse(localStorage.getItem('ss_daily')||'{}');
-  if(!stored.checks)stored.checks={};
-  stored.checks[id]=!isDone;
-  localStorage.setItem('ss_daily',JSON.stringify(stored));
+function toggleDaily(i, row){
+  const saved = JSON.parse(localStorage.getItem("ss2_daily") || "{}");
+  saved["i" + i] = !saved["i" + i];
+  saved.date = today;
+  localStorage.setItem("ss2_daily", JSON.stringify(saved));
+  row.classList.toggle("done");
 }
+render("prep", PREP, "ss2_prep");
+render("plays", PLAYS, "ss2_plays");
+renderDaily();
 
-function toggleWeekly(id,rowId){
-  const el=document.getElementById(id);
-  const row=document.getElementById(rowId);
-  const isDone=el.classList.contains('done');
-  el.classList.toggle('done');
-  if(row)row.classList.toggle('done-row');
-  const stored=JSON.parse(localStorage.getItem('ss_weekly')||'{}');
-  if(!stored.checks)stored.checks={};
-  stored.checks[id]=!isDone;
-  localStorage.setItem('ss_weekly',JSON.stringify(stored));
-}
-
-// ---- ONE-TIME STEPS ----
-function toggle(hdr){hdr.closest('.card').classList.toggle('open')}
-
-function toggleDone(e,chk){
-  e.stopPropagation();
-  const card=chk.closest('.card');
-  card.classList.toggle('done');
-  saveSteps();updateProgress();
-}
-
-function saveSteps(){
-  const s={};
-  document.querySelectorAll('.card[data-step]').forEach(c=>{
-    s[c.dataset.step]=c.classList.contains('done');
-  });
-  localStorage.setItem('ss_steps',JSON.stringify(s));
-}
-
-function loadSteps(){
-  const s=JSON.parse(localStorage.getItem('ss_steps')||'{}');
-  Object.keys(s).forEach(k=>{
-    if(s[k]){
-      const c=document.querySelector(`.card[data-step="${k}"]`);
-      if(c)c.classList.add('done');
-    }
-  });
-}
-
-function updateProgress(){
-  const total=document.querySelectorAll('.card[data-step]').length;
-  const done=document.querySelectorAll('.card[data-step].done').length;
-  const pct=Math.round(done/total*100);
-  document.getElementById('nav-prog-label').textContent=`${done}/${total}`;
-}
-
-// ---- SCOREBOARD ----
-const TARGETS={v:2000,s:200,p:20,m:1000};
-document.querySelectorAll('.stat-val[data-k]').forEach(el=>{
-  const k=el.dataset.k;
-  const saved=localStorage.getItem('ss_stat_'+k);
-  if(saved)el.textContent=saved;
-  el.addEventListener('input',()=>{
-    localStorage.setItem('ss_stat_'+k,el.textContent);
-    updateBar(k,el.textContent);
-  });
-  updateBar(k,el.textContent);
+// ── scoreboard ────────────────────────────────────
+const TARGETS = { v: 1500, s: 400, l: 150, m: 10 };
+document.querySelectorAll(".stat input").forEach((inp) => {
+  const k = inp.dataset.k;
+  inp.value = localStorage.getItem("ss2_stat_" + k) || "";
+  const paint = () => {
+    const n = parseFloat(inp.value.replace(/[^0-9.]/g, "")) || 0;
+    document.getElementById("b-" + k).style.width = Math.min(100, (n / TARGETS[k]) * 100) + "%";
+  };
+  paint();
+  inp.addEventListener("input", () => { localStorage.setItem("ss2_stat_" + k, inp.value); paint(); });
 });
 
-function updateBar(k,val){
-  const bar=document.getElementById('pb-'+k);
-  if(!bar||!TARGETS[k])return;
-  const num=parseFloat(String(val).replace(/[^0-9.]/g,''))||0;
-  const pct=Math.min(100,Math.round(num/TARGETS[k]*100));
-  bar.style.width=pct+'%';
+// ── thread tracker ────────────────────────────────
+function threads(){ return JSON.parse(localStorage.getItem("ss2_threads") || "[]"); }
+function saveThreads(t){ localStorage.setItem("ss2_threads", JSON.stringify(t)); renderThreads(); }
+function renderThreads(){
+  const list = threads();
+  document.getElementById("threads").innerHTML = list.length === 0
+    ? '<div class="d" style="padding:6px 4px">No threads saved yet — go hunting.</div>'
+    : list.map((t, i) => `
+      <div class="thread">
+        <a href="${t.url}" target="_blank" title="${t.note || ""}">${t.note ? t.note + " — " : ""}${t.url.replace(/^https?:\/\/(www\.)?/, "")}</a>
+        <select onchange="setStatus(${i},this.value)">
+          ${["found", "commented", "got replies", "dead"].map((s) => `<option ${t.status === s ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+        <span class="x" onclick="delThread(${i})">✕</span>
+      </div>`).join("");
+}
+function addThread(){
+  const url = document.getElementById("turl").value.trim();
+  if (!url) return;
+  const note = document.getElementById("tnote").value.trim();
+  saveThreads([...threads(), { url, note, status: "found" }]);
+  document.getElementById("turl").value = "";
+  document.getElementById("tnote").value = "";
+}
+function setStatus(i, s){ const t = threads(); t[i].status = s; saveThreads(t); }
+function delThread(i){ const t = threads(); t.splice(i, 1); saveThreads(t); }
+renderThreads();
+
+// ── templates copy ────────────────────────────────
+function cp(btn){
+  navigator.clipboard.writeText(btn.parentElement.querySelector("pre").innerText);
+  btn.textContent = "Copied ✓";
+  setTimeout(() => (btn.textContent = "Copy"), 1500);
 }
 
-// ---- NAV ----
-function scrollTo(id){
-  const el=document.getElementById(id);
-  if(el)el.scrollIntoView({behavior:'smooth'});
-}
-
-// Highlight active nav tab on scroll
-const sections=[
-  {id:'s-daily',tab:0},
-  {id:'s-firstusers',tab:1},
-  {id:'s-setup',tab:2},
-  {id:'s-amplify',tab:3},
-  {id:'s-scale',tab:4}
-];
-const tabs=document.querySelectorAll('.nav-tab');
-window.addEventListener('scroll',()=>{
-  const scrollY=window.scrollY+80;
-  let active=0;
-  sections.forEach(s=>{
-    const el=document.getElementById(s.id);
-    if(el&&el.offsetTop<=scrollY)active=s.tab;
-  });
-  tabs.forEach((t,i)=>t.classList.toggle('active',i===active));
-},{ passive:true });
-
-// ---- DATE DISPLAY ----
-document.getElementById('nav-date').textContent=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric'});
-document.getElementById('daily-reset-label').textContent=nextMidnight();
-document.getElementById('weekly-reset-label').textContent=nextMonday();
-
-// ---- INIT ----
-loadDailies();
-loadWeeklies();
-loadSteps();
-updateProgress();
+// ── phase banner ──────────────────────────────────
+(function(){
+  const now = new Date();
+  const fl = new Date("2026-07-11"); const end = new Date("2026-07-19");
+  const days = Math.ceil((fl - now) / 864e5);
+  let msg, pill;
+  if (now < fl) { msg = "PHASE 1 — Pre-flight prep. Finish the checklist below before you board."; pill = days + " day" + (days === 1 ? "" : "s") + " to Florida"; }
+  else if (now <= end) { const left = Math.ceil((end - now) / 864e5); msg = "PHASE 2 — Florida sprint. Daily block first, then one-time plays."; pill = left + " working day" + (left === 1 ? "" : "s") + " left"; }
+  else { msg = "PHASE 3 — Back home. Product Hunt + double down on what the scoreboard says worked."; pill = "post-trip"; }
+  document.getElementById("banner").textContent = msg;
+  document.getElementById("phase-days").textContent = pill;
+})();
 </script>
 </body>
 </html>
