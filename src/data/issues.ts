@@ -42,6 +42,8 @@ export const issues: Issue[] = [
       "omega-3",
       "collagen-peptides",
       "ghk-cu",
+      "kpv",
+      "thymosin-alpha-1",
     ],
   },
   {
@@ -63,7 +65,21 @@ export const issues: Issue[] = [
     name: "Soft Jawline / Neck Definition",
     description:
       "Poor cervicomental angle or undefined jaw. Primary lever is body fat — most other interventions are marginal until fat loss is addressed.",
-    treatmentSlugs: ["mastic-gum", "creatine"],
+    treatmentSlugs: ["semaglutide", "tirzepatide", "tesamorelin", "mastic-gum", "creatine", "gua-sha"],
+  },
+  {
+    slug: "body-fat",
+    name: "Stubborn Body Fat / Fat Loss",
+    description:
+      "Excess body fat is the single biggest lever on facial and physical aesthetics — it blurs the jawline, cheekbones, and overall bone structure. Diet and training come first; the compounds below (GLP-1s especially) are accelerators, not replacements, and only work aesthetically when muscle is preserved with protein and lifting.",
+    treatmentSlugs: ["semaglutide", "tirzepatide", "tesamorelin", "mots-c", "aod-9604"],
+  },
+  {
+    slug: "fine-lines",
+    name: "Fine Lines / Wrinkles",
+    description:
+      "Early expression lines and loss of firmness. Retinoids do the heavy lifting; topical peptides (Matrixyl, Argireline) and collagen support are lower-risk daily adjuncts that compound over months. Sun protection is the non-negotiable foundation.",
+    treatmentSlugs: ["tretinoin", "tazarotene", "matrixyl", "argireline", "vitamin-c-serum", "collagen-peptides"],
   },
   {
     slug: "muscle-mass",
@@ -75,6 +91,7 @@ export const issues: Issue[] = [
       "collagen-peptides",
       "bpc-157",
       "ipamorelin-cjc",
+      "sermorelin",
       "vitamin-d3",
       "omega-3",
       "magnesium-glycinate",
@@ -85,7 +102,7 @@ export const issues: Issue[] = [
     name: "Poor Recovery / Joint Pain",
     description:
       "Slow gym recovery, tendon issues, or chronic inflammation. Blocks training consistency.",
-    treatmentSlugs: ["bpc-157", "tb-500", "collagen-peptides", "magnesium-glycinate", "omega-3"],
+    treatmentSlugs: ["bpc-157", "tb-500", "collagen-peptides", "magnesium-glycinate", "omega-3", "sermorelin", "thymosin-alpha-1"],
   },
   {
     slug: "hyperpigmentation",
@@ -99,14 +116,14 @@ export const issues: Issue[] = [
     name: "Oily Skin / Large Pores",
     description:
       "Excess sebum production leads to shine, clogged pores, and acne. Largely genetic but manageable with the right topicals.",
-    treatmentSlugs: ["niacinamide", "salicylic-acid", "azelaic-acid", "zinc-picolinate"],
+    treatmentSlugs: ["niacinamide", "salicylic-acid", "azelaic-acid", "zinc-picolinate", "kpv"],
   },
   {
     slug: "poor-sleep",
     name: "Poor Sleep Quality",
     description:
       "Inconsistent or low-quality sleep accelerates aging, tanks testosterone, impairs recovery, and makes everything else harder. Sleep is the master lever.",
-    treatmentSlugs: ["magnesium-glycinate", "ashwagandha", "melatonin", "ipamorelin-cjc"],
+    treatmentSlugs: ["magnesium-glycinate", "ashwagandha", "melatonin", "ipamorelin-cjc", "sermorelin", "selank"],
   },
   {
     slug: "hormonal-optimization",
@@ -124,6 +141,7 @@ export const issues: Issue[] = [
       "dhea",
       "enclomiphene",
       "mucuna-pruriens",
+      "pt-141",
     ],
   },
   {
@@ -138,28 +156,28 @@ export const issues: Issue[] = [
     name: "Facial Puffiness / Water Retention",
     description:
       "Bloated face dilutes bone structure and reduces jawline definition. Root causes: high sodium, alcohol, poor sleep, allergies. Mechanical drainage and targeted topicals can help acutely and chronically.",
-    treatmentSlugs: ["gua-sha", "caffeine-eye-cream"],
+    treatmentSlugs: ["gua-sha", "caffeine-eye-cream", "tesamorelin"],
   },
   {
     slug: "cognitive-performance",
     name: "Cognitive Performance / Focus",
     description:
       "Mental clarity, focus, and motivation. Directly affects productivity in the afternoon gap between detailing and gym. Nootropics and adaptogens with actual RCT evidence.",
-    treatmentSlugs: ["l-theanine", "rhodiola-rosea", "lions-mane", "mucuna-pruriens"],
+    treatmentSlugs: ["l-theanine", "rhodiola-rosea", "lions-mane", "mucuna-pruriens", "semax", "selank"],
   },
   {
     slug: "longevity",
     name: "Longevity / Anti-Aging",
     description:
       "Compounds with evidence for slowing biological aging, improving metabolic health, and extending healthspan. The stack underneath the visible improvements.",
-    treatmentSlugs: ["taurine", "berberine", "spermidine", "nac", "nmn", "astaxanthin", "epithalon"],
+    treatmentSlugs: ["taurine", "berberine", "spermidine", "nac", "nmn", "astaxanthin", "epithalon", "mots-c", "thymosin-alpha-1"],
   },
   {
     slug: "tanning",
     name: "Skin Tanning",
     description:
       "Achieving a tan — either for aesthetics or the appearance of lower body fat. Includes legitimate methods and research compounds with significant risk profiles.",
-    treatmentSlugs: ["melanotan-ii"],
+    treatmentSlugs: ["melanotan-ii", "melanotan-1"],
   },
   {
     slug: "acne-scarring",

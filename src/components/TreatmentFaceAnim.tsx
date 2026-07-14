@@ -71,6 +71,20 @@ const TREATMENT_ANIM: Record<string, AnimConfig> = {
   'dhea':                 { type: 'glowUp',        timeline: '4–8 weeks' },
   'enclomiphene':         { type: 'glowUp',        timeline: '4–12 weeks' },
   'melanotan-ii':         { type: 'glowUp',        timeline: '2–4 weeks' },
+  'melanotan-1':          { type: 'glowUp',        timeline: '2–4 weeks' },
+  'semaglutide':          { type: 'jawDefine',     timeline: '3–12 months' },
+  'tirzepatide':          { type: 'jawDefine',     timeline: '3–12 months' },
+  'tesamorelin':          { type: 'jawDefine',     timeline: '3–6 months' },
+  'aod-9604':             { type: 'jawDefine',     timeline: '2–3 months' },
+  'mots-c':               { type: 'glowUp',        timeline: '4–8 weeks' },
+  'sermorelin':           { type: 'glowUp',        timeline: '4–12 weeks' },
+  'thymosin-alpha-1':     { type: 'glowUp',        timeline: '2–6 weeks' },
+  'kpv':                  { type: 'spotClear',     timeline: '4–8 weeks' },
+  'pt-141':               { type: 'glowUp',        timeline: 'on-demand' },
+  'selank':               { type: 'glowUp',        timeline: '1–2 weeks' },
+  'semax':                { type: 'glowUp',        timeline: '1–2 weeks' },
+  'argireline':           { type: 'textureSmooth', timeline: '4–8 weeks' },
+  'matrixyl':             { type: 'textureSmooth', timeline: '8–12 weeks' },
 };
 
 // ── Dot position data ─────────────────────────────────────────────────────────

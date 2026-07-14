@@ -108,13 +108,42 @@ const SYNONYM_MAP: Record<string, string[]> = {
 
   // Peptides
   peptide: ["peptides", "bpc-157", "tb-500", "ghk-cu", "ipamorelin"],
-  peptides: ["bpc-157", "tb-500", "ghk-cu", "ipamorelin", "epithalon"],
+  peptides: ["bpc-157", "tb-500", "ghk-cu", "ipamorelin", "epithalon", "sermorelin", "semaglutide"],
   ghk: ["ghk-cu", "copper peptide"],
   bpc: ["bpc-157"],
   "copper peptide": ["ghk-cu"],
-  gh: ["ipamorelin", "cjc-1295", "growth hormone"],
-  "growth hormone": ["ipamorelin", "cjc-1295", "sermorelin"],
+  gh: ["ipamorelin", "cjc-1295", "growth hormone", "sermorelin", "tesamorelin"],
+  "growth hormone": ["ipamorelin", "cjc-1295", "sermorelin", "tesamorelin"],
   ipamorelin: ["growth hormone", "cjc-1295", "peptides"],
+  sermorelin: ["growth hormone", "gh secretagogue", "peptides"],
+  tesamorelin: ["growth hormone", "visceral fat", "body fat", "peptides"],
+  "mots-c": ["mots c", "metabolic", "body fat", "longevity"],
+  "mots c": ["mots-c", "metabolic", "body fat"],
+  kpv: ["skin clarity", "anti-inflammatory", "acne", "gut"],
+  "thymosin alpha 1": ["thymosin-alpha-1", "immune", "recovery"],
+  selank: ["anxiety", "cognitive performance", "nootropic peptide"],
+  semax: ["focus", "cognitive performance", "nootropic peptide"],
+  "pt-141": ["pt 141", "bremelanotide", "libido", "hormonal optimization"],
+  "pt 141": ["pt-141", "bremelanotide", "libido"],
+  bremelanotide: ["pt-141", "libido", "hormonal optimization"],
+
+  // GLP-1 / fat loss
+  glp: ["glp-1", "semaglutide", "tirzepatide", "body fat", "fat loss"],
+  "glp-1": ["semaglutide", "tirzepatide", "ozempic", "body fat", "fat loss"],
+  "glp 1": ["glp-1", "semaglutide", "tirzepatide", "fat loss"],
+  semaglutide: ["glp-1", "ozempic", "wegovy", "body fat", "fat loss"],
+  ozempic: ["semaglutide", "glp-1", "fat loss", "body fat"],
+  wegovy: ["semaglutide", "glp-1", "fat loss"],
+  tirzepatide: ["glp-1", "mounjaro", "zepbound", "body fat", "fat loss"],
+  mounjaro: ["tirzepatide", "glp-1", "fat loss"],
+  zepbound: ["tirzepatide", "glp-1", "fat loss"],
+  "fat loss": ["body fat", "semaglutide", "tirzepatide", "tesamorelin", "jawline"],
+  "body fat": ["fat loss", "semaglutide", "tirzepatide", "jawline definition"],
+  "weight loss": ["body fat", "fat loss", "semaglutide", "tirzepatide"],
+  lose: ["body fat", "fat loss", "weight loss"],
+  cutting: ["body fat", "fat loss", "aod-9604"],
+  "aod": ["aod-9604", "fat loss", "body fat"],
+  "aod-9604": ["fat loss", "body fat", "peptide"],
 
   // Retinoids
   retinol: ["tretinoin", "adapalene", "retinoid"],
@@ -149,9 +178,16 @@ const SYNONYM_MAP: Record<string, string[]> = {
 
   // Tanning
   tan: ["tanning", "melanotan", "melanin", "mt2"],
-  tanning: ["melanotan ii", "melanin", "mt2"],
+  tanning: ["melanotan ii", "melanotan 1", "melanin", "mt2"],
   mt2: ["melanotan ii", "tanning peptide"],
-  "melanotan": ["melanotan ii", "tanning"],
+  mt1: ["melanotan 1", "afamelanotide", "tanning"],
+  "melanotan": ["melanotan ii", "melanotan 1", "tanning"],
+  afamelanotide: ["melanotan 1", "tanning"],
+
+  // Topical peptides
+  argireline: ["fine lines", "topical botox", "acetyl hexapeptide", "wrinkles"],
+  matrixyl: ["fine lines", "palmitoyl peptide", "collagen", "wrinkles"],
+  "topical botox": ["argireline", "fine lines"],
 
   // Anti-aging / longevity
   "anti-aging": ["longevity", "nmn", "nad", "spermidine", "taurine"],
@@ -229,8 +265,8 @@ const SYNONYM_MAP: Record<string, string[]> = {
   "itchy scalp": ["dandruff", "ketoconazole"],
 
   // Aging / dryness / eyes
-  wrinkles: ["tretinoin", "collagen", "anti-aging", "fine lines"],
-  "fine lines": ["tretinoin", "collagen peptides", "hyaluronic acid"],
+  wrinkles: ["tretinoin", "collagen", "anti-aging", "fine lines", "argireline", "matrixyl"],
+  "fine lines": ["tretinoin", "collagen peptides", "hyaluronic acid", "argireline", "matrixyl"],
   "crows feet": ["tretinoin", "caffeine eye cream", "collagen"],
   dry: ["hyaluronic acid", "snail mucin", "skin barrier", "moisturizer"],
   dehydrated: ["hyaluronic acid", "skin barrier"],

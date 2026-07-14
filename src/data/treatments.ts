@@ -188,7 +188,11 @@ export const treatments: Treatment[] = [
       "Discontinue if mood changes or sexual side effects occur",
     ],
     issueSlugs: ["hair-loss"],
-    vendorIds: [],
+    vendorIds: ["felix", "rocky", "alldaychemist", "swiss-chems"],
+    vendorProductUrls: {
+      "felix": "https://felixforyou.ca/hair-loss/",
+      "rocky": "https://www.rockyhealth.com",
+    },
   },
   {
     slug: "dutasteride",
@@ -208,7 +212,7 @@ export const treatments: Treatment[] = [
       "Not for use by women",
     ],
     issueSlugs: ["hair-loss"],
-    vendorIds: [],
+    vendorIds: ["felix", "alldaychemist", "swiss-chems"],
   },
   {
     slug: "biotin",
@@ -251,7 +255,10 @@ export const treatments: Treatment[] = [
       "Buy Careprost from verified international pharmacy sources — gray-market purity varies",
     ],
     issueSlugs: ["eyelash-growth", "thin-brows"],
-    vendorIds: [],
+    vendorIds: ["alldaychemist", "amazon-ca"],
+    vendorProductUrls: {
+      "alldaychemist": "https://www.alldaychemist.com/careprost-bimatoprost-ophthalmic-solution.html",
+    },
   },
   {
     slug: "latanoprost",
@@ -272,7 +279,7 @@ export const treatments: Treatment[] = [
       "Effects are not permanent — requires ongoing use",
     ],
     issueSlugs: ["eyelash-growth", "thin-brows"],
-    vendorIds: [],
+    vendorIds: ["alldaychemist", "felix"],
   },
 
   // ── PEPTIDES ───────────────────────────────────────────────────────────────
@@ -293,10 +300,12 @@ export const treatments: Treatment[] = [
       "Source from vendors with COA — purity matters for injectables",
     ],
     issueSlugs: ["thin-brows", "under-eye-hollows", "hair-loss", "skin-clarity"],
-    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "peptide-sciences", "limitless-life", "mountain-west"],
     vendorProductUrls: {
-      "pure-rawz": "https://purerawz.co/product/bpc-157/",
-      "cosmic-peptides": "https://cosmicpeptides.com/products/bpc-157",
+      "pure-rawz": "https://purerawz.co/product/ghk-cu/",
+      "cosmic-peptides": "https://cosmicpeptides.com/products/ghk-cu",
+      "peptide-sciences": "https://www.peptidesciences.com/ghk-cu-50mg",
+      "mountain-west": "https://mountainwestmc.com",
     },
   },
   {
@@ -317,10 +326,11 @@ export const treatments: Treatment[] = [
       "Store lyophilized at -20°C, reconstituted at 4°C, use within 30 days",
     ],
     issueSlugs: ["recovery", "muscle-mass"],
-    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "peptide-sciences", "amino-asylum", "mountain-west"],
     vendorProductUrls: {
       "pure-rawz": "https://purerawz.co/product/bpc-157/",
       "cosmic-peptides": "https://cosmicpeptides.com/products/bpc-157",
+      "peptide-sciences": "https://www.peptidesciences.com/bpc-157-5mg",
     },
   },
   {
@@ -340,7 +350,7 @@ export const treatments: Treatment[] = [
       "No significant side effects at standard doses in healthy individuals",
     ],
     issueSlugs: ["recovery"],
-    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "peptide-sciences", "amino-asylum"],
     vendorProductUrls: {
       "pure-rawz": "https://purerawz.co/product/tb-500/",
       "cosmic-peptides": "https://cosmicpeptides.com/products/tb-500",
@@ -365,7 +375,7 @@ export const treatments: Treatment[] = [
       "Can cause insulin resistance at very high doses — stay in range",
     ],
     issueSlugs: ["muscle-mass", "recovery", "poor-sleep"],
-    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "peptide-sciences", "limitless-life"],
     vendorProductUrls: {
       "pure-rawz": "https://purerawz.co/product/ipamorelin/",
       "cosmic-peptides": "https://cosmicpeptides.com/products/ipamorelin-cjc-1295",
@@ -388,7 +398,7 @@ export const treatments: Treatment[] = [
       "Theoretical concern with telomerase activation in cancer cells — avoid if cancer history",
     ],
     issueSlugs: ["skin-clarity", "poor-sleep", "longevity"],
-    vendorIds: ["pure-rawz", "cosmic-peptides"],
+    vendorIds: ["pure-rawz", "cosmic-peptides", "peptide-sciences", "limitless-life"],
     vendorProductUrls: {
       "pure-rawz": "https://purerawz.co/product/epithalon/",
       "cosmic-peptides": "https://cosmicpeptides.com/products/epithalon",
@@ -463,7 +473,7 @@ export const treatments: Treatment[] = [
       "Wash jade tool with gentle soap and warm water after each use — harbors bacteria if not cleaned",
     ],
     issueSlugs: ["facial-puffiness", "under-eye-hollows", "jawline-definition"],
-    vendorIds: [],
+    vendorIds: ["iherb", "amazon-ca"],
   },
 
   // ── SKINCARE ───────────────────────────────────────────────────────────────
@@ -529,8 +539,8 @@ export const treatments: Treatment[] = [
       "Can exacerbate rosacea and perioral dermatitis — avoid these areas",
       "Do not combine with chemical exfoliants or vitamin C on same night",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation"],
-    vendorIds: [],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "fine-lines"],
+    vendorIds: ["felix", "alldaychemist"],
   },
   {
     slug: "tretinoin",
@@ -550,8 +560,11 @@ export const treatments: Treatment[] = [
       "Avoid on broken skin or active eczema",
       "Purging (initial breakout) is expected — not a reaction",
     ],
-    issueSlugs: ["skin-clarity", "hyperpigmentation", "acne-scarring", "enlarged-pores", "razor-bumps", "skin-texture"],
-    vendorIds: [],
+    issueSlugs: ["skin-clarity", "hyperpigmentation", "acne-scarring", "enlarged-pores", "razor-bumps", "skin-texture", "fine-lines"],
+    vendorIds: ["felix", "rocky", "alldaychemist"],
+    vendorProductUrls: {
+      "felix": "https://felixforyou.ca/skin/",
+    },
   },
   {
     slug: "isotretinoin",
@@ -574,7 +587,7 @@ export const treatments: Treatment[] = [
       "Initial purge in weeks 1–4 is real and can be severe at high starting doses — start at 0.5mg/kg",
     ],
     issueSlugs: ["skin-clarity", "androgenic-acne"],
-    vendorIds: [],
+    vendorIds: ["felix", "alldaychemist"],
   },
   {
     slug: "benzoyl-peroxide",
@@ -1331,7 +1344,10 @@ export const treatments: Treatment[] = [
       "Do not combine with exogenous testosterone",
     ],
     issueSlugs: ["hormonal-optimization"],
-    vendorIds: [],
+    vendorIds: ["swiss-chems", "amino-asylum", "limitless-life"],
+    vendorProductUrls: {
+      "swiss-chems": "https://swisschems.is/product/enclomiphene-citrate/",
+    },
   },
   {
     slug: "boron",
@@ -1399,6 +1415,319 @@ export const treatments: Treatment[] = [
       "Cardiovascular effects (BP elevation, tachycardia) documented — avoid with hypertension or cardiac conditions",
     ],
     issueSlugs: ["tanning"],
-    vendorIds: [],
+    vendorIds: ["swiss-chems", "amino-asylum", "peptide-sciences"],
+    vendorProductUrls: {
+      "swiss-chems": "https://swisschems.is/product/melanotan-2-10mg/",
+    },
+  },
+  {
+    slug: "melanotan-1",
+    name: "Melanotan I (Afamelanotide)",
+    category: "Research Compounds",
+    summary:
+      "Linear α-MSH analogue that stimulates melanin production more selectively than MT-2 — it activates MC1R without the strong MC4R (libido/appetite) crossover, so it has a cleaner side-effect profile. Slower to tan but far less nausea and no priapism. The safer of the two melanotans for pure tanning, though still carries the core mole/melanoma concern of any melanocortin agonist.",
+    protocol: [
+      "0.5–1mg subcutaneous daily during a 1–2 week loading phase with 15–20 min moderate UV 2–3x/week",
+      "Maintenance: 1mg 2–3x weekly with continued light UV exposure",
+      "Reconstitute lyophilized powder with bacteriostatic water; store reconstituted vial refrigerated",
+      "Tan develops more gradually than MT-2 (2–4 weeks) but is more even and predictable",
+      "Requires more total peptide than MT-2 for the same tan — factor into cost",
+    ],
+    safety: [
+      "Still a melanocortin agonist — existing moles/nevi can darken; anyone with dysplastic nevi, many moles, or melanoma history should NOT use it",
+      "Far less nausea than MT-2 and no priapism/appetite crossover — the main safety advantage",
+      "Gray-market purity varies — use vendors with COA and reconstitute cleanly to avoid infection",
+      "UV is still required for the tan to express — do not overexpose chasing faster results",
+      "Not FDA-approved for cosmetic use (prescription Scenesse exists for a rare photodermatosis only)",
+    ],
+    issueSlugs: ["tanning"],
+    vendorIds: ["swiss-chems", "peptide-sciences", "amino-asylum"],
+  },
+
+  // ── GLP-1 / FAT LOSS ─────────────────────────────────────────────────────
+  {
+    slug: "semaglutide",
+    name: "Semaglutide (GLP-1)",
+    category: "Peptides",
+    summary:
+      "GLP-1 receptor agonist (Ozempic/Wegovy) that slows gastric emptying and blunts appetite, driving significant fat loss — trial average ~15% body weight over 68 weeks. For looksmaxxing, body fat is the master lever for jawline, cheekbones, and facial definition, which makes GLP-1s one of the highest-impact aesthetic compounds available. Prescription as Wegovy; also sold as a research peptide.",
+    protocol: [
+      "Start 0.25mg subcutaneous once weekly for 4 weeks to build tolerance — do not rush the titration",
+      "Titrate up every 4 weeks: 0.25 → 0.5 → 1.0 → 1.7 → 2.4mg weekly as tolerated",
+      "Inject same day each week, subcutaneous (abdomen, thigh, or upper arm), rotate sites",
+      "Pair with 1.6–2.2g/kg protein and resistance training — GLP-1s cause muscle loss if protein/training slip",
+      "Plateau or GI intolerance = hold the dose, don't push higher",
+    ],
+    safety: [
+      "Nausea, constipation, and reflux are near-universal early — titrate slowly and eat smaller meals",
+      "Muscle loss is significant without high protein + lifting — this directly undermines the aesthetic goal",
+      "Contraindicated with personal/family history of medullary thyroid cancer or MEN2",
+      "Rare pancreatitis and gallbladder issues — seek care for severe persistent abdominal pain",
+      "Research-grade GLP-1 dosing is easy to get wrong — underdose from mis-reconstitution is common; verify concentration math",
+    ],
+    issueSlugs: ["body-fat", "jawline-definition"],
+    vendorIds: ["amino-asylum", "limitless-life", "peptide-sciences"],
+  },
+  {
+    slug: "tirzepatide",
+    name: "Tirzepatide (GLP-1 / GIP)",
+    category: "Peptides",
+    summary:
+      "Dual GLP-1 and GIP receptor agonist (Mounjaro/Zepbound) — more effective than semaglutide, with ~21% average body weight reduction at the top dose in trials. The strongest fat-loss compound currently available. Same aesthetic rationale as semaglutide: dropping body fat is what reveals bone structure.",
+    protocol: [
+      "Start 2.5mg subcutaneous weekly for 4 weeks (non-therapeutic tolerance dose)",
+      "Titrate in 2.5mg steps every 4 weeks toward 5–15mg as tolerated",
+      "Weekly subcutaneous injection, rotate sites; keep the same day each week",
+      "Protein 1.6–2.2g/kg + resistance training are non-negotiable to preserve muscle",
+      "Hold titration if GI side effects are strong — tolerance builds with time at dose",
+    ],
+    safety: [
+      "Same GI side-effect profile as semaglutide, sometimes stronger given the higher efficacy",
+      "Muscle and even bone loss with aggressive deficits — anchor with protein, lifting, and a moderate deficit",
+      "Contraindicated with medullary thyroid cancer / MEN2 history",
+      "Pancreatitis and gallbladder risk — same monitoring as semaglutide",
+      "Grey-market vials require careful reconstitution and dosing math — errors are common and consequential",
+    ],
+    issueSlugs: ["body-fat", "jawline-definition"],
+    vendorIds: ["amino-asylum", "limitless-life"],
+  },
+  {
+    slug: "tesamorelin",
+    name: "Tesamorelin",
+    category: "Peptides",
+    summary:
+      "GHRH analogue FDA-approved to reduce visceral adipose tissue. Uniquely targets deep/visceral fat and shows real effect on facial and truncal fat via elevated IGF-1 — relevant for reducing facial puffiness and softness that blunts bone structure. One of the few GH secretagogues with proper human fat-loss data.",
+    protocol: [
+      "2mg subcutaneous once daily, injected at night on an empty stomach",
+      "Rotate injection sites around the abdomen; reconstitute per vial and refrigerate",
+      "Fast ~2 hours before and 30 min after — food (especially carbs/insulin) blunts the GH pulse",
+      "Effects on body composition build over 3–6 months; IGF-1 should be checked to stay in range",
+      "Stacks with GLP-1s (appetite/fat) and ipamorelin — different mechanisms",
+    ],
+    safety: [
+      "Injection-site reactions and joint aches/fluid retention are the common complaints",
+      "Raises IGF-1 — periodic bloodwork advised; avoid with active cancer",
+      "Can worsen insulin sensitivity at high IGF-1 — monitor glucose if predisposed",
+      "Not for use in pregnancy or with known GH-sensitive conditions",
+      "Research-grade purity matters — use COA-backed vendors",
+    ],
+    issueSlugs: ["body-fat", "facial-puffiness", "jawline-definition"],
+    vendorIds: ["peptide-sciences", "limitless-life"],
+  },
+  {
+    slug: "aod-9604",
+    name: "AOD-9604",
+    category: "Peptides",
+    summary:
+      "Modified fragment of the C-terminus of human growth hormone (residues 176–191) marketed as a fat-loss peptide. It stimulates lipolysis and inhibits lipogenesis without the IGF-1 elevation or blood-sugar effects of full GH. Evidence in humans is weak compared to GLP-1s — a mild adjunct, not a primary driver.",
+    protocol: [
+      "250–500mcg subcutaneous daily, typically AM fasted",
+      "Often run alongside a caloric deficit and cardio rather than as a standalone",
+      "Cycle 8–12 weeks; reconstitute and refrigerate per standard peptide handling",
+      "Best framed as a marginal add-on to diet + training, not a substitute",
+    ],
+    safety: [
+      "Generally well tolerated — no significant GH/IGF-1 or glucose effects reported",
+      "Human efficacy data is limited and mixed — set low expectations vs GLP-1s",
+      "Research compound, not approved — use COA-backed sources",
+      "Injection-site reactions are the main complaint",
+    ],
+    issueSlugs: ["body-fat"],
+    vendorIds: ["amino-asylum", "limitless-life"],
+  },
+  {
+    slug: "mots-c",
+    name: "MOTS-c",
+    category: "Peptides",
+    summary:
+      "Mitochondrial-derived peptide that acts on metabolic regulation — improves insulin sensitivity, promotes fat oxidation, and enhances exercise capacity in animal models. Used by athletes and biohackers for metabolic health and endurance. Human data is early but mechanistically promising.",
+    protocol: [
+      "5–10mg subcutaneous 2–3x per week, cycled 4–6 weeks",
+      "Time doses around training for the endurance/metabolic benefit",
+      "Reconstitute and refrigerate; rotate injection sites",
+      "Pair with training — the effect is metabolic support, not a standalone fat-loss driver",
+    ],
+    safety: [
+      "Limited human safety data — early-stage compound",
+      "Generally well tolerated in reported use; injection-site reactions possible",
+      "Research compound, not approved — COA-backed sourcing only",
+      "Avoid stacking blindly with other metabolic agents without monitoring",
+    ],
+    issueSlugs: ["body-fat", "longevity"],
+    vendorIds: ["amino-asylum", "limitless-life"],
+  },
+
+  // ── GH SECRETAGOGUES ──────────────────────────────────────────────────────
+  {
+    slug: "sermorelin",
+    name: "Sermorelin",
+    category: "Peptides",
+    summary:
+      "GHRH analogue that stimulates the pituitary to release its own growth hormone in natural pulses. Milder and more physiologic than direct GH — used for improved sleep quality, recovery, body composition, and skin. A gentler entry point into GH optimization than ipamorelin/CJC or tesamorelin.",
+    protocol: [
+      "100–300mcg subcutaneous nightly before bed on an empty stomach",
+      "Fast ~2 hours before dosing — food blunts the GH pulse",
+      "Cycle 3–6 months; benefits (sleep, recovery) often appear within weeks",
+      "Stacks with ipamorelin for a stronger GH pulse (GHRH + GHRP synergy)",
+    ],
+    safety: [
+      "Injection-site redness, flushing, or head-rush shortly after dosing are common and transient",
+      "Raises IGF-1 modestly — avoid with active cancer; periodic bloodwork sensible on longer runs",
+      "Water retention and tingling possible early",
+      "Research compound — COA-backed sourcing only",
+    ],
+    issueSlugs: ["poor-sleep", "recovery", "muscle-mass", "skin-clarity"],
+    vendorIds: ["peptide-sciences", "limitless-life", "amino-asylum"],
+  },
+  {
+    slug: "thymosin-alpha-1",
+    name: "Thymosin Alpha-1",
+    category: "Peptides",
+    summary:
+      "Immune-modulating peptide (a fragment of thymosin) that supports T-cell function and dampens excess inflammation. Used to shorten illness recovery, support immune resilience during hard training blocks, and reduce chronic inflammatory load that shows up as skin and recovery issues. One of the better-studied peptides, with approved use for hepatitis in some countries.",
+    protocol: [
+      "1.5mg subcutaneous 2x per week is a common maintenance protocol",
+      "Higher frequency (daily for 1–2 weeks) during acute illness or heavy stress",
+      "Reconstitute and refrigerate; rotate injection sites",
+      "Cycle as needed rather than continuously",
+    ],
+    safety: [
+      "One of the better-tolerated peptides — mild injection-site reactions are the main issue",
+      "Because it modulates immunity, caution with autoimmune conditions — discuss with a clinician",
+      "Research/prescription status varies by country",
+      "COA-backed sourcing only",
+    ],
+    issueSlugs: ["recovery", "skin-clarity"],
+    vendorIds: ["peptide-sciences", "limitless-life"],
+  },
+  {
+    slug: "kpv",
+    name: "KPV",
+    category: "Peptides",
+    summary:
+      "Tripeptide (lysine-proline-valine, the C-terminal fragment of α-MSH) with anti-inflammatory action that works both systemically and topically. Used for gut inflammation and for calming inflammatory skin conditions — acne, eczema, rosacea — without the melanocortin/tanning effects of the full peptide. Popular as an oral/topical adjunct for stubborn inflammatory skin.",
+    protocol: [
+      "Topical: KPV in a serum/cream applied to affected skin 1–2x daily",
+      "Oral capsules (200–500mcg) used for gut-driven inflammation that manifests on the skin",
+      "Subcutaneous (250–500mcg) also used for systemic anti-inflammatory effect",
+      "Pair with a standard acne routine — KPV calms inflammation, it doesn't replace actives",
+    ],
+    safety: [
+      "Very well tolerated — no melanocortin/tanning or libido effects despite the α-MSH lineage",
+      "Topical irritation is rare; patch test new formulations",
+      "Research compound — quality of compounded topicals varies, use reputable sources",
+      "Not a substitute for treating severe or cystic acne medically",
+    ],
+    issueSlugs: ["skin-clarity", "oily-skin", "recovery"],
+    vendorIds: ["amino-asylum", "limitless-life"],
+  },
+
+  // ── LIBIDO / COGNITIVE PEPTIDES ───────────────────────────────────────────
+  {
+    slug: "pt-141",
+    name: "PT-141 (Bremelanotide)",
+    category: "Peptides",
+    summary:
+      "Melanocortin agonist FDA-approved (as Vyleesi) for low sexual desire — acts centrally on the nervous system rather than the vascular system like PDE5 inhibitors, so it drives desire/arousal itself. Used on-demand for libido. Shares the melanocortin family with the melanotans, so mild tanning/darkening is possible with frequent use.",
+    protocol: [
+      "0.5–1mg subcutaneous roughly 45 min to a few hours before activity, on-demand",
+      "Start low (0.5mg or less) to gauge nausea tolerance before going higher",
+      "Not for daily use — on-demand only; limit frequency to reduce melanocortin side effects",
+      "Reconstitute and refrigerate per standard peptide handling",
+    ],
+    safety: [
+      "Nausea and flushing are the most common effects — starting low mitigates this",
+      "Transient blood-pressure rise — avoid with uncontrolled hypertension or cardiac disease",
+      "Frequent use can darken skin/moles (melanocortin effect) — same nevi caution as the melanotans",
+      "Research/prescription status varies — COA-backed sourcing only",
+    ],
+    issueSlugs: ["hormonal-optimization"],
+    vendorIds: ["swiss-chems", "amino-asylum"],
+  },
+  {
+    slug: "selank",
+    name: "Selank",
+    category: "Peptides",
+    summary:
+      "Anxiolytic peptide developed in Russia (a synthetic analogue of tuftsin) used for anxiety reduction and mild cognitive/mood support without sedation or dependence. Modulates GABA and serotonin systems and BDNF. Popular as a calm-focus nootropic, typically delivered as a nasal spray.",
+    protocol: [
+      "Nasal spray is the common route: 250–500mcg 1–2x daily",
+      "Subcutaneous dosing is also used at similar amounts",
+      "Use as needed for acute anxiety or in short daily cycles (2–4 weeks)",
+      "Often paired with Semax for a calm-but-sharp cognitive stack",
+    ],
+    safety: [
+      "Very well tolerated — no sedation, no dependence reported",
+      "Occasional mild fatigue or nasal irritation from the spray",
+      "Limited long-term human data outside Russian clinical use",
+      "Research compound in most markets — COA-backed sourcing only",
+    ],
+    issueSlugs: ["cognitive-performance", "poor-sleep"],
+    vendorIds: ["peptide-sciences", "amino-asylum"],
+  },
+  {
+    slug: "semax",
+    name: "Semax",
+    category: "Peptides",
+    summary:
+      "Russian nootropic peptide (an ACTH fragment analogue) used for focus, memory, and mental stamina. Increases BDNF and modulates dopamine/serotonin, producing a clean cognitive lift without stimulant jitter. Commonly used as a nasal spray during demanding work or study blocks — directly relevant to the afternoon focus gap.",
+    protocol: [
+      "Nasal spray: 300–600mcg 1–2x daily, dosed earlier in the day",
+      "Use during focus-heavy blocks; cycle 2–4 weeks with breaks",
+      "Stacks with Selank (calm) for a balanced focus-without-anxiety effect",
+      "Avoid late-day dosing if it affects sleep",
+    ],
+    safety: [
+      "Well tolerated — no stimulant crash or dependence reported",
+      "Occasional nasal irritation or mild overstimulation at higher doses",
+      "Limited long-term human data outside Russian clinical use",
+      "Research compound in most markets — COA-backed sourcing only",
+    ],
+    issueSlugs: ["cognitive-performance"],
+    vendorIds: ["peptide-sciences", "amino-asylum"],
+  },
+
+  // ── TOPICAL PEPTIDES (SKINCARE) ───────────────────────────────────────────
+  {
+    slug: "argireline",
+    name: "Argireline (Acetyl Hexapeptide-8)",
+    category: "Skincare",
+    summary:
+      "Topical peptide marketed as 'topical Botox' — it partially inhibits neurotransmitter release at the muscle, modestly softening expression lines (forehead, crow's feet) with consistent use. Effect is real but mild and temporary compared to injectables; best as a low-risk daily-use option for early fine lines.",
+    protocol: [
+      "Apply a 5–10% argireline serum to expression-line areas AM and/or PM before moisturizer",
+      "Consistency over 4–8 weeks is required; effect fades if discontinued",
+      "Layer under moisturizer and SPF; pairs well with a retinoid at night",
+      "Set realistic expectations — softening of dynamic lines, not paralysis",
+    ],
+    safety: [
+      "Very well tolerated topically — irritation is uncommon",
+      "Effect is modest and reversible — not a replacement for injectable neuromodulators",
+      "Patch test new serums; avoid broken skin",
+      "No systemic absorption concern at cosmetic concentrations",
+    ],
+    issueSlugs: ["fine-lines"],
+    vendorIds: ["the-ordinary", "iherb", "amazon-ca"],
+  },
+  {
+    slug: "matrixyl",
+    name: "Matrixyl (Palmitoyl Peptides)",
+    category: "Skincare",
+    summary:
+      "Signal-peptide complex (palmitoyl pentapeptide-4 / Matrixyl 3000) that stimulates collagen and elastin synthesis, improving skin firmness and reducing fine lines over time. One of the better-evidenced cosmetic peptides for anti-aging, and it layers cleanly with retinoids and vitamin C.",
+    protocol: [
+      "Apply a Matrixyl serum AM and/or PM to clean skin before heavier creams",
+      "Results build over 8–12 weeks of consistent use",
+      "Layers well with hyaluronic acid, niacinamide, and retinoids (use retinoid PM)",
+      "Always follow with SPF in the AM to protect new collagen",
+    ],
+    safety: [
+      "Very well tolerated — one of the gentlest anti-aging actives",
+      "Effect is gradual and cumulative — not an overnight change",
+      "Patch test; avoid combining too many actives at once if sensitive",
+      "No significant systemic concern at cosmetic use",
+    ],
+    issueSlugs: ["fine-lines", "skin-texture"],
+    vendorIds: ["the-ordinary", "iherb"],
   },
 ];

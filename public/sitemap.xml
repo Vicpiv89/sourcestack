@@ -37,6 +37,8 @@
   <url><loc>https://sourcestack.app/issues/dandruff</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sourcestack.app/issues/androgenic-acne</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sourcestack.app/issues/skin-texture</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/issues/body-fat</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://sourcestack.app/issues/fine-lines</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <!-- Treatments -->
   <url><loc>https://sourcestack.app/treatments/minoxidil-topical</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://sourcestack.app/treatments/ru58841</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -100,4 +102,18 @@
   <url><loc>https://sourcestack.app/treatments/dhea</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://sourcestack.app/treatments/enclomiphene</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://sourcestack.app/treatments/melanotan-ii</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/melanotan-1</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/semaglutide</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://sourcestack.app/treatments/tirzepatide</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://sourcestack.app/treatments/tesamorelin</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sourcestack.app/treatments/aod-9604</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/mots-c</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/sermorelin</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sourcestack.app/treatments/thymosin-alpha-1</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/kpv</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/pt-141</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/selank</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/semax</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/argireline</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sourcestack.app/treatments/matrixyl</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
