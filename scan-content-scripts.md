@@ -4,6 +4,17 @@
 
 **Why this format:** the scan is a visual reveal (numbers populating + a score) — that's the dopamine. Zero-follower accounts pull views on reveal formats because the payoff is in the video itself, not your following.
 
+## ⚙️ Automation: the Studio tool (`/studio`)
+Batch generator built into the app (unlinked, private route — `sourcestack.app/studio`).
+- Drop in 10+ photos at once → it scans every one with the real engine → auto-names them from the filename.
+- Edit names, set the hook line, hit **▶ Play reveal**.
+- It plays a vertical 9:16 sequence: hook card → each face with an animated score count-up + top-3 metrics → ranked **leaderboard** → "link in bio" CTA.
+- **You screen-record that one take.** No more upload-one-at-a-time / screenshot / manually build a ranking. That whole tedious loop is gone.
+- Curation still matters (front-facing, well-lit photos) — that's the accuracy safeguard, not busywork.
+- Metric to watch after posting: **scan sessions**, not views.
+
+*Phase 2 (only after a clip proves the format gets views): full programmatic MP4 render via Remotion — `run one command → finished clips, zero recording`. Not worth building until the format is validated.*
+
 ## Setup (once, ~10 min)
 - **Account:** looksmaxxing-native handle (e.g. `@sourcestack` or `@facescan.app`). Same handle TikTok + IG.
 - **Bio:** one line + link. `Free face scan → 14 metrics, nothing uploads. Link below.` → link to `sourcestack.app/scan` (NOT the homepage — send them straight to the hook).
