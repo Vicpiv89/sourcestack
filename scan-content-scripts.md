@@ -73,6 +73,32 @@ Views are vanity. Watch **scan sessions** (analytics) in the 24h after each post
 
 ---
 
+## CLIP TYPE 4 — Celebrity / Internet-Face Scans ⭐ (lead with this)
+*Best opener: borrows their audience, zero personal exposure, batchable (scan 20 in one sitting from photos). The scan already accepts uploaded photos — drag/drop a downloaded pic into /scan. No build needed.*
+
+**Two hard rules (don't skip):**
+1. **Curate photos.** Front-facing, well-lit, high-res only. A bad photo tanks a hot celeb's score → makes the TOOL look broken, not the celeb. Test-scan 5–10 first, know the numbers, pick the ones that land.
+2. **On named real people, keep it about ratios — not drugs.** Never "X needs finasteride/accutane" (implies a condition = defamation-adjacent + platform harassment risk + you're using their face to sell a paid product). Frame as the scan's *analysis*: "the 4% keeping him off a perfect jaw," "what the scan says maxes him out." Save the buy-these-compounds funnel for generic/aspirational clips.
+
+**Format A — Leaderboard (safest + most shareable):**
+- Hook: "I scanned 10 celebrities' faces with an AI tool. Here's the ranking."
+- Show 8–10 rapid scans, score flashing on each → final tier list / leaderboard.
+- End: "Scan yours free — link in bio. Bet you beat #7."
+- Caption: `no way [celeb] scored that low 💀 do you agree`
+
+**Format B — Debate bait:**
+- Hook: "This face scanner says [Celeb A] beats [Celeb B]. Thoughts?"
+- Two scans head-to-head, scores reveal, one wins.
+- Controversy in comments = reach. Pick two the niche already argues about.
+
+**Format C — Confirmation / validation:**
+- Hook: "Does this AI actually know what a good face is? Let's test it on [famously good-looking celeb]."
+- Scan → high score → "it's not wrong." Builds trust in the tool.
+
+**Face pool:** pick names the looksmaxxing niche already debates (male-model / jawline canon + streamers/internet faces the audience knows). Known + debated = comments = reach. Rotate faces every batch.
+
+**Why this over own-face content:** removes the vulnerability that was killing your motivation, and known faces come with built-in search + curiosity. Lead your posting with celebrity clips, mix in the own-face/privacy clips (1–3) as variety.
+
 ## Batch plan
 - **One session:** record all 3 (film 2–3 hook takes each). ~45 min.
 - **Edit:** trim, add text overlays (CapCut). ~30 min each, or rough-cut and ship — done > perfect.
