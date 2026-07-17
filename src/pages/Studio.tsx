@@ -303,7 +303,7 @@ export default function Studio() {
             {phase === "cta" && (
               <div style={{ padding: 28 }}>
                 <div style={{ fontSize: 30, fontWeight: 800, marginBottom: 12 }}>Scan your own face — free</div>
-                <div style={{ fontSize: 16, color: "#cde", marginBottom: 22 }}>14 metrics · nothing uploads · 30 seconds</div>
+                <div style={{ fontSize: 16, color: "#cde", marginBottom: 22 }}>17 metrics · nothing uploads · 30 seconds</div>
                 <div style={{ display: "inline-block", background: "#6ee7b7", color: "#062", fontWeight: 800,
                   padding: "12px 22px", borderRadius: 999, fontSize: 17 }}>link in bio ↑</div>
               </div>

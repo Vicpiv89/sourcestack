@@ -3,6 +3,7 @@ import type { FaceLandmarker } from "@mediapipe/tasks-vision";
 // ─── MediaPipe landmark indices (478-point face mesh w/ iris) ───
 const LM = {
   rEyeOuter: 33, rEyeInner: 133, lEyeInner: 362, lEyeOuter: 263,
+  rEyeUpper: 159, rEyeLower: 145, lEyeUpper: 386, lEyeLower: 374,
   rIris: 468, lIris: 473,
   rCheek: 234, lCheek: 454,          // bizygomatic (face oval widest)
   rGonion: 58, lGonion: 288,         // jaw angle region
@@ -85,10 +86,17 @@ export function loadFaceLandmarker(): Promise<FaceLandmarker> {
 const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
 const mid = (a: Pt, b: Pt): Pt => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
-/** Score 10 inside [lo, hi]; lose 1 point per `unit` of distance outside. */
+/**
+ * Harsh scoring: 10 only at the exact center of [lo, hi], sliding to 8.5 at the
+ * band edge, then dropping 1.35 per `unit` outside. A perfect 10 requires a
+ * perfect measurement — near-ideal reads as "good, not done".
+ */
 function band(value: number, lo: number, hi: number, unit: number): number {
-  const d = value < lo ? lo - value : value > hi ? value - hi : 0;
-  return Math.max(1, Math.min(10, 10 - d / unit));
+  const center = (lo + hi) / 2;
+  const half = Math.max((hi - lo) / 2, 0.0001);
+  const d = Math.abs(value - center);
+  if (d <= half) return 10 - (d / half) * 1.5;
+  return Math.max(1, Math.min(10, 8.5 - ((d - half) / unit) * 1.35));
 }
 
 /** mean luminance, luminance std, and redness of a square patch centered on (cx, cy) */
@@ -125,9 +133,9 @@ function rotate(p: Pt, origin: Pt, rad: number): Pt {
 }
 
 export function tierFor(overall: number): string {
-  if (overall >= 8) return "Elite harmony";
-  if (overall >= 7) return "Strong base";
-  if (overall >= 5.5) return "Solid — clear levers";
+  if (overall >= 8.7) return "Elite harmony";
+  if (overall >= 7.5) return "Strong base";
+  if (overall >= 6) return "Solid — clear levers";
   return "High upside";
 }
 
@@ -172,9 +180,9 @@ export function analyzeFace(
     display: `${tilt.toFixed(1)}°`, ideal: "6–9° positive",
     score: band(tilt, 6, 9, 1.2), weight: 1.2,
     note: tilt >= 6 ? "Hunter-eye territory — keep it." :
-      tilt >= 3 ? "Positive tilt. Sleep quality and de-puffing push it higher." :
-      "Flat-to-negative. Puffiness and fatigue flatten tilt — fixable margin here.",
-    issueSlugs: tilt < 3 ? ["facial-puffiness", "poor-sleep"] : [],
+      tilt >= 3 ? "Positive but short of ideal. Sleep debt and puffiness are flattening what's there." :
+      "Flat-to-negative tilt — reads tired and recessed on camera. Puffiness and fatigue are the fixable part.",
+    issueSlugs: tilt < 6 ? ["facial-puffiness", "poor-sleep"] : [],
   });
 
   // 2 · Eye spacing (1:1:1 rule)
@@ -198,9 +206,10 @@ export function analyzeFace(
     id: "fwhr", name: "Face Width-Height (fWHR)",
     display: fwhr.toFixed(2), ideal: "1.75–1.95",
     score: band(fwhr, 1.75, 1.95, 0.12), weight: 1.0,
-    note: fwhr >= 1.75 ? "Dominant width-to-height — strong masculine signal." :
-      "Narrower profile. Leanness sharpens what's there; width itself is structural.",
-    issueSlugs: [],
+    note: fwhr >= 1.75 && fwhr <= 1.95 ? "Dominant width-to-height — strong masculine signal." :
+      fwhr > 1.95 ? "Width overshoots the band — usually soft-tissue fullness, not bone. Leanness pulls this back in." :
+      "Narrow width-to-height — weakens the dominance signal. Masseter work and leanness are the levers.",
+    issueSlugs: fwhr < 1.75 ? ["jawline-definition"] : fwhr > 1.95 ? ["facial-puffiness", "body-fat"] : [],
   });
 
   // 4 · Midface ratio (interpupillary / pupil-to-lip)
@@ -224,10 +233,10 @@ export function analyzeFace(
     id: "thirds", name: "Facial Thirds Balance",
     display: `${thirds.toFixed(2)}×`, ideal: "1.22–1.42",
     score: band(thirds, 1.22, 1.42, 0.1), weight: 1.0,
-    note: thirds > 1.42 ? "Lower third runs long — beard/facial hair styling can rebalance." :
-      thirds < 1.22 ? "Lower third slightly short — reads softer; jaw definition work helps." :
+    note: thirds > 1.42 ? "Lower third runs long — visibly stretches the face. Beard/facial hair styling rebalances it." :
+      thirds < 1.22 ? "Lower third runs short — reads soft and under-developed. Jaw definition work is the lever." :
       "Balanced thirds.",
-    issueSlugs: [],
+    issueSlugs: thirds < 1.22 ? ["jawline-definition"] : [],
   });
 
   // 6 · Chin-to-philtrum
@@ -238,10 +247,10 @@ export function analyzeFace(
     id: "chin-philtrum", name: "Chin-to-Philtrum",
     display: `${chinRatio.toFixed(2)}×`, ideal: "2.15–2.65×",
     score: band(chinRatio, 2.15, 2.65, 0.25), weight: 0.9,
-    note: chinRatio < 2.15 ? "Chin under-projects relative to philtrum. Body fat is usually the mask here." :
+    note: chinRatio < 2.15 ? "Chin under-projects relative to philtrum — weakens the whole profile. Body fat is usually the mask here." :
       chinRatio > 2.65 ? "Long lower face relative to philtrum — strong chin, style around it." :
       "Strong chin proportion.",
-    issueSlugs: chinRatio < 2.15 ? ["jawline-definition"] : [],
+    issueSlugs: chinRatio < 2.15 ? ["jawline-definition", "body-fat"] : [],
   });
 
   // 7 · Lip ratio (lower / upper)
@@ -251,10 +260,49 @@ export function analyzeFace(
   add({
     id: "lip-ratio", name: "Lip Ratio",
     display: `${lipRatio.toFixed(2)}×`, ideal: "1.45–1.95× lower/upper",
-    score: band(lipRatio, 1.45, 1.95, 0.3), weight: 0.7,
-    note: lipRatio >= 1.45 && lipRatio <= 1.95 ? "Ideal lower-to-upper fullness." :
-      "Off the classic ratio — hydration and exfoliation move lip quality more than people think.",
+    score: band(lipRatio, 1.45, 1.95, 0.25), weight: 0.7,
+    note: lipRatio >= 1.45 && lipRatio <= 1.95 ? "Lower-to-upper fullness sits in the classic band." :
+      lipRatio < 1.45 ? "Upper lip dominates — off the classic ratio, reads unbalanced up close." :
+      "Bottom-heavy lip ratio — off the classic band and it shows in photos.",
     issueSlugs: [],
+  });
+
+  // 7b · Lip fullness (total vermilion height vs lower third)
+  const lipFullness = dist(P.lipTop, P.lipBottom) / Math.max(dist(P.subnasale, P.chin), 0.001);
+  add({
+    id: "lip-fullness", name: "Lip Fullness",
+    display: `${(lipFullness * 100).toFixed(0)}%`, ideal: "22–30% of lower third",
+    score: band(lipFullness, 0.22, 0.3, 0.045), weight: 0.7,
+    note: lipFullness < 0.22 ? "Lips run thin for your lower third — flattens the whole mouth area on camera." :
+      lipFullness > 0.3 ? "Lips carry a lot of the lower third — proportion, not fullness, is the issue here." :
+      "Vermilion height is proportionate to your lower third.",
+    issueSlugs: [],
+  });
+
+  // 7c · Mouth width vs nose width (classic ~1.5× rule)
+  const mouthNose = dist(P.rMouth, P.lMouth) / Math.max(dist(P.rAlar, P.lAlar), 0.001);
+  add({
+    id: "mouth-nose", name: "Mouth-to-Nose Width",
+    display: `${mouthNose.toFixed(2)}×`, ideal: "1.38–1.62× nose width",
+    score: band(mouthNose, 1.38, 1.62, 0.13), weight: 0.7,
+    note: mouthNose < 1.38 ? "Mouth reads narrow against your nose — throws off the lower-face balance." :
+      mouthNose > 1.62 ? "Wide mouth relative to nose — pulls attention low on the face." :
+      "Mouth-to-nose proportion is on the classic line.",
+    issueSlugs: [],
+  });
+
+  // 7d · Eye aspect ratio (height / width — narrow reads sharper)
+  const earR = dist(P.rEyeUpper, P.rEyeLower) / Math.max(dist(P.rEyeOuter, P.rEyeInner), 0.001);
+  const earL = dist(P.lEyeUpper, P.lEyeLower) / Math.max(dist(P.lEyeOuter, P.lEyeInner), 0.001);
+  const eyeAspect = (earR + earL) / 2;
+  add({
+    id: "eye-aspect", name: "Eye Narrowness",
+    display: `${eyeAspect.toFixed(2)}×`, ideal: "0.24–0.32 height/width",
+    score: band(eyeAspect, 0.24, 0.32, 0.04), weight: 0.9,
+    note: eyeAspect > 0.32 ? "Eyes read round — puffiness and water retention round the eye area. Leanness + sleep narrows the shape." :
+      eyeAspect < 0.24 ? "Extremely narrow aperture — often camera angle or squinting. Retake relaxed if so." :
+      "Narrow aperture — the hunter-eye shape everyone is chasing.",
+    issueSlugs: eyeAspect > 0.32 ? ["facial-puffiness", "poor-sleep"] : [],
   });
 
   // 8 · Nose width vs intercanthal
@@ -275,10 +323,10 @@ export function analyzeFace(
     id: "jaw-taper", name: "Jaw-to-Cheek Taper",
     display: `${jawTaper.toFixed(2)}×`, ideal: "0.84–0.90",
     score: band(jawTaper, 0.845, 0.895, 0.022), weight: 1.0,
-    note: jawTaper > 0.895 ? "Lower face carries width — usually soft-tissue, not bone. Fat loss reveals the line." :
-      jawTaper < 0.845 ? "Narrow gonial width. Masseter development adds real width here." :
+    note: jawTaper > 0.895 ? "Lower face carries width — usually soft-tissue, not bone. The jawline is buried; fat loss reveals it." :
+      jawTaper < 0.845 ? "Narrow gonial width — jaw disappears from the front. Masseter development adds real width here." :
       "Clean taper — jawline reads defined.",
-    issueSlugs: jawTaper > 0.895 ? ["facial-puffiness", "jawline-definition"] :
+    issueSlugs: jawTaper > 0.895 ? ["facial-puffiness", "jawline-definition", "body-fat"] :
       jawTaper < 0.845 ? ["jawline-definition"] : [],
   });
 
@@ -329,9 +377,9 @@ export function analyzeFace(
     display: `${faceIndex.toFixed(2)}×`, ideal: "1.18–1.30",
     score: band(faceIndex, 1.18, 1.3, 0.09), weight: 0.8,
     note: faceIndex > 1.3 ? "Long-face pattern — hairstyle with side volume rebalances." :
-      faceIndex < 1.18 ? "Rounder pattern — leanness is the master lever, this often moves with body fat." :
+      faceIndex < 1.18 ? "Round-face pattern — definition is buried under soft tissue. Leanness is the master lever here." :
       "Balanced length-to-width.",
-    issueSlugs: faceIndex < 1.18 ? ["facial-puffiness"] : [],
+    issueSlugs: faceIndex < 1.18 ? ["facial-puffiness", "body-fat"] : [],
   });
 
   // ── pixel-based metrics (need the un-annotated canvas) ──
@@ -400,10 +448,10 @@ export function analyzeFace(
 
   const totalWeight = metrics.reduce((s, m) => s + m.weight, 0);
   const weightedMean = metrics.reduce((s, m) => s + m.score * m.weight, 0) / totalWeight;
-  // most faces land near-ideal on most ratios, so the raw mean clusters 8–9.5;
-  // stretch it hard so the overall score actually differentiates faces:
-  // garbage photos ~3, average ~5–7, strong 8+, ceiling 9.4
-  const overall = Math.max(2.9, Math.min(9.4, 1.9 * weightedMean - 8.6));
+  // with the harsh band(), raw weighted means cluster ~7.5–9 for real faces;
+  // steep linear stretch so the overall actually differentiates AND runs harsh:
+  // junk ~3, average ~5–6, strong ~7, near-perfect required to break 9
+  const overall = Math.max(2.9, Math.min(9.4, 2.4 * weightedMean - 14.0));
 
   return {
     overall,

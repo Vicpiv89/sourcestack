@@ -48,6 +48,7 @@ export default function FaceScan() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [dragOver, setDragOver] = useState(false);
+  const [showAllMetrics, setShowAllMetrics] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -151,9 +152,9 @@ export default function FaceScan() {
     line(o.lBrowMedial, o.lBrowTail, faint);
   };
 
-  // issues: from weak metrics + self-reported
+  // issues: from weak metrics + self-reported (7.5 = anything meaningfully off-ideal flags)
   const metricIssueSlugs = result
-    ? [...new Set(result.metrics.filter((m) => m.score < 7).flatMap((m) => m.issueSlugs))]
+    ? [...new Set(result.metrics.filter((m) => m.score < 7.5).flatMap((m) => m.issueSlugs))]
     : [];
   const allIssueSlugs = [...new Set([...metricIssueSlugs, ...selfReported])];
   const matchedIssues = allIssueSlugs
@@ -161,8 +162,9 @@ export default function FaceScan() {
     .filter(Boolean) as typeof issues;
   const stackSlugs = [...new Set(matchedIssues.flatMap((i) => i.treatmentSlugs.slice(0, 2)))].slice(0, 10);
 
+  const flaggedCount = result ? result.metrics.filter((m) => m.score < 7.5).length : 0;
   const weakest = result
-    ? [...result.metrics].sort((a, b) => a.score - b.score).slice(0, 4).filter((m) => m.score < 7)
+    ? [...result.metrics].sort((a, b) => a.score - b.score).slice(0, 5).filter((m) => m.score < 7.5)
     : [];
 
   const reset = () => {
@@ -171,6 +173,7 @@ export default function FaceScan() {
     setError("");
     setSelfReported([]);
     setSaveState("idle");
+    setShowAllMetrics(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -191,7 +194,7 @@ export default function FaceScan() {
     <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Face Scan — Photo to Protocol"
-        description="Upload a photo, get 14 facial measurements scored — canthal tilt, fWHR, jaw taper, symmetry, skin clarity, brow density — then a protocol targeting exactly what you can improve. Runs 100% in your browser."
+        description="Upload a photo, get 17 facial measurements scored — canthal tilt, fWHR, jaw taper, lip ratios, eye shape, symmetry, skin clarity, brow density — then a protocol targeting exactly what you need to improve. Runs 100% in your browser."
         path="/scan"
       />
       <div className="px-6 pt-12 pb-24 max-w-4xl mx-auto">
@@ -201,9 +204,9 @@ export default function FaceScan() {
             <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Face Scan</p>
             <h1 className="text-3xl font-bold text-white mb-2">Photo → protocol.</h1>
             <p className="text-white/40 text-sm mb-8 leading-relaxed">
-              One front-facing photo. We measure 14 facial metrics — canthal tilt, fWHR,
-              jaw taper, symmetry, skin clarity, brow density — and show you exactly
-              what can be improved, with the fix for each.
+              One front-facing photo. We measure 17 facial metrics — canthal tilt, fWHR,
+              jaw taper, lip ratios, eye shape, symmetry, skin clarity, brow density —
+              and show you exactly what needs improving, with the fix for each.
             </p>
 
             <div
@@ -302,40 +305,23 @@ export default function FaceScan() {
                   </span>
                   <span className="text-white/30 text-lg mb-1">/ 10</span>
                 </div>
-                <p className="text-sm mb-4" style={{ color: scoreColor(result.overall) }}>
+                <p className="text-sm mb-1" style={{ color: scoreColor(result.overall) }}>
                   {result.tier}
+                </p>
+                <p className="text-white/40 text-xs mb-4">
+                  {flaggedCount > 0
+                    ? `${flaggedCount} of ${result.metrics.length} metrics flagged for improvement`
+                    : `All ${result.metrics.length} metrics in the ideal band — near-perfect scan`}
                 </p>
 
                 {result.warnings.map((w) => (
                   <p key={w} className="text-amber-400/70 text-xs mb-2">⚠ {w}</p>
                 ))}
 
-                {/* Metric grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-6 mb-10">
-                  {result.metrics.map((m) => (
-                    <div key={m.id} className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10">
-                      <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">{m.name}</p>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-white text-lg font-semibold">{m.display}</span>
-                        <span className="text-xs font-medium" style={{ color: scoreColor(m.score) }}>
-                          {m.score.toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
-                        />
-                      </div>
-                      <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Weakest points — framed as what's improvable */}
+                {/* Weakest points — what needs work, ranked */}
                 {weakest.length > 0 && (
-                  <div className="mb-10">
-                    <h2 className="text-white font-semibold text-sm mb-1">What you can improve, ranked</h2>
+                  <div className="mt-6 mb-10">
+                    <h2 className="text-white font-semibold text-sm mb-1">What you need to improve, ranked</h2>
                     <p className="text-white/30 text-xs mb-3">Each maps to protocol options in the database. Highest impact first.</p>
                     <div className="flex flex-col gap-2.5">
                       {weakest.map((m, i) => {
@@ -358,42 +344,6 @@ export default function FaceScan() {
                     </div>
                   </div>
                 )}
-
-                {/* Goal selection */}
-                <div className="mb-10 px-4 py-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04]">
-                  <h2 className="text-white font-semibold text-sm mb-1">What do you want to improve?</h2>
-                  <p className="text-white/40 text-xs mb-3.5 leading-relaxed">
-                    The scan reads your ratios, skin, and brows — but you know the rest.
-                    Select everything you're working on and your plan gets built around it.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {SELF_REPORT.map(({ slug, label }) => {
-                      const on = selfReported.includes(slug);
-                      return (
-                        <button
-                          key={slug}
-                          onClick={() =>
-                            setSelfReported((prev) =>
-                              on ? prev.filter((s) => s !== slug) : [...prev, slug]
-                            )
-                          }
-                          className={`px-3.5 py-2 rounded-full text-xs border transition-colors ${
-                            on
-                              ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-300 font-medium"
-                              : "border-white/15 bg-white/[0.03] text-white/50 hover:border-white/30 hover:text-white/80"
-                          }`}
-                        >
-                          {on ? "✓ " : "+ "}{label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {selfReported.length > 0 && (
-                    <p className="text-emerald-400/70 text-xs mt-3">
-                      {selfReported.length} goal{selfReported.length > 1 ? "s" : ""} added to your plan ↓
-                    </p>
-                  )}
-                </div>
 
                 {/* The plan — listicle */}
                 {matchedIssues.length > 0 ? (
@@ -505,12 +455,84 @@ export default function FaceScan() {
                   </div>
                 ) : (
                   <div className="px-5 py-6 rounded-2xl border border-white/10 bg-white/[0.02] text-center">
-                    <p className="text-white text-sm font-medium mb-1">Clean scan — nothing flagged.</p>
+                    <p className="text-white text-sm font-medium mb-1">
+                      {weakest.length > 0
+                        ? "Your flagged metrics are structural — but that's not the whole picture."
+                        : "Near-perfect scan — nothing flagged. That's rare."}
+                    </p>
                     <p className="text-white/35 text-xs leading-relaxed">
-                      Select what you want to improve above, and your plan builds itself.
+                      Select what you're working on below, and your plan builds itself.
                     </p>
                   </div>
                 )}
+
+                {/* Goal selection — adds to the plan above */}
+                <div className="mt-10 mb-10 px-4 py-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04]">
+                  <h2 className="text-white font-semibold text-sm mb-1">What do you want to improve?</h2>
+                  <p className="text-white/40 text-xs mb-3.5 leading-relaxed">
+                    The scan reads your ratios, skin, and brows — but you know the rest.
+                    Select everything you're working on and it's added to your plan.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {SELF_REPORT.map(({ slug, label }) => {
+                      const on = selfReported.includes(slug);
+                      return (
+                        <button
+                          key={slug}
+                          onClick={() =>
+                            setSelfReported((prev) =>
+                              on ? prev.filter((s) => s !== slug) : [...prev, slug]
+                            )
+                          }
+                          className={`px-3.5 py-2 rounded-full text-xs border transition-colors ${
+                            on
+                              ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-300 font-medium"
+                              : "border-white/15 bg-white/[0.03] text-white/50 hover:border-white/30 hover:text-white/80"
+                          }`}
+                        >
+                          {on ? "✓ " : "+ "}{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selfReported.length > 0 && (
+                    <p className="text-emerald-400/70 text-xs mt-3">
+                      {selfReported.length} goal{selfReported.length > 1 ? "s" : ""} added to your plan ↑
+                    </p>
+                  )}
+                </div>
+
+                {/* Full measurement grid — collapsed by default to keep mobile readable */}
+                <div className="mb-2">
+                  <button
+                    onClick={() => setShowAllMetrics((v) => !v)}
+                    className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.02] text-white/50 text-xs hover:border-white/25 hover:text-white/80 transition-colors"
+                  >
+                    {showAllMetrics ? "Hide" : "See"} all {result.metrics.length} measurements {showAllMetrics ? "↑" : "↓"}
+                  </button>
+                  {showAllMetrics && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3">
+                      {result.metrics.map((m) => (
+                        <div key={m.id} className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10">
+                          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">{m.name}</p>
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-white text-lg font-semibold">{m.display}</span>
+                            <span className="text-xs font-medium" style={{ color: scoreColor(m.score) }}>
+                              {m.score.toFixed(1)}
+                            </span>
+                          </div>
+                          <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
+                            />
+                          </div>
+                          <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 <p className="text-white/20 text-[11px] mt-8 leading-relaxed">
                   Ratios are estimated from a single 2D photo — lighting, lens distance, and angle all

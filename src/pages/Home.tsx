@@ -202,7 +202,7 @@ export default function Home() {
                 <span className="text-[9px] font-bold tracking-widest uppercase text-white/60 bg-white/10 px-1.5 py-0.5 rounded-full border border-white/15">New</span>
               </div>
               <p className="text-white/35 text-xs">
-                One photo → 14 facial metrics measured → exactly what you can improve, with the fix for each. Nothing uploaded.
+                One photo → 17 facial metrics measured → exactly what you need to improve, with the fix for each. Nothing uploaded.
               </p>
             </div>
           </div>
