@@ -65,14 +65,14 @@ export const issues: Issue[] = [
     name: "Soft Jawline / Neck Definition",
     description:
       "Poor cervicomental angle or undefined jaw. Primary lever is body fat — most other interventions are marginal until fat loss is addressed.",
-    treatmentSlugs: ["semaglutide", "tirzepatide", "tesamorelin", "mastic-gum", "creatine", "gua-sha"],
+    treatmentSlugs: ["retatrutide", "tirzepatide", "semaglutide", "cagrilintide", "tesamorelin", "mastic-gum", "creatine", "gua-sha"],
   },
   {
     slug: "body-fat",
     name: "Stubborn Body Fat / Fat Loss",
     description:
       "Excess body fat is the single biggest lever on facial and physical aesthetics — it blurs the jawline, cheekbones, and overall bone structure. Diet and training come first; the compounds below (GLP-1s especially) are accelerators, not replacements, and only work aesthetically when muscle is preserved with protein and lifting.",
-    treatmentSlugs: ["semaglutide", "tirzepatide", "tesamorelin", "mots-c", "aod-9604"],
+    treatmentSlugs: ["retatrutide", "tirzepatide", "semaglutide", "cagrilintide", "tesamorelin", "mots-c", "5-amino-1mq", "aod-9604", "slu-pp-332"],
   },
   {
     slug: "fine-lines",
