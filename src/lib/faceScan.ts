@@ -47,6 +47,10 @@ export interface ScanResult {
     rCheek: Pt; lCheek: Pt; rGonion: Pt; lGonion: Pt;
     nasion: Pt; subnasale: Pt; chin: Pt; foreheadTop: Pt;
     rBrowMedial: Pt; rBrowTail: Pt; lBrowMedial: Pt; lBrowTail: Pt;
+    /** skin sample zones (only meaningful when pixel metrics ran) */
+    rCheekSkin: Pt; lCheekSkin: Pt; foreheadSkin: Pt;
+    /** base radius (px) for drawing the skin sample ovals */
+    skinPatchR: number;
   };
 }
 
@@ -464,6 +468,8 @@ export function analyzeFace(
       rCheek: px(LM.rCheek), lCheek: px(LM.lCheek), rGonion: px(LM.rGonion), lGonion: px(LM.lGonion),
       nasion: px(LM.nasion), subnasale: px(LM.subnasale), chin: px(LM.chin), foreheadTop: px(LM.foreheadTop),
       rBrowMedial: px(LM.rBrowMedial), rBrowTail: px(LM.rBrowTail), lBrowMedial: px(LM.lBrowMedial), lBrowTail: px(LM.lBrowTail),
+      rCheekSkin: px(LM.rCheekSkin), lCheekSkin: px(LM.lCheekSkin), foreheadSkin: px(LM.foreheadSkin),
+      skinPatchR: faceW * 0.09,
     },
   };
 }

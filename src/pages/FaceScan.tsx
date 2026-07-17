@@ -150,6 +150,41 @@ export default function FaceScan() {
     // brows
     line(o.rBrowMedial, o.rBrowTail, faint);
     line(o.lBrowMedial, o.lBrowTail, faint);
+
+    // sample-zone ovals, colored by the pixel-metric scores
+    const ellipse = (
+      c: { x: number; y: number }, rx: number, ry: number, rot: number, color: string
+    ) => {
+      ctx.strokeStyle = color;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, rx, ry, rot, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    };
+
+    // skin quality — the three sampled patches (cheeks + forehead)
+    const skinScore = scan.metrics.find((m) => m.id === "skin-clarity")?.score;
+    if (skinScore !== undefined) {
+      const c = scoreColor(skinScore) + "cc";
+      const r = o.skinPatchR;
+      ellipse(o.rCheekSkin, r * 0.9, r * 0.65, -0.2, c);
+      ellipse(o.lCheekSkin, r * 0.9, r * 0.65, 0.2, c);
+      ellipse(o.foreheadSkin, r * 1.4, r * 0.55, 0, c);
+    }
+
+    // brow health — oval traced along each sampled brow
+    const browScore = scan.metrics.find((m) => m.id === "brow-density")?.score;
+    if (browScore !== undefined) {
+      const c = scoreColor(browScore) + "cc";
+      const browOval = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+        const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        ellipse({ x: cx, y: cy }, len * 0.62, len * 0.2, Math.atan2(b.y - a.y, b.x - a.x), c);
+      };
+      browOval(o.rBrowMedial, o.rBrowTail);
+      browOval(o.lBrowMedial, o.lBrowTail);
+    }
   };
 
   // issues: from weak metrics + self-reported (7.5 = anything meaningfully off-ideal flags)
