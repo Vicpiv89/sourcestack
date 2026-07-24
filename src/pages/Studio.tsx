@@ -280,12 +280,13 @@ function renderVideoFrame(
   ctx.fillStyle = "#fff";
   ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
   ctx.fillText("Leaderboard", REC_W * 0.09, REC_H * 0.13);
-  const rowH = 112, top = REC_H * 0.185;
+  // no bottom CTA text anymore — rows use that freed space and run further down the screen
+  const rowH = 132, top = REC_H * 0.185;
   boardRanked.forEach((it, i) => {
     const t = fadeIn(boardT, i * 220, 400);
     if (t <= 0) return;
     const y = top + i * rowH;
-    const baseline = y + 63;
+    const baseline = y + 72;
     ctx.globalAlpha = t;
     ctx.fillStyle = i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)";
     roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
@@ -295,7 +296,7 @@ function renderVideoFrame(
     ctx.textAlign = "left";
     ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
-    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 72, 72, 12, it.focusX ?? 0.5, it.focusY ?? 0.5);
+    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 20, 84, 84, 14, it.focusX ?? 0.5, it.focusY ?? 0.5);
     ctx.fillStyle = "#fff";
     ctx.font = "600 35px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.name, REC_W * 0.26, baseline);
@@ -306,10 +307,6 @@ function renderVideoFrame(
     ctx.fillText(it.score.toFixed(1), REC_W * 0.79, baseline);
     ctx.globalAlpha = 1;
   });
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#9ab";
-  ctx.font = "600 30px -apple-system, Helvetica, Arial, sans-serif";
-  ctx.fillText("Try it yourself - sourcestack.app", REC_W / 2, REC_H * 0.84);
 }
 
 type Item = {
@@ -335,7 +332,7 @@ function makeThumb(canvas: HTMLCanvasElement, maxDim = 220): string {
   small.height = h;
   small.getContext("2d")!.drawImage(canvas, 0, 0, w, h);
   // webp (not jpeg) — preserves transparency for background-removed cutouts
-  return small.toDataURL("image/webp", 0.85);
+  return small.toDataURL("image/png");
 }
 
 // ── overlay (mirrors FaceScan.drawOverlay) ──
@@ -476,8 +473,9 @@ export default function Studio() {
       }
       const scan = analyzeFace(detection.faceLandmarks[0], w, h, ctx);
       drawOverlay(ctx, scan, w);
-      // webp (not jpeg) — preserves transparency for background-removed player cutouts
-      const dataUrl = canvas.toDataURL("image/webp", 0.92);
+      // png (not jpeg) — preserves transparency for background-removed player cutouts.
+      // Using png specifically (not webp) — universally, unambiguously supported everywhere.
+      const dataUrl = canvas.toDataURL("image/png");
       const thumb = makeThumb(canvas);
       const contentScore = remapForContent(scan.overall);
       const focus = faceFocus(scan, w, h);
@@ -628,35 +626,52 @@ export default function Studio() {
     const img = imgCacheRef.current.get(cur.id);
     if (!canvas || !img) return;
     let raf = 0;
+    let warned = false;
     const draw = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const w = Math.round(canvas.clientWidth * dpr);
-      const h = Math.round(canvas.clientHeight * dpr);
-      if (w && h && (canvas.width !== w || canvas.height !== h)) { canvas.width = w; canvas.height = h; }
-      if (canvas.width && canvas.height) {
-        const ctx = canvas.getContext("2d")!;
-        // opaque backdrop — otherwise transparent pixels in a background-removed photo would
-        // let whatever's behind the canvas show through
-        ctx.fillStyle = "#04120a";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const marginX = canvas.width * 0.06;
-        const localT = performance.now() - faceStartRef.current;
-        if (localT < SCAN_HOLD_MS) {
-          drawContain(ctx, img, marginX, 0, canvas.width - marginX * 2, canvas.height);
-        } else {
-          const revealT = localT - SCAN_HOLD_MS;
-          const faceTop = canvas.height * 0.15;
-          const faceH = canvas.height * 0.4;
-          const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
-          const by = lerp(0, faceTop, zt);
-          const bh = lerp(canvas.height, faceH, zt);
-          drawCover(ctx, img, marginX, by, canvas.width - marginX * 2, bh, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+      try {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        // fall back to the parent box if clientWidth/Height read 0 on an early frame
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.round((canvas.clientWidth || rect.width) * dpr);
+        const h = Math.round((canvas.clientHeight || rect.height) * dpr);
+        if (w && h && (canvas.width !== w || canvas.height !== h)) { canvas.width = w; canvas.height = h; }
+        if (canvas.width && canvas.height) {
+          const ctx = canvas.getContext("2d")!;
+          // opaque backdrop — otherwise transparent pixels in a background-removed photo would
+          // let whatever's behind the canvas show through
+          ctx.fillStyle = "#04120a";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // a failed/undecoded image has naturalWidth 0 — drawing that would leave the canvas
+          // blank behind the opaque fill above rather than crashing, so skip it explicitly
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+            const marginX = canvas.width * 0.06;
+            const localT = performance.now() - faceStartRef.current;
+            if (localT < SCAN_HOLD_MS) {
+              drawContain(ctx, img, marginX, 0, canvas.width - marginX * 2, canvas.height);
+            } else {
+              const revealT = localT - SCAN_HOLD_MS;
+              const faceTop = canvas.height * 0.15;
+              const faceH = canvas.height * 0.4;
+              const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
+              const by = lerp(0, faceTop, zt);
+              const bh = lerp(canvas.height, faceH, zt);
+              drawCover(ctx, img, marginX, by, canvas.width - marginX * 2, bh, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+            }
+          } else if (!warned) {
+            warned = true;
+            console.warn("Studio: image failed to decode for", cur.name, cur.id);
+          }
         }
+      } catch (err) {
+        if (!warned) { warned = true; console.error("Studio live-preview draw failed:", err); }
       }
       raf = requestAnimationFrame(draw);
     };
     if (img.complete) raf = requestAnimationFrame(draw);
-    else img.onload = () => { raf = requestAnimationFrame(draw); };
+    else {
+      img.onload = () => { raf = requestAnimationFrame(draw); };
+      img.onerror = () => console.error("Studio: image failed to load for", cur.name, cur.id);
+    }
     return () => cancelAnimationFrame(raf);
   }, [cur, phase]);
 
@@ -831,21 +846,19 @@ export default function Studio() {
             {phase === "board" && (
               <div style={{ position: "absolute", inset: 0, padding: "34px 20px", display: "flex", flexDirection: "column" }}>
                 <div style={{ fontSize: 24, fontWeight: 800, marginTop: 14, marginBottom: 20 }}>Leaderboard</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
+                {/* no bottom CTA text — rows use that freed space and run further down the screen */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
                   {boardRanked.map((it, i) => (
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12,
                       background: i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)",
-                      borderRadius: 10, padding: "8px 12%", paddingLeft: 12,
+                      borderRadius: 10, padding: "10px 12%", paddingLeft: 12,
                       animation: `sfade .4s ease both`, animationDelay: `${i * 0.22}s` }}>
                       <span style={{ width: 22, fontWeight: 800, color: "#6ee7b7", fontSize: 17 }}>{i + 1}</span>
-                      <img src={it.thumb} alt="" style={{ width: 41, height: 41, borderRadius: 9, objectFit: "cover" }} />
+                      <img src={it.thumb} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} />
                       <span style={{ flex: 1, textAlign: "left", fontSize: 18, fontWeight: 600 }}>{it.name}</span>
                       <span style={{ fontSize: 22, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
                     </div>
                   ))}
-                </div>
-                <div style={{ marginTop: "auto", marginBottom: "16%", fontSize: 15, fontWeight: 600, color: "#9ab" }}>
-                  Try it yourself - sourcestack.app
                 </div>
               </div>
             )}
