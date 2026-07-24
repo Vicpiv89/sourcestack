@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /studio
+Disallow: /account
 Sitemap: https://sourcestack.app/sitemap.xml

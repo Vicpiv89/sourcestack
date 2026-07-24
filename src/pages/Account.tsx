@@ -65,7 +65,7 @@ export default function Account() {
   if (!loading && !user) {
     return (
       <div className="min-h-screen bg-[#111] text-[#e5e5e5] flex items-center justify-center px-6">
-        <SEO title="Account" path="/account" />
+        <SEO title="Account" path="/account" noindex />
         <div className="text-center">
           <p className="text-white font-semibold mb-2">You're not signed in.</p>
           <button
@@ -82,7 +82,7 @@ export default function Account() {
 
   return (
     <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
-      <SEO title="Account" path="/account" />
+      <SEO title="Account" path="/account" noindex />
       <div className="px-6 pt-12 pb-24 max-w-2xl mx-auto">
         <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Account</p>
         <h1 className="text-2xl font-bold text-white mb-8 truncate">{user?.email}</h1>
