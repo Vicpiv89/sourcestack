@@ -270,7 +270,7 @@ function renderVideoFrame(
   ctx.textAlign = "left";
   ctx.fillStyle = "#fff";
   ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
-  ctx.fillText("Top 10 — All Time", REC_W * 0.09, REC_H * 0.13);
+  ctx.fillText("Leaderboard", REC_W * 0.09, REC_H * 0.13);
   const rowH = 112, top = REC_H * 0.185;
   boardRanked.forEach((it, i) => {
     const t = fadeIn(boardT, i * 220, 400);
@@ -619,7 +619,12 @@ export default function Studio() {
       if (!w || !h) return;
       canvas.width = w;
       canvas.height = h;
-      drawCover(canvas.getContext("2d")!, img, 0, 0, w, h, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+      const ctx = canvas.getContext("2d")!;
+      // opaque backdrop first — otherwise transparent pixels in a background-removed photo
+      // let the animating <img> underneath show through (visible as a second, mis-cropped face)
+      ctx.fillStyle = "#04120a";
+      ctx.fillRect(0, 0, w, h);
+      drawCover(ctx, img, 0, 0, w, h, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
     };
     if (img.complete) draw();
     else img.onload = draw;
@@ -816,7 +821,7 @@ export default function Studio() {
 
             {phase === "board" && (
               <div style={{ position: "absolute", inset: 0, padding: "34px 20px", display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 14, marginBottom: 20 }}>Top 10 — All Time</div>
+                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 14, marginBottom: 20 }}>Leaderboard</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
                   {boardRanked.map((it, i) => (
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12,
