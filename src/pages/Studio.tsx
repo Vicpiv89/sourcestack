@@ -796,7 +796,10 @@ export default function Studio() {
                     "contain" scan view AND the zoom into the focus-centered crop, using the same
                     drawCover() math as the real video. Recomputed fresh every frame from the current
                     box, so the zoom lands on the face the whole way through, never wrong-then-snap. */}
-                <canvas ref={liveCanvasRef} style={{ position: "absolute", inset: 0 }} />
+                {/* canvas is a "replaced element" with an intrinsic 300x150 default — position:absolute;inset:0
+                    alone does NOT stretch it like a div; needs explicit width/height too, or it silently
+                    stays at 300x150 and everything drawn into it (and its CSS box measurements) is wrong */}
+                <canvas ref={liveCanvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
                 {!revealed && (
                   <>
                     <div style={{
