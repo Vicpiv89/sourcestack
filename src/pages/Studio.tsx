@@ -124,7 +124,7 @@ const cleanName = (filename: string) =>
 // count-up hook for the score reveal
 function useCountUp() {
   const [val, setVal] = useState(0);
-  const run = useCallback((target: number, ms = 1100) => {
+  const run = useCallback((target: number, ms = 1450) => {
     const start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / ms);
@@ -164,8 +164,9 @@ export default function Studio() {
   const [score, runCount, setScore] = useCountUp();
   const timers = useRef<number[]>([]);
 
+  // per-video reveal order = order photos were entered, not sorted by score
+  // (the leaderboard/board phase below uses the separately-sorted `boardRanked` pool)
   const done = items.filter((i) => i.status === "done" && i.result);
-  const ranked = [...done].sort((a, b) => (b.result!.overall - a.result!.overall));
 
   const addFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -222,27 +223,27 @@ export default function Studio() {
   const at = (ms: number, fn: () => void) => { timers.current.push(window.setTimeout(fn, ms)); };
 
   const play = () => {
-    if (ranked.length === 0) return;
+    if (done.length === 0) return;
     clearTimers();
     setPlaying(true);
     setPhase("hook");
     setFaceIdx(0);
     setScore(0);
 
-    const HOOK = 2200;
-    const SCAN_HOLD = 950; // full-screen "scanning" moment before zooming out to the read-out
-    const FACE = 4900;
+    const HOOK = 2600;
+    const SCAN_HOLD = 1300; // full-screen "scanning" moment before zooming out to the read-out
+    const FACE = 5800;
     at(HOOK, () => stepFace(0));
 
     function stepFace(i: number) {
-      if (i >= ranked.length) { showBoard(); return; }
+      if (i >= done.length) { showBoard(); return; }
       setPhase("face");
       setFaceIdx(i);
       setScore(0);
       setRevealed(false);
       at(SCAN_HOLD, () => {
         setRevealed(true);
-        timers.current.push(window.setTimeout(() => runCount(remapForContent(ranked[i].result!.overall)), 200));
+        timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), 250));
       });
       at(FACE, () => stepFace(i + 1));
     }
@@ -261,7 +262,7 @@ export default function Studio() {
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
     textAlign: "center", color: "#fff", fontFamily: "inherit",
   };
-  const cur = ranked[faceIdx];
+  const cur = done[faceIdx];
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 80px" }}>
@@ -373,9 +374,12 @@ export default function Studio() {
                   style={{
                     position: "absolute", top: 0, left: 0, width: "100%",
                     height: revealed ? "44%" : "100%",
-                    objectFit: "cover",
+                    // "contain" while scanning so the whole photo shows uncropped (no zoomed-in-on-face look);
+                    // "cover" once zoomed out to the small strip, where a crop reads normally
+                    objectFit: revealed ? "cover" : "contain",
+                    background: "#000",
                     filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
-                    transition: "height 750ms cubic-bezier(0.22,1,0.36,1), filter 750ms ease",
+                    transition: "height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
                   }}
                 />
                 {!revealed && (
