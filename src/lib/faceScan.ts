@@ -105,8 +105,14 @@ function band(value: number, lo: number, hi: number, unit: number): number {
 
 /**
  * Mean luminance, luminance std (texture/roughness), aggregate redness, and
- * per-pixel redness std (localized red spots — acne/inflammation) of a square
+ * redness-excess std (localized red spots — acne/inflammation) of a square
  * patch centered on (cx, cy).
+ *
+ * Redness excess is R - avg(G,B) — a plain per-pixel difference, not a ratio.
+ * A ratio (R / avg(G,B)) blows up at the single-pixel level: two small,
+ * individually-noisy 8-bit channel values divided against each other amplify
+ * ordinary sensor/JPEG noise into a huge swing that has nothing to do with
+ * actual skin condition. A difference doesn't have that instability.
  */
 function samplePatch(
   ctx: CanvasRenderingContext2D,
@@ -118,7 +124,7 @@ function samplePatch(
   const y = Math.round(Math.max(0, Math.min(imgH - s, cy - s / 2)));
   const data = ctx.getImageData(x, y, s, s).data;
   let sum = 0, sumSq = 0, rSum = 0, gbSum = 0, n = 0;
-  let redSum = 0, redSumSq = 0;
+  let exSum = 0, exSumSq = 0;
   for (let i = 0; i < data.length; i += 4) {
     const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
     sum += lum;
@@ -126,18 +132,18 @@ function samplePatch(
     const gb = (data[i + 1] + data[i + 2]) / 2;
     rSum += data[i];
     gbSum += gb;
-    const red = data[i] / Math.max(1, gb);
-    redSum += red;
-    redSumSq += red * red;
+    const excess = data[i] - gb;
+    exSum += excess;
+    exSumSq += excess * excess;
     n++;
   }
   const mean = sum / n;
-  const redMean = redSum / n;
+  const exMean = exSum / n;
   return {
     mean,
     std: Math.sqrt(Math.max(0, sumSq / n - mean * mean)),
     redness: rSum / Math.max(1, gbSum),
-    rednessStd: Math.sqrt(Math.max(0, redSumSq / n - redMean * redMean)),
+    rednessStd: Math.sqrt(Math.max(0, exSumSq / n - exMean * exMean)),
   };
 }
 
@@ -400,35 +406,42 @@ export function analyzeFace(
   // ── pixel-based metrics (need the un-annotated canvas) ──
   if (ctx) {
     // 13 · Skin clarity — spottiness (acne, scarring, texture), not skin tone.
-    // Previous version divided local luminance std by the patch's own mean
-    // ("texture" as a %), which systematically inflated the score for darker
-    // skin: the same absolute pixel noise / a smaller mean luminance = a
-    // larger ratio, purely because the denominator is smaller — not because
-    // there was more actual texture. That's what was scoring dark skin near
-    // the floor regardless of real clarity. Fixed by using raw (non-
-    // mean-normalized) luminance std for texture/scarring, adding a
-    // dedicated redness-variance term to actually target red spots/acne
-    // (tone-independent — a spot reads redder than surrounding skin at any
-    // base tone), and dropping the old cross-region "tone" term (evenness
-    // between cheeks/forehead) entirely since that was the piece most
+    // v1 divided local luminance std by the patch's own mean ("texture" as a
+    // %), which systematically inflated the score for darker skin — same
+    // absolute pixel noise / a smaller mean luminance = a larger ratio, purely
+    // from the smaller denominator, not more actual texture. Floored dark
+    // skin regardless of real clarity.
+    // v2 fixed that but its redness term used a per-pixel RATIO
+    // (R / avg(G,B)) — ratios of small noisy 8-bit values are unstable at the
+    // single-pixel level, so ordinary sensor/JPEG noise got amplified into a
+    // huge swing for every photo, floored everyone this time.
+    // v3: redness is now a per-pixel DIFFERENCE (R - avg(G,B), see
+    // samplePatch) — stable, no division. Weighted below texture since it's
+    // the newer/less-proven signal. Drop the old cross-region "tone" term
+    // (evenness between cheeks/forehead) entirely — that was the piece most
     // conflated with skin tone rather than blemishes.
+    // Also: band() assumes a symmetric "ideal middle value" (right for a
+    // ratio like fWHR, wrong here) — skinValue is "how much variance", where
+    // lower is *always* better, no sweet spot. Using band() made noisier
+    // photos occasionally score higher than smooth ones. Scored directly
+    // with a plain monotonic falloff instead.
     const patchSize = faceW * 0.09;
     const patches = [LM.rCheekSkin, LM.lCheekSkin, LM.foreheadSkin].map((i) => {
       const p = px(i);
       return samplePatch(ctx, p.x, p.y, patchSize, imgW, imgH);
     });
     const texture = patches.reduce((s, p) => s + p.std, 0) / patches.length;
-    const rednessVar = (patches.reduce((s, p) => s + p.rednessStd, 0) / patches.length) * 100;
+    const rednessVar = patches.reduce((s, p) => s + p.rednessStd, 0) / patches.length;
     const meanLum = patches.reduce((s, p) => s + p.mean, 0) / patches.length;
-    const skinValue = texture + rednessVar;
-    const skinScore = band(-skinValue, -9, -3, 3);
+    const skinValue = texture + 0.5 * rednessVar;
+    const skinScore = Math.max(1, Math.min(10, 10 - skinValue * 0.3));
     // dark skin naturally reflects less light even under good, even lighting —
     // only warn on genuine underexposure, not low mean luminance from tone alone
     if (meanLum < 35)
       warnings.push("Low light — skin reading is unreliable in this photo.");
     add({
       id: "skin-clarity", name: "Skin Clarity (est.)",
-      display: `${Math.max(0, Math.min(100, 100 - (skinValue - 4) * 3.3)).toFixed(0)}%`,
+      display: `${(skinScore * 10).toFixed(0)}%`,
       ideal: "75%+",
       score: skinScore, weight: 1.1,
       note: skinScore >= 8 ? "Clear, even texture — skin is carrying you." :
