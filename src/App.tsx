@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -20,7 +20,9 @@ import FaceScan from "./pages/FaceScan";
 import Account from "./pages/Account";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import Studio from "./pages/Studio";
+// lazy: pulls in mediabunny (WebCodecs mp4 encoding) which is heavy and internal-only —
+// must not bloat the main bundle every real visitor downloads on the public product pages
+const Studio = lazy(() => import("./pages/Studio"));
 
 // Handles Supabase email confirmation redirect (hash contains type=signup)
 function AuthCallbackHandler() {
@@ -128,7 +130,7 @@ export default function App() {
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/ai" element={<ProtocolAI />} />
                 <Route path="/scan" element={<FaceScan />} />
-                <Route path="/studio" element={<Studio />} />
+                <Route path="/studio" element={<Suspense fallback={null}><Studio /></Suspense>} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />

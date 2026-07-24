@@ -5,6 +5,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult, type ScanMetric } from "../lib/faceScan";
+import { Output, Mp4OutputFormat, BufferTarget, CanvasSource, QUALITY_HIGH, canEncodeVideo } from "mediabunny";
 
 const MAX_DIM = 1100;
 const POOL_KEY = "studio_alltime_leaderboard";
@@ -83,31 +84,27 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return lines;
 }
 
-type FrameState = {
-  phase: "hook" | "face" | "board";
-  revealed: boolean;
-  hook: string;
-  cur?: Item;
-  score: number;
-  boardRanked: PoolItem[];
-};
-type AnimTimes = { hookStart: number; faceStart: number; revealStart: number; boardStart: number };
+// a face as needed for offline rendering — plain data, no live scan/UI state attached
+type RenderFace = { id: string; name: string; result: ScanResult; contentScore: number };
 
-function drawFrame(
+// Pure function of elapsed time — draws exactly what the reveal looks like at tMs into the
+// video. No timers, no live state: generateVideo() below calls this once per output frame,
+// as fast as the browser can render+encode, completely decoupled from real-time playback.
+function renderVideoFrame(
   ctx: CanvasRenderingContext2D,
-  fs: FrameState,
-  a: AnimTimes,
+  tMs: number,
+  hookText: string,
+  faces: RenderFace[],
+  boardRanked: PoolItem[],
   imgCache: Map<string, HTMLImageElement>,
   thumbCache: Map<string, HTMLImageElement>,
 ) {
-  const now = performance.now();
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, REC_W, REC_H);
-  const fadeIn = (start: number, delay = 0, dur = 450) =>
-    start ? Math.max(0, Math.min(1, (now - start - delay) / dur)) : 0;
+  const fadeIn = (localT: number, delay = 0, dur = 450) => Math.max(0, Math.min(1, (localT - delay) / dur));
 
-  if (fs.phase === "hook") {
-    const t = fadeIn(a.hookStart, 0, 500);
+  if (tMs < HOOK_MS) {
+    const t = fadeIn(tMs, 0, 500);
     ctx.globalAlpha = t;
     ctx.textAlign = "center";
     ctx.fillStyle = "#6ee7b7";
@@ -115,7 +112,7 @@ function drawFrame(
     ctx.fillText("SOURCESTACK · AI FACE SCAN", REC_W / 2, REC_H * 0.4);
     ctx.fillStyle = "#fff";
     ctx.font = "800 64px -apple-system, Helvetica, Arial, sans-serif";
-    const lines = wrapLines(ctx, fs.hook || "", REC_W * 0.82);
+    const lines = wrapLines(ctx, hookText || "", REC_W * 0.82);
     let ly = REC_H * 0.46;
     for (const line of lines) { ctx.fillText(line, REC_W / 2, ly); ly += 76; }
     ctx.fillStyle = "#6ee7b7";
@@ -124,48 +121,19 @@ function drawFrame(
     return;
   }
 
-  if (fs.phase === "face" && fs.cur?.dataUrl && fs.cur.result) {
-    const faceAlpha = Math.min(1, (now - a.faceStart) / 260);
+  const afterHook = tMs - HOOK_MS;
+  const faceTotal = faces.length * FACE_MS;
+  if (faces.length > 0 && afterHook < faceTotal) {
+    const idx = Math.min(faces.length - 1, Math.floor(afterHook / FACE_MS));
+    const localT = afterHook - idx * FACE_MS;
+    const f = faces[idx];
+    const img = imgCache.get(f.id);
+    const faceAlpha = Math.min(1, localT / 260);
     ctx.globalAlpha = faceAlpha;
-    const img = imgCache.get(fs.cur.id);
-    if (fs.revealed) {
-      if (img?.complete) drawCover(ctx, img, 0, 0, REC_W, REC_H * 0.44);
-      const top = REC_H * 0.44;
-      ctx.textAlign = "center";
 
-      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 0);
-      ctx.fillStyle = "#fff";
-      ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(fs.cur.name, REC_W / 2, top + 120);
-
-      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 120);
-      ctx.fillStyle = colorForScore(fs.score);
-      ctx.font = "900 136px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.textAlign = "right";
-      ctx.fillText(fs.score.toFixed(1), REC_W / 2 + 34, top + 250);
-      ctx.fillStyle = "#9aa";
-      ctx.font = "400 34px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("/ 10", REC_W / 2 + 48, top + 250);
-
-      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 220);
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#cde";
-      ctx.font = "500 32px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(tierFor(remapForContent(fs.cur.result.overall)), REC_W / 2, top + 305);
-
-      const w = worstMetric(fs.cur.result);
-      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 340);
-      ctx.fillStyle = "#c88";
-      ctx.font = "700 22px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText("WORST RATIO", REC_W / 2, top + 365);
-      ctx.fillStyle = "#d98a8a";
-      ctx.font = "600 34px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(`${w.name} — ${w.score.toFixed(1)}`, REC_W / 2, top + 408);
-    } else {
+    if (localT < SCAN_HOLD_MS) {
       if (img?.complete) drawContain(ctx, img, 0, 0, REC_W, REC_H);
-      const st = now - a.faceStart;
-      const sy = -0.04 * REC_H + Math.min(1, st / SCAN_HOLD_MS) * 1.08 * REC_H;
+      const sy = -0.04 * REC_H + Math.min(1, localT / SCAN_HOLD_MS) * 1.08 * REC_H;
       const grad = ctx.createLinearGradient(0, 0, REC_W, 0);
       grad.addColorStop(0, "rgba(110,231,183,0)");
       grad.addColorStop(0.5, "rgba(110,231,183,0.95)");
@@ -175,46 +143,82 @@ function drawFrame(
       ctx.textAlign = "center";
       ctx.fillStyle = "#6ee7b7";
       ctx.font = "700 24px Menlo, Consolas, monospace";
-      ctx.fillText(`SCANNING ${fs.cur.name.toUpperCase()}`, REC_W / 2, 70);
+      ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
+    } else {
+      const revealT = localT - SCAN_HOLD_MS;
+      if (img?.complete) drawCover(ctx, img, 0, 0, REC_W, REC_H * 0.44);
+      const top = REC_H * 0.44;
+      ctx.textAlign = "center";
+
+      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
+      ctx.fillStyle = "#fff";
+      ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(f.name, REC_W / 2, top + 120);
+
+      const scoreT = Math.max(0, Math.min(1, (revealT - 250) / 1450));
+      const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
+      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 120);
+      ctx.fillStyle = colorForScore(liveScore);
+      ctx.font = "900 136px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 34, top + 250);
+      ctx.fillStyle = "#9aa";
+      ctx.font = "400 34px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("/ 10", REC_W / 2 + 48, top + 250);
+
+      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 220);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#cde";
+      ctx.font = "500 32px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(tierFor(f.contentScore), REC_W / 2, top + 305);
+
+      const w = worstMetric(f.result);
+      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 340);
+      ctx.fillStyle = "#c88";
+      ctx.font = "700 22px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText("WORST RATIO", REC_W / 2, top + 365);
+      ctx.fillStyle = "#d98a8a";
+      ctx.font = "600 34px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(`${w.name} — ${w.score.toFixed(1)}`, REC_W / 2, top + 408);
     }
     ctx.globalAlpha = 1;
     return;
   }
 
-  if (fs.phase === "board") {
+  const boardT = afterHook - faceTotal;
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#fff";
+  ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
+  ctx.fillText("Top 10 — All Time", REC_W * 0.09, REC_H * 0.11);
+  const rowH = 98, top = REC_H * 0.15;
+  boardRanked.forEach((it, i) => {
+    const t = fadeIn(boardT, i * 220, 400);
+    if (t <= 0) return;
+    const y = top + i * rowH;
+    ctx.globalAlpha = t;
+    ctx.fillStyle = i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)";
+    roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
+    ctx.fill();
+    ctx.fillStyle = "#6ee7b7";
+    ctx.font = "800 30px -apple-system, Helvetica, Arial, sans-serif";
     ctx.textAlign = "left";
+    ctx.fillText(String(i + 1), REC_W * 0.09, y + 55);
+    const timg = thumbCache.get(it.id);
+    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 60, 60, 10);
     ctx.fillStyle = "#fff";
-    ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
-    ctx.fillText("Top 10 — All Time", REC_W * 0.09, REC_H * 0.11);
-    const rowH = 98, top = REC_H * 0.15;
-    fs.boardRanked.forEach((it, i) => {
-      const t = fadeIn(a.boardStart, i * 220, 400);
-      if (t <= 0) return;
-      const y = top + i * rowH;
-      ctx.globalAlpha = t;
-      ctx.fillStyle = i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)";
-      roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
-      ctx.fill();
-      ctx.fillStyle = "#6ee7b7";
-      ctx.font = "800 30px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText(String(i + 1), REC_W * 0.09, y + 55);
-      const timg = thumbCache.get(it.id);
-      if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 60, 60, 10);
-      ctx.fillStyle = "#fff";
-      ctx.font = "600 29px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(it.name, REC_W * 0.26, y + 55);
-      ctx.textAlign = "right";
-      ctx.fillStyle = colorForScore(it.score);
-      ctx.font = "800 33px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(it.score.toFixed(1), REC_W * 0.92, y + 55);
-      ctx.globalAlpha = 1;
-    });
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#789";
-    ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
-    ctx.fillText("try your scan → sourcestack", REC_W / 2, REC_H * 0.97);
-  }
+    ctx.font = "600 29px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText(it.name, REC_W * 0.26, y + 55);
+    ctx.textAlign = "right";
+    ctx.fillStyle = colorForScore(it.score);
+    ctx.font = "800 33px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText(it.score.toFixed(1), REC_W * 0.92, y + 55);
+    ctx.globalAlpha = 1;
+  });
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#789";
+  ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
+  ctx.fillText("try your scan → sourcestack", REC_W / 2, REC_H * 0.97);
 }
 
 type Item = {
@@ -335,17 +339,13 @@ export default function Studio() {
   const [score, runCount, setScore] = useCountUp();
   const timers = useRef<number[]>([]);
 
-  // recording — a hidden canvas redraws the same state every frame and gets captured
-  // directly, so the download is independent of screen/window/tab and needs no permission prompt
-  const [recording, setRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  // video generation — renders frames offline (not real-time) and encodes them straight to
+  // an .mp4 via WebCodecs, so there's no live playback/capture race to go wrong
+  const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState(0);
   const recCanvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number | null>(null);
   const imgCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const thumbCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
-  const animRef = useRef<AnimTimes>({ hookStart: 0, faceStart: 0, revealStart: 0, boardStart: 0 });
-  const frameRef = useRef<FrameState>({ phase: "hook", revealed: false, hook: "", score: 0, boardRanked: [] });
 
   // per-video reveal order = order photos were entered, not sorted by score
   // (the leaderboard/board phase below uses the separately-sorted `boardRanked` pool)
@@ -415,7 +415,6 @@ export default function Studio() {
     setPhase("hook");
     setFaceIdx(0);
     setScore(0);
-    animRef.current.hookStart = performance.now();
 
     at(HOOK_MS, () => stepFace(0));
 
@@ -425,76 +424,87 @@ export default function Studio() {
       setFaceIdx(i);
       setScore(0);
       setRevealed(false);
-      animRef.current.faceStart = performance.now();
-      animRef.current.revealStart = 0;
       at(SCAN_HOLD_MS, () => {
         setRevealed(true);
-        animRef.current.revealStart = performance.now();
         timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), 250));
       });
       at(FACE_MS, () => stepFace(i + 1));
     }
     function showBoard() {
       setPhase("board");
-      animRef.current.boardStart = performance.now();
     }
   };
 
-  const stop = () => {
-    clearTimers();
-    setPlaying(false);
-    setPhase("hook");
-    setRevealed(false);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
-    }
-    if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-  };
+  const stop = () => { clearTimers(); setPlaying(false); setPhase("hook"); setRevealed(false); };
 
-  // ── record & download ──
-  // Redraws the exact same state onto a hidden canvas every frame and records THAT — no
-  // screen/tab-share permission, no window-size dependency, no cropping needed afterward.
-  const recordAndDownload = () => {
-    if (done.length === 0) return;
-    if (typeof MediaRecorder === "undefined") {
-      alert("Recording isn't supported in this browser — try Chrome, or screen-record the stage manually instead.");
+  // ── generate video ──
+  // Renders every output frame offline (not real-time playback) with renderVideoFrame(), then
+  // encodes it straight into an .mp4 via WebCodecs (through mediabunny). No live capture, no
+  // permission prompt, no dependency on wall-clock timing keeping up — just deterministic math.
+  const generateVideo = async () => {
+    if (done.length === 0 || generating) return;
+    const supported = await canEncodeVideo("avc", { width: REC_W, height: REC_H, bitrate: QUALITY_HIGH });
+    if (!supported) {
+      alert("This browser can't encode video (needs WebCodecs + H.264 support) — try a recent Chrome.");
       return;
     }
-    const canvas = recCanvasRef.current!;
-    canvas.width = REC_W;
-    canvas.height = REC_H;
-    const ctx = canvas.getContext("2d")!;
-    const stream = (canvas as HTMLCanvasElement & { captureStream: (fps?: number) => MediaStream }).captureStream(30);
-    chunksRef.current = [];
-    const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
-    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
-    mediaRecorderRef.current = rec;
-    rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    rec.onstop = () => {
-      if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-      setRecording(false);
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+    setGenerating(true);
+    setGenProgress(0);
+    try {
+      const faces: RenderFace[] = done.map((it) => ({
+        id: it.id,
+        name: it.name,
+        result: it.result!,
+        contentScore: remapForContent(it.result!.overall),
+      }));
+
+      // make sure every photo this render needs is actually decoded before we start drawing frames
+      await Promise.all([
+        ...faces.map((f) => imgCacheRef.current.get(f.id)?.decode().catch(() => {})),
+        ...boardRanked.map((b) => thumbCacheRef.current.get(b.id)?.decode().catch(() => {})),
+      ]);
+
+      const canvas = recCanvasRef.current!;
+      canvas.width = REC_W;
+      canvas.height = REC_H;
+      const ctx = canvas.getContext("2d")!;
+
+      const target = new BufferTarget();
+      const output = new Output({ format: new Mp4OutputFormat(), target });
+      const videoSource = new CanvasSource(canvas, { codec: "avc", bitrate: QUALITY_HIGH });
+      output.addVideoTrack(videoSource);
+      await output.start();
+
+      const fps = 30;
+      const frameDur = 1 / fps;
+      const totalMs = HOOK_MS + faces.length * FACE_MS + BOARD_HOLD_MS;
+      const totalFrames = Math.ceil((totalMs / 1000) * fps);
+
+      for (let i = 0; i < totalFrames; i++) {
+        renderVideoFrame(ctx, (i / fps) * 1000, hook, faces, boardRanked, imgCacheRef.current, thumbCacheRef.current);
+        await videoSource.add(i / fps, frameDur);
+        if (i % 8 === 0) {
+          setGenProgress(Math.round((i / totalFrames) * 100));
+          await new Promise((r) => setTimeout(r, 0)); // yield so the UI can repaint progress
+        }
+      }
+
+      await output.finalize();
+      const blob = new Blob([target.buffer!], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `sourcestack-reveal-${Date.now()}.webm`;
+      a.download = `sourcestack-reveal-${Date.now()}.mp4`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-    };
-    rec.start();
-    setRecording(true);
-
-    const loop = () => {
-      drawFrame(ctx, frameRef.current, animRef.current, imgCacheRef.current, thumbCacheRef.current);
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    loop();
-
-    play();
-    at(HOOK_MS + done.length * FACE_MS + BOARD_HOLD_MS, () => {
-      if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop();
-    });
+    } catch (err) {
+      console.error(err);
+      alert("Video generation failed — check the browser console for details.");
+    } finally {
+      setGenerating(false);
+      setGenProgress(0);
+    }
   };
 
   // ── styles ──
@@ -506,10 +516,6 @@ export default function Studio() {
     textAlign: "center", color: "#fff", fontFamily: "inherit",
   };
   const cur = done[faceIdx];
-
-  // kept in sync every render so the recording loop (driven by requestAnimationFrame,
-  // outside React's render cycle) always reads the latest state
-  frameRef.current = { phase, revealed, hook, cur, score, boardRanked };
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 80px" }}>
@@ -564,11 +570,11 @@ export default function Studio() {
               {!playing
                 ? <button onClick={play} style={btn}>▶ Play reveal ({done.length})</button>
                 : <button onClick={stop} style={{ ...btn, background: "#3a1d1d", color: "#f88" }}>■ Stop</button>}
-              {!recording
-                ? <button onClick={recordAndDownload} disabled={playing} style={{ ...btn, background: "#1a2e24", color: "#6ee7b7", border: "1px solid rgba(110,231,183,0.35)", opacity: playing ? 0.5 : 1 }}>
-                    ⬇ Record &amp; download
+              {!generating
+                ? <button onClick={generateVideo} disabled={playing} style={{ ...btn, background: "#1a2e24", color: "#6ee7b7", border: "1px solid rgba(110,231,183,0.35)", opacity: playing ? 0.5 : 1 }}>
+                    🎬 Generate video (.mp4)
                   </button>
-                : <button onClick={stop} style={{ ...btn, background: "#3a1d1d", color: "#f88" }}>● Recording… (click to stop)</button>}
+                : <button disabled style={{ ...btn, background: "#1a2e24", color: "#6ee7b7", opacity: 0.7 }}>Generating… {genProgress}%</button>}
               <button onClick={clearSession} style={{ ...btn, background: "#1c1c22", color: "#cde", border: "1px solid rgba(255,255,255,0.12)" }}>
                 Next video (clear these, keep leaderboard)
               </button>
@@ -576,8 +582,9 @@ export default function Studio() {
           )}
           {done.length > 0 && (
             <p style={{ fontSize: 12, color: "#788", marginTop: 12, lineHeight: 1.5 }}>
-              "Record &amp; download" renders the reveal straight to a video file and saves it
-              automatically — no screen-recorder, no permission prompt.
+              "Generate video" renders every frame directly to an .mp4 and saves it automatically
+              — no screen-recorder, no permission prompt, no live playback needed (takes a few
+              seconds, not the full video length).
               The ending board is your all-time top 10, not just today's photos.
               Watch <b>scan sessions</b> after posting, not views.
             </p>
