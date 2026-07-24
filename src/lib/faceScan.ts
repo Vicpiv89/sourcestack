@@ -453,9 +453,11 @@ export function analyzeFace(
   const totalWeight = metrics.reduce((s, m) => s + m.weight, 0);
   const weightedMean = metrics.reduce((s, m) => s + m.score * m.weight, 0) / totalWeight;
   // with the harsh band(), raw weighted means cluster ~7.5–9 for real faces;
-  // steep linear stretch so the overall actually differentiates AND runs harsh:
-  // junk ~3, average ~5–6, strong ~7, near-perfect required to break 9
-  const overall = Math.max(2.9, Math.min(9.4, 2.4 * weightedMean - 14.0));
+  // linear stretch so the overall still differentiates but doesn't over-punish
+  // real faces landing at the low end of that cluster (was 2.4x/-14.0 — a wm
+  // of 7.33 scored 3.6, well under the intended "average" band):
+  // junk ~3.5, average ~5–6.5, strong ~7.5, near-perfect still required to break 9
+  const overall = Math.max(2.9, Math.min(9.4, 1.9 * weightedMean - 9.0));
 
   return {
     overall,
