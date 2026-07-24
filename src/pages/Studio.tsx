@@ -87,6 +87,54 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
 // a face as needed for offline rendering — plain data, no live scan/UI state attached
 type RenderFace = { id: string; name: string; result: ScanResult; contentScore: number };
 
+// subtle soccer-pitch backdrop — dark green base + faint line art, sits behind everything
+function drawPitchBackground(ctx: CanvasRenderingContext2D) {
+  const grad = ctx.createRadialGradient(REC_W / 2, REC_H * 0.42, 80, REC_W / 2, REC_H * 0.42, REC_H * 0.75);
+  grad.addColorStop(0, "#0a1f12");
+  grad.addColorStop(1, "#020806");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, REC_W, REC_H);
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.lineWidth = 3;
+  const m = 60;
+  ctx.strokeRect(m, m, REC_W - m * 2, REC_H - m * 2);
+
+  const midY = REC_H / 2;
+  ctx.beginPath();
+  ctx.moveTo(m, midY);
+  ctx.lineTo(REC_W - m, midY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(REC_W / 2, midY, 150, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.09)";
+  ctx.beginPath();
+  ctx.arc(REC_W / 2, midY, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  const r = 46;
+  ctx.beginPath(); ctx.arc(m, m, r, 0, Math.PI / 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(REC_W - m, m, r, Math.PI / 2, Math.PI); ctx.stroke();
+  ctx.beginPath(); ctx.arc(m, REC_H - m, r, -Math.PI / 2, 0); ctx.stroke();
+  ctx.beginPath(); ctx.arc(REC_W - m, REC_H - m, r, Math.PI, Math.PI * 1.5); ctx.stroke();
+  ctx.restore();
+}
+
+// same pitch line-art as an SVG data URI, for the on-screen DOM preview to match
+const PITCH_SVG_BG = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 1920'>` +
+    `<g stroke='rgba(255,255,255,0.07)' stroke-width='3' fill='none'>` +
+      `<rect x='60' y='60' width='960' height='1800'/>` +
+      `<line x1='60' y1='960' x2='1020' y2='960'/>` +
+      `<circle cx='540' cy='960' r='150'/>` +
+    `</g>` +
+    `<circle cx='540' cy='960' r='4' fill='rgba(255,255,255,0.09)'/>` +
+  `</svg>`
+)}"), radial-gradient(120% 70% at 50% 40%, #0a1f12 0%, #020806 70%)`;
+
 // Pure function of elapsed time — draws exactly what the reveal looks like at tMs into the
 // video. No timers, no live state: generateVideo() below calls this once per output frame,
 // as fast as the browser can render+encode, completely decoupled from real-time playback.
@@ -99,9 +147,9 @@ function renderVideoFrame(
   imgCache: Map<string, HTMLImageElement>,
   thumbCache: Map<string, HTMLImageElement>,
 ) {
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, REC_W, REC_H);
+  drawPitchBackground(ctx);
   const fadeIn = (localT: number, delay = 0, dur = 450) => Math.max(0, Math.min(1, (localT - delay) / dur));
+  const faceMarginX = REC_W * 0.06; // faces sit inset from the edges, not edge-to-edge
 
   if (tMs < HOOK_MS) {
     const t = fadeIn(tMs, 0, 500);
@@ -132,14 +180,14 @@ function renderVideoFrame(
     ctx.globalAlpha = faceAlpha;
 
     if (localT < SCAN_HOLD_MS) {
-      if (img?.complete) drawContain(ctx, img, 0, 0, REC_W, REC_H);
+      if (img?.complete) drawContain(ctx, img, faceMarginX, 0, REC_W - faceMarginX * 2, REC_H);
       const sy = -0.04 * REC_H + Math.min(1, localT / SCAN_HOLD_MS) * 1.08 * REC_H;
-      const grad = ctx.createLinearGradient(0, 0, REC_W, 0);
+      const grad = ctx.createLinearGradient(faceMarginX, 0, REC_W - faceMarginX, 0);
       grad.addColorStop(0, "rgba(110,231,183,0)");
       grad.addColorStop(0.5, "rgba(110,231,183,0.95)");
       grad.addColorStop(1, "rgba(110,231,183,0)");
       ctx.fillStyle = grad;
-      ctx.fillRect(0, sy, REC_W, 5);
+      ctx.fillRect(faceMarginX, sy, REC_W - faceMarginX * 2, 5);
       ctx.textAlign = "center";
       ctx.fillStyle = "#6ee7b7";
       ctx.font = "700 24px Menlo, Consolas, monospace";
@@ -150,7 +198,7 @@ function renderVideoFrame(
       const faceTop = REC_H * 0.15;
       const faceH = REC_H * 0.4;
       const faceBottom = faceTop + faceH;
-      if (img?.complete) drawCover(ctx, img, 0, faceTop, REC_W, faceH);
+      if (img?.complete) drawCover(ctx, img, faceMarginX, faceTop, REC_W - faceMarginX * 2, faceH);
       ctx.textAlign = "center";
 
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
@@ -507,7 +555,7 @@ export default function Studio() {
   // ── styles ──
   const stage: React.CSSProperties = {
     position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
-    background: "#000",
+    backgroundImage: PITCH_SVG_BG, backgroundSize: "cover",
     borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
     textAlign: "center", color: "#fff", fontFamily: "inherit",
@@ -630,12 +678,11 @@ export default function Studio() {
                 <img
                   src={cur.dataUrl} alt=""
                   style={{
-                    position: "absolute", top: revealed ? "15%" : 0, left: 0, width: "100%",
+                    position: "absolute", top: revealed ? "15%" : 0, left: "6%", right: "6%",
                     height: revealed ? "40%" : "100%",
                     // "contain" while scanning so the whole photo shows uncropped (no zoomed-in-on-face look);
                     // "cover" once zoomed out, centered rather than pinned to the top
                     objectFit: revealed ? "cover" : "contain",
-                    background: "#000",
                     filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
                     transition: "top 950ms cubic-bezier(0.22,1,0.36,1), height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
                   }}
