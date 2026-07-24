@@ -55,6 +55,15 @@ function fixNamesFor(issueSlugs: string[]): string[] {
     .filter(Boolean) as string[];
 }
 
+// deliberately vague — treatment *categories* only (e.g. "Skincare"), never the specific
+// compound/product name. Used above the fold, before the free preview of named options below.
+function categoriesFor(issueSlugs: string[]): string[] {
+  const treatSlugs = [...new Set(issueSlugs.flatMap((s) => issues.find((i) => i.slug === s)?.treatmentSlugs ?? []))];
+  return [...new Set(
+    treatSlugs.map((slug) => treatments.find((t) => t.slug === slug)?.category).filter(Boolean)
+  )] as string[];
+}
+
 export default function FaceScan() {
   const { user, isPro } = useAuth();
   const [state, setState] = useState<"idle" | "analyzing" | "done" | "error">("idle");
@@ -64,7 +73,6 @@ export default function FaceScan() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [dragOver, setDragOver] = useState(false);
-  const [showAllMetrics, setShowAllMetrics] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -224,7 +232,6 @@ export default function FaceScan() {
     setError("");
     setSelfReported([]);
     setSaveState("idle");
-    setShowAllMetrics(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -369,6 +376,63 @@ export default function FaceScan() {
                   <p key={w} className="text-amber-400/70 text-xs mb-2">⚠ {w}</p>
                 ))}
 
+                {/* Full measurement grid — the diagnostic, up front. Not collapsible: this is what people came for. */}
+                <div className="mt-6 mb-10 flex flex-col gap-5">
+                  {CATEGORY_ORDER.map((cat) => {
+                    const items = result.metrics.filter((m) => METRIC_CATEGORY[m.id] === cat);
+                    if (items.length === 0) return null;
+                    const color = CATEGORY_COLOR[cat];
+                    const catFlagged = items.filter((m) => m.score < 7.5);
+                    const cats = categoriesFor([...new Set(catFlagged.flatMap((m) => m.issueSlugs))]);
+
+                    return (
+                      <div key={cat}>
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+                          <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color }}>
+                            {cat}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                          {items.map((m) => (
+                            <div
+                              key={m.id}
+                              className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10 border-t-2"
+                              style={{ borderTopColor: color + "70" }}
+                            >
+                              <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">{m.name}</p>
+                              <div className="flex items-baseline justify-between">
+                                <span className="text-white text-lg font-semibold">{m.display}</span>
+                                <span className="text-xs font-medium" style={{ color: scoreColor(m.score) }}>
+                                  {m.score.toFixed(1)}
+                                </span>
+                              </div>
+                              <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
+                                />
+                              </div>
+                              <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        {cats.length > 0 && (
+                          <div className="mt-2.5 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-3 flex-wrap">
+                            <p className="text-white/40 text-xs">
+                              Addressed with <span className="text-white/70">{cats.join(" · ")}</span>
+                            </p>
+                            <a href="#your-plan" className="text-xs font-semibold shrink-0 hover:underline" style={{ color }}>
+                              See your plan →
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {/* Weakest points — what needs work, ranked */}
                 {weakest.length > 0 && (
                   <div className="mt-6 mb-10">
@@ -397,6 +461,7 @@ export default function FaceScan() {
                 )}
 
                 {/* The plan — listicle */}
+                <div id="your-plan" className="scroll-mt-6">
                 {matchedIssues.length > 0 ? (
                   <div>
                     <h2 className="text-white font-semibold text-base mb-1">
@@ -516,6 +581,7 @@ export default function FaceScan() {
                     </p>
                   </div>
                 )}
+                </div>
 
                 {/* Goal selection — adds to the plan above */}
                 <div className="mt-10 mb-10 px-4 py-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04]">
@@ -550,59 +616,6 @@ export default function FaceScan() {
                     <p className="text-emerald-400/70 text-xs mt-3">
                       {selfReported.length} goal{selfReported.length > 1 ? "s" : ""} added to your plan ↑
                     </p>
-                  )}
-                </div>
-
-                {/* Full measurement grid — collapsed by default to keep mobile readable */}
-                <div className="mb-2">
-                  <button
-                    onClick={() => setShowAllMetrics((v) => !v)}
-                    className="w-full py-3 rounded-xl border border-white/10 bg-white/[0.02] text-white/50 text-xs hover:border-white/25 hover:text-white/80 transition-colors"
-                  >
-                    {showAllMetrics ? "Hide" : "See"} all {result.metrics.length} measurements {showAllMetrics ? "↑" : "↓"}
-                  </button>
-                  {showAllMetrics && (
-                    <div className="flex flex-col gap-5 mt-4">
-                      {CATEGORY_ORDER.map((cat) => {
-                        const items = result.metrics.filter((m) => METRIC_CATEGORY[m.id] === cat);
-                        if (items.length === 0) return null;
-                        const color = CATEGORY_COLOR[cat];
-                        return (
-                          <div key={cat}>
-                            <div className="flex items-center gap-2 mb-2.5">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-                              <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color }}>
-                                {cat}
-                              </p>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                              {items.map((m) => (
-                                <div
-                                  key={m.id}
-                                  className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10 border-t-2"
-                                  style={{ borderTopColor: color + "70" }}
-                                >
-                                  <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">{m.name}</p>
-                                  <div className="flex items-baseline justify-between">
-                                    <span className="text-white text-lg font-semibold">{m.display}</span>
-                                    <span className="text-xs font-medium" style={{ color: scoreColor(m.score) }}>
-                                      {m.score.toFixed(1)}
-                                    </span>
-                                  </div>
-                                  <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full rounded-full"
-                                      style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
-                                    />
-                                  </div>
-                                  <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
                   )}
                 </div>
 
