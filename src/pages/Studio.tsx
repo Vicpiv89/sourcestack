@@ -3,10 +3,40 @@
 // screen-recordable reveal (hook → per-face score count-up → leaderboard → CTA).
 // Not for public users; no nav link. See scan-content-scripts.md.
 
-import { useState, useRef, useCallback } from "react";
-import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult } from "../lib/faceScan";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult, type ScanMetric } from "../lib/faceScan";
+import { issues } from "../data/issues";
+import { treatments } from "../data/treatments";
 
 const MAX_DIM = 1100;
+const POOL_KEY = "studio_alltime_leaderboard";
+
+// worst-scoring metrics — the "flaws" called out per face in the reveal
+function worstMetrics(result: ScanResult, n = 2): ScanMetric[] {
+  return [...result.metrics].sort((a, b) => a.score - b.score).slice(0, n);
+}
+
+// first treatment tied to the single worst actionable (has an issue mapping) metric
+function recommendedProduct(result: ScanResult): { treatment: string; forFlaw: string } | null {
+  const worst = [...result.metrics].sort((a, b) => a.score - b.score);
+  for (const m of worst) {
+    for (const slug of m.issueSlugs) {
+      const issue = issues.find((i) => i.slug === slug);
+      const treatSlug = issue?.treatmentSlugs[0];
+      const treatment = treatments.find((t) => t.slug === treatSlug);
+      if (treatment) return { treatment: treatment.name, forFlaw: m.name };
+    }
+  }
+  return null;
+}
+
+// content-only score remap: same underlying engine/analysis, just a wider, slightly
+// less harsh display curve for leaderboard content. Does NOT touch the live /scan product.
+function remapForContent(raw: number): number {
+  const center = 5.5; // empirical midpoint of raw scores on real photos
+  const mapped = center + 0.5 + (raw - center) * 2.15;
+  return Math.max(3.5, Math.min(9.0, mapped));
+}
 
 type Item = {
   id: string;
@@ -16,6 +46,20 @@ type Item = {
   result?: ScanResult;
   error?: string;
 };
+
+// all-time leaderboard entry — persisted to localStorage so it survives across videos/reloads
+type PoolItem = { id: string; name: string; thumb: string; score: number; tier: string; ts: number };
+
+function makeThumb(canvas: HTMLCanvasElement, maxDim = 220): string {
+  const scale = Math.min(1, maxDim / Math.max(canvas.width, canvas.height));
+  const w = Math.round(canvas.width * scale);
+  const h = Math.round(canvas.height * scale);
+  const small = document.createElement("canvas");
+  small.width = w;
+  small.height = h;
+  small.getContext("2d")!.drawImage(canvas, 0, 0, w, h);
+  return small.toDataURL("image/jpeg", 0.8);
+}
 
 // ── overlay (mirrors FaceScan.drawOverlay) ──
 function drawOverlay(ctx: CanvasRenderingContext2D, scan: ScanResult, w: number) {
@@ -91,9 +135,22 @@ export default function Studio() {
   const [hook, setHook] = useState("I scanned these faces with an AI");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // all-time leaderboard pool — accumulates across videos/sessions, persisted locally
+  const [pool, setPool] = useState<PoolItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem(POOL_KEY) || "[]"); } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(POOL_KEY, JSON.stringify(pool)); } catch {}
+  }, [pool]);
+  const boardRanked = [...pool].sort((a, b) => b.score - a.score).slice(0, 10);
+  const clearPool = () => {
+    if (window.confirm("Clear the entire all-time leaderboard? This can't be undone.")) setPool([]);
+  };
+  const removeFromPool = (id: string) => setPool((prev) => prev.filter((p) => p.id !== id));
+
   // reveal player
   const [playing, setPlaying] = useState(false);
-  const [phase, setPhase] = useState<"hook" | "face" | "board" | "cta">("hook");
+  const [phase, setPhase] = useState<"hook" | "face" | "board">("hook");
   const [faceIdx, setFaceIdx] = useState(0);
   const [score, runCount, setScore] = useCountUp();
   const timers = useRef<number[]>([]);
@@ -131,16 +188,25 @@ export default function Studio() {
       const scan = analyzeFace(detection.faceLandmarks[0], w, h, ctx);
       drawOverlay(ctx, scan, w);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      const thumb = makeThumb(canvas);
+      const contentScore = remapForContent(scan.overall);
       setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: "done", result: scan, dataUrl } : p)));
+      setPool((prev) => [...prev, { id: it.id, name: it.name, thumb, score: contentScore, tier: tierFor(contentScore), ts: Date.now() }]);
     } catch (e) {
       console.error(e);
       setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: "error", error: "Scan failed" } : p)));
     }
   };
 
-  const setName = (id: string, name: string) =>
+  const setName = (id: string, name: string) => {
     setItems((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
-  const remove = (id: string) => setItems((prev) => prev.filter((p) => p.id !== id));
+    setPool((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
+  };
+  const remove = (id: string) => {
+    setItems((prev) => prev.filter((p) => p.id !== id));
+    setPool((prev) => prev.filter((p) => p.id !== id));
+  };
+  const clearSession = () => { stop(); setItems([]); };
 
   // ── reveal sequencer ──
   const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
@@ -155,7 +221,7 @@ export default function Studio() {
     setScore(0);
 
     const HOOK = 2200;
-    const FACE = 3200;
+    const FACE = 4200; // longer — now shows 2 flaws + a product rec, needs more read time
     at(HOOK, () => stepFace(0));
 
     function stepFace(i: number) {
@@ -163,12 +229,11 @@ export default function Studio() {
       setPhase("face");
       setFaceIdx(i);
       setScore(0);
-      at(0, () => timers.current.push(window.setTimeout(() => runCount(ranked[i].result!.overall), 500)));
+      at(0, () => timers.current.push(window.setTimeout(() => runCount(remapForContent(ranked[i].result!.overall)), 500)));
       at(FACE, () => stepFace(i + 1));
     }
     function showBoard() {
       setPhase("board");
-      at(Math.min(1200 + ranked.length * 450, 5200), () => setPhase("cta"));
     }
   };
 
@@ -224,7 +289,7 @@ export default function Studio() {
                   border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 13 }} />
               <span style={{ fontSize: 13, width: 74, textAlign: "right", color: it.status === "error" ? "#f88" : "#6ee7b7" }}>
                 {it.status === "scanning" ? "scanning…"
-                  : it.status === "done" ? `${it.result!.overall.toFixed(1)} · ${it.result!.tier}`
+                  : it.status === "done" ? `${remapForContent(it.result!.overall).toFixed(1)} · ${tierFor(remapForContent(it.result!.overall))}`
                   : it.status === "error" ? "no face" : "—"}
               </span>
               <button onClick={() => remove(it.id)} style={{ color: "#888", background: "none", border: "none", cursor: "pointer" }}>✕</button>
@@ -232,17 +297,39 @@ export default function Studio() {
           ))}
 
           {done.length > 0 && (
-            <div style={{ marginTop: 22, display: "flex", gap: 10 }}>
+            <div style={{ marginTop: 22, display: "flex", gap: 10, flexWrap: "wrap" }}>
               {!playing
                 ? <button onClick={play} style={btn}>▶ Play reveal ({done.length})</button>
                 : <button onClick={stop} style={{ ...btn, background: "#3a1d1d", color: "#f88" }}>■ Stop</button>}
+              <button onClick={clearSession} style={{ ...btn, background: "#1c1c22", color: "#cde", border: "1px solid rgba(255,255,255,0.12)" }}>
+                Next video (clear these, keep leaderboard)
+              </button>
             </div>
           )}
           {done.length > 0 && (
             <p style={{ fontSize: 12, color: "#788", marginTop: 12, lineHeight: 1.5 }}>
               Press Play, then screen-record the vertical stage → post to TikTok/Reels/Shorts.
+              The ending board is your all-time top 10, not just today's photos.
               Watch <b>scan sessions</b> after posting, not views.
             </p>
+          )}
+
+          {pool.length > 0 && (
+            <div style={{ marginTop: 28, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: "#9aa" }}>All-time leaderboard · {pool.length} scanned</span>
+                <button onClick={clearPool} style={{ fontSize: 11, color: "#a66", background: "none", border: "none", cursor: "pointer" }}>reset all-time</button>
+              </div>
+              {boardRanked.map((it, i) => (
+                <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", fontSize: 12, color: "#cde" }}>
+                  <span style={{ width: 16, color: "#6ee7b7", fontWeight: 700 }}>{i + 1}</span>
+                  <img src={it.thumb} alt="" style={{ width: 26, height: 26, borderRadius: 6, objectFit: "cover" }} />
+                  <span style={{ flex: 1 }}>{it.name}</span>
+                  <span style={{ color: "#6ee7b7", fontWeight: 700 }}>{it.score.toFixed(1)}</span>
+                  <button onClick={() => removeFromPool(it.id)} style={{ color: "#666", background: "none", border: "none", cursor: "pointer", fontSize: 11 }}>✕</button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
@@ -264,48 +351,50 @@ export default function Studio() {
 
             {phase === "face" && cur && (
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
-                <img src={cur.dataUrl} alt="" style={{ width: "100%", height: "62%", objectFit: "cover" }} />
-                <div style={{ flex: 1, padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <img src={cur.dataUrl} alt="" style={{ width: "100%", height: "58%", objectFit: "cover" }} />
+                <div style={{ flex: 1, padding: "12px 18px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                   <div style={{ fontSize: 22, fontWeight: 700 }}>{cur.name}</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0" }}>
                     <span style={{ fontSize: 64, fontWeight: 900, color: "#6ee7b7", lineHeight: 1 }}>{score.toFixed(1)}</span>
                     <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
                   </div>
-                  <div style={{ fontSize: 14, color: "#cde" }}>{tierFor(cur.result!.overall)}</div>
+                  <div style={{ fontSize: 14, color: "#cde" }}>{tierFor(remapForContent(cur.result!.overall))}</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginTop: 10 }}>
-                    {[...cur.result!.metrics].sort((a, b) => b.score - a.score).slice(0, 3).map((m) => (
-                      <span key={m.id} style={pill}>{m.name} {m.score.toFixed(1)}</span>
+                    {worstMetrics(cur.result!, 2).map((m) => (
+                      <span key={m.id} style={flawPill}>{m.name} {m.score.toFixed(1)}</span>
                     ))}
                   </div>
+                  {(() => {
+                    const rec = recommendedProduct(cur.result!);
+                    return rec ? (
+                      <div style={{ fontSize: 13, color: "#6ee7b7", fontWeight: 700, marginTop: 12 }}>
+                        Fix: {rec.treatment}
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </div>
             )}
 
             {phase === "board" && (
               <div style={{ position: "absolute", inset: 0, padding: "34px 20px", display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>The Leaderboard</div>
+                <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Top 10 — All Time</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, overflow: "hidden" }}>
-                  {ranked.map((it, i) => (
+                  {boardRanked.map((it, i) => (
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10,
                       background: i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)",
                       borderRadius: 10, padding: "7px 10px",
-                      animation: `sfade .4s ease both`, animationDelay: `${i * 0.28}s` }}>
+                      animation: `sfade .4s ease both`, animationDelay: `${i * 0.22}s` }}>
                       <span style={{ width: 20, fontWeight: 800, color: "#6ee7b7" }}>{i + 1}</span>
-                      <img src={it.dataUrl} alt="" style={{ width: 34, height: 34, borderRadius: 7, objectFit: "cover" }} />
+                      <img src={it.thumb} alt="" style={{ width: 34, height: 34, borderRadius: 7, objectFit: "cover" }} />
                       <span style={{ flex: 1, textAlign: "left", fontSize: 15, fontWeight: 600 }}>{it.name}</span>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: "#6ee7b7" }}>{it.result!.overall.toFixed(1)}</span>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: "#6ee7b7" }}>{it.score.toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {phase === "cta" && (
-              <div style={{ padding: 28 }}>
-                <div style={{ fontSize: 30, fontWeight: 800, marginBottom: 12 }}>Scan your own face — free</div>
-                <div style={{ fontSize: 16, color: "#cde", marginBottom: 22 }}>17 metrics · nothing uploads · 30 seconds</div>
-                <div style={{ display: "inline-block", background: "#6ee7b7", color: "#062", fontWeight: 800,
-                  padding: "12px 22px", borderRadius: 999, fontSize: 17 }}>link in bio ↑</div>
+                <div style={{ marginTop: "auto", paddingTop: 14, fontSize: 12, color: "#789" }}>
+                  try your scan → sourcestack
+                </div>
               </div>
             )}
           </div>
@@ -321,6 +410,6 @@ const btn: React.CSSProperties = {
   background: "#6ee7b7", color: "#062", fontWeight: 700, border: "none",
   padding: "11px 20px", borderRadius: 10, cursor: "pointer", fontSize: 15,
 };
-const pill: React.CSSProperties = {
-  background: "rgba(255,255,255,0.07)", borderRadius: 999, padding: "4px 10px", fontSize: 12, color: "#cde",
+const flawPill: React.CSSProperties = {
+  background: "rgba(248,136,136,0.12)", borderRadius: 999, padding: "4px 10px", fontSize: 12, color: "#f88",
 };
