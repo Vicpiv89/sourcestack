@@ -457,7 +457,7 @@ export function analyzeFace(
   // real faces landing at the low end of that cluster (was 2.4x/-14.0 — a wm
   // of 7.33 scored 3.6, well under the intended "average" band):
   // junk ~3.5, average ~5–6.5, strong ~7.5, near-perfect still required to break 9
-  const overall = Math.max(2.9, Math.min(9.4, 1.9 * weightedMean - 9.0));
+  const overall = Math.max(2.9, Math.min(9.1, 1.9 * weightedMean - 9.0));
 
   return {
     overall,
