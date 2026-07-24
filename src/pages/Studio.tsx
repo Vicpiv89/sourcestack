@@ -429,6 +429,7 @@ export default function Studio() {
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(0);
   const recCanvasRef = useRef<HTMLCanvasElement>(null);
+  const revealCanvasRef = useRef<HTMLCanvasElement>(null); // live-preview equivalent of the video's face crop
   const imgCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const thumbCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
@@ -743,14 +744,26 @@ export default function Studio() {
                     position: "absolute", top: revealed ? "15%" : 0, left: "6%", right: "6%",
                     height: revealed ? "40%" : "100%",
                     // "contain" while scanning so the whole photo shows uncropped (no zoomed-in-on-face look);
-                    // "cover" once zoomed out — objectPosition uses the detected face center, not the
-                    // image's raw geometric center, so off-center player cutouts still land centered
+                    // "cover" (default centered) once zoomed out — only for the ~950ms motion itself, the
+                    // precisely face-centered <canvas> below fades in on top once it settles
                     objectFit: revealed ? "cover" : "contain",
-                    objectPosition: revealed ? `${((cur.focusX ?? 0.5) * 100).toFixed(1)}% ${((cur.focusY ?? 0.5) * 100).toFixed(1)}%` : undefined,
                     filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
                     transition: "top 950ms cubic-bezier(0.22,1,0.36,1), height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
                   }}
                 />
+                {revealed && (
+                  // canvas (not <img objectFit>) — object-position percentages don't map to "put this
+                  // fraction of the image here", so we crop it ourselves with the same drawCover() math
+                  // the actual generated video uses, guaranteeing the two always match. Fades in once
+                  // the <img>'s zoom motion above has settled into the same box.
+                  <canvas
+                    ref={revealCanvasRef}
+                    style={{
+                      position: "absolute", top: "15%", left: "6%", right: "6%", height: "40%", width: "88%",
+                      borderRadius: 8, animation: "sfade .4s ease both", animationDelay: "0.5s",
+                    }}
+                  />
+                )}
                 {!revealed && (
                   <>
                     <div style={{
