@@ -9,6 +9,12 @@ import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult, type ScanMet
 const MAX_DIM = 1100;
 const POOL_KEY = "studio_alltime_leaderboard";
 
+// reveal pacing — shared by the on-screen sequencer and the auto-stop timer for recording
+const HOOK_MS = 2600;
+const SCAN_HOLD_MS = 1300; // full-screen "scanning" moment before zooming out to the read-out
+const FACE_MS = 5800;
+const BOARD_HOLD_MS = 5000; // how long the leaderboard holds before a recording auto-stops
+
 // worst-scoring metric — the roast-bait "worst ratio" callout per face in the reveal
 function worstMetric(result: ScanResult): ScanMetric {
   return [...result.metrics].sort((a, b) => a.score - b.score)[0];
@@ -148,6 +154,12 @@ export default function Studio() {
   const [score, runCount, setScore] = useCountUp();
   const timers = useRef<number[]>([]);
 
+  // recording — tab-capture the stage while play() runs, auto-download the result
+  const [recording, setRecording] = useState(false);
+  const [presenting, setPresenting] = useState(false); // true = stage shown fullscreen for a clean capture
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
   // per-video reveal order = order photos were entered, not sorted by score
   // (the leaderboard/board phase below uses the separately-sorted `boardRanked` pool)
   const done = items.filter((i) => i.status === "done" && i.result);
@@ -214,10 +226,7 @@ export default function Studio() {
     setFaceIdx(0);
     setScore(0);
 
-    const HOOK = 2600;
-    const SCAN_HOLD = 1300; // full-screen "scanning" moment before zooming out to the read-out
-    const FACE = 5800;
-    at(HOOK, () => stepFace(0));
+    at(HOOK_MS, () => stepFace(0));
 
     function stepFace(i: number) {
       if (i >= done.length) { showBoard(); return; }
@@ -225,24 +234,86 @@ export default function Studio() {
       setFaceIdx(i);
       setScore(0);
       setRevealed(false);
-      at(SCAN_HOLD, () => {
+      at(SCAN_HOLD_MS, () => {
         setRevealed(true);
         timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), 250));
       });
-      at(FACE, () => stepFace(i + 1));
+      at(FACE_MS, () => stepFace(i + 1));
     }
     function showBoard() {
       setPhase("board");
     }
   };
 
-  const stop = () => { clearTimers(); setPlaying(false); setPhase("hook"); setRevealed(false); };
+  const stop = () => {
+    clearTimers();
+    setPlaying(false);
+    setPhase("hook");
+    setRevealed(false);
+    setPresenting(false);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  // ── record & download ──
+  // Captures the actual on-screen stage (via tab capture) while play() runs, so the
+  // downloaded file is pixel-identical to what you see — no separate screen-recorder needed.
+  const recordAndDownload = async () => {
+    if (done.length === 0) return;
+    const md = navigator.mediaDevices as (MediaDevices & { getDisplayMedia?: (opts: unknown) => Promise<MediaStream> }) | undefined;
+    if (!md?.getDisplayMedia || typeof MediaRecorder === "undefined") {
+      alert("Recording isn't supported in this browser — try Chrome, or screen-record the stage manually instead.");
+      return;
+    }
+    try {
+      setPresenting(true);
+      await new Promise((r) => setTimeout(r, 60)); // let the fullscreen presentation view paint first
+      const stream = await md.getDisplayMedia({
+        video: { frameRate: 30 },
+        audio: false,
+        preferCurrentTab: true, // Chrome-only hint — skips straight to this tab in the share picker
+      });
+      chunksRef.current = [];
+      const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
+      const rec = new MediaRecorder(stream, { mimeType: mime });
+      mediaRecorderRef.current = rec;
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setPresenting(false);
+        setRecording(false);
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `sourcestack-reveal-${Date.now()}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+      stream.getVideoTracks()[0].onended = () => { if (rec.state !== "inactive") rec.stop(); };
+      rec.start();
+      setRecording(true);
+      play();
+      at(HOOK_MS + done.length * FACE_MS + BOARD_HOLD_MS, () => {
+        if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop();
+      });
+    } catch (err) {
+      console.error(err);
+      setPresenting(false);
+      setRecording(false);
+    }
+  };
 
   // ── styles ──
   const stage: React.CSSProperties = {
-    position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
+    position: "relative",
+    ...(presenting ? { height: "90vh", width: "auto" } : { width: "min(405px, 90vw)" }),
+    aspectRatio: "9 / 16",
     background: "#000",
-    borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: presenting ? 0 : 22, overflow: "hidden",
+    border: presenting ? "none" : "1px solid rgba(255,255,255,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
     textAlign: "center", color: "#fff", fontFamily: "inherit",
   };
@@ -300,6 +371,11 @@ export default function Studio() {
               {!playing
                 ? <button onClick={play} style={btn}>▶ Play reveal ({done.length})</button>
                 : <button onClick={stop} style={{ ...btn, background: "#3a1d1d", color: "#f88" }}>■ Stop</button>}
+              {!recording
+                ? <button onClick={recordAndDownload} disabled={playing} style={{ ...btn, background: "#1a2e24", color: "#6ee7b7", border: "1px solid rgba(110,231,183,0.35)", opacity: playing ? 0.5 : 1 }}>
+                    ⬇ Record &amp; download
+                  </button>
+                : <button onClick={stop} style={{ ...btn, background: "#3a1d1d", color: "#f88" }}>● Recording… (click to stop)</button>}
               <button onClick={clearSession} style={{ ...btn, background: "#1c1c22", color: "#cde", border: "1px solid rgba(255,255,255,0.12)" }}>
                 Next video (clear these, keep leaderboard)
               </button>
@@ -307,7 +383,8 @@ export default function Studio() {
           )}
           {done.length > 0 && (
             <p style={{ fontSize: 12, color: "#788", marginTop: 12, lineHeight: 1.5 }}>
-              Press Play, then screen-record the vertical stage → post to TikTok/Reels/Shorts.
+              "Record &amp; download" captures the stage itself and saves a .webm when it's done — no
+              screen-recorder needed. Chrome will ask you to confirm sharing this tab; that's expected.
               The ending board is your all-time top 10, not just today's photos.
               Watch <b>scan sessions</b> after posting, not views.
             </p>
@@ -333,7 +410,10 @@ export default function Studio() {
         </div>
 
         {/* ── right: the 9:16 stage ── */}
-        <div style={{ position: "sticky", top: 20, display: "flex", justifyContent: "center" }}>
+        <div style={presenting
+          ? { position: "fixed", inset: 0, background: "#000", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }
+          : { position: "sticky", top: 20, display: "flex", justifyContent: "center" }
+        }>
           <div style={stage}>
             {phase === "hook" && (
               <div style={{ padding: 30, animation: "sfade .5s ease both" }}>
