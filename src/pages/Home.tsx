@@ -60,10 +60,10 @@ export default function Home() {
               {treatments.length} compounds · {vendors.length} vetted vendors · {issues.length} issues
             </p>
             <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3 leading-tight">
-              The looksmaxxing<br />protocol database.
+              Scanned. Sourced.<br />Fixed.
             </h1>
             <p className="text-white/40 text-sm sm:text-base mb-6 leading-relaxed max-w-sm">
-              Search any issue or compound — get exact dosing protocols, safety notes, and vetted sources. No fluff.
+              Random TikToks and sketchy vendors get you the wrong dose and wasted money. SourceStack replaces the guessing with a measured plan — and a vendor you can trust.
             </p>
 
             {/* Face Scan CTA */}
@@ -232,6 +232,19 @@ export default function Home() {
           </div>
           <span className="text-emerald-400/40 group-hover:text-emerald-400/70 text-sm transition-colors shrink-0">→</span>
         </Link>
+      </div>
+
+      {/* ── Who this is for ───────────────────────────── */}
+      <div className="px-4 sm:px-6 pb-16 max-w-5xl mx-auto">
+        <div className="border-t border-white/[0.07] pt-12">
+          <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">Not for the TikTok-comment crowd</p>
+          <p className="text-white text-lg sm:text-xl font-semibold max-w-xl leading-snug mb-3">
+            Anyone can tell you to "just use tretinoin." Almost nobody tells you the dose, the timeline, or which vendor won't sell you chalk.
+          </p>
+          <p className="text-white/35 text-sm max-w-lg leading-relaxed">
+            If you're already spending money on this — compounds, skincare, supplements — SourceStack is where that money stops being a guess.
+          </p>
+        </div>
       </div>
 
       {/* ── Stack / Quiz promo ────────────────────────── */}
