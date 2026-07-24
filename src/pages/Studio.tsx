@@ -36,6 +36,187 @@ function colorForScore(v: number): string {
   return `hsl(${hue.toFixed(0)}, 82%, ${light.toFixed(0)}%)`;
 }
 
+// ── canvas renderer for downloadable recording — mirrors the on-screen DOM/CSS reveal ──
+const REC_W = 1080;
+const REC_H = 1920;
+
+function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, dx: number, dy: number, dw: number, dh: number, radius = 0) {
+  const ir = img.width / img.height;
+  const tr = dw / dh;
+  let sx, sy, sw, sh;
+  if (ir > tr) { sh = img.height; sw = sh * tr; sx = (img.width - sw) / 2; sy = 0; }
+  else { sw = img.width; sh = sw / tr; sx = 0; sy = (img.height - sh) / 2; }
+  ctx.save();
+  if (radius) { roundRectPath(ctx, dx, dy, dw, dh, radius); ctx.clip(); }
+  ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+function drawContain(ctx: CanvasRenderingContext2D, img: HTMLImageElement, dx: number, dy: number, dw: number, dh: number) {
+  const ir = img.width / img.height;
+  const tr = dw / dh;
+  let w, h;
+  if (ir > tr) { w = dw; h = dw / ir; } else { h = dh; w = dh * ir; }
+  ctx.drawImage(img, dx + (dw - w) / 2, dy + (dh - h) / 2, w, h);
+}
+
+function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (line && ctx.measureText(test).width > maxWidth) { lines.push(line); line = word; }
+    else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+type FrameState = {
+  phase: "hook" | "face" | "board";
+  revealed: boolean;
+  hook: string;
+  cur?: Item;
+  score: number;
+  boardRanked: PoolItem[];
+};
+type AnimTimes = { hookStart: number; faceStart: number; revealStart: number; boardStart: number };
+
+function drawFrame(
+  ctx: CanvasRenderingContext2D,
+  fs: FrameState,
+  a: AnimTimes,
+  imgCache: Map<string, HTMLImageElement>,
+  thumbCache: Map<string, HTMLImageElement>,
+) {
+  const now = performance.now();
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, REC_W, REC_H);
+  const fadeIn = (start: number, delay = 0, dur = 450) =>
+    start ? Math.max(0, Math.min(1, (now - start - delay) / dur)) : 0;
+
+  if (fs.phase === "hook") {
+    const t = fadeIn(a.hookStart, 0, 500);
+    ctx.globalAlpha = t;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#6ee7b7";
+    ctx.font = "700 28px Menlo, Consolas, monospace";
+    ctx.fillText("SOURCESTACK · AI FACE SCAN", REC_W / 2, REC_H * 0.4);
+    ctx.fillStyle = "#fff";
+    ctx.font = "800 64px -apple-system, Helvetica, Arial, sans-serif";
+    const lines = wrapLines(ctx, fs.hook || "", REC_W * 0.82);
+    let ly = REC_H * 0.46;
+    for (const line of lines) { ctx.fillText(line, REC_W / 2, ly); ly += 76; }
+    ctx.fillStyle = "#6ee7b7";
+    ctx.fillRect(REC_W / 2 - 46, ly + 12, 92, 4);
+    ctx.globalAlpha = 1;
+    return;
+  }
+
+  if (fs.phase === "face" && fs.cur?.dataUrl && fs.cur.result) {
+    const faceAlpha = Math.min(1, (now - a.faceStart) / 260);
+    ctx.globalAlpha = faceAlpha;
+    const img = imgCache.get(fs.cur.id);
+    if (fs.revealed) {
+      if (img?.complete) drawCover(ctx, img, 0, 0, REC_W, REC_H * 0.44);
+      const top = REC_H * 0.44;
+      ctx.textAlign = "center";
+
+      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 0);
+      ctx.fillStyle = "#fff";
+      ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(fs.cur.name, REC_W / 2, top + 120);
+
+      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 120);
+      ctx.fillStyle = colorForScore(fs.score);
+      ctx.font = "900 136px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(fs.score.toFixed(1), REC_W / 2 + 34, top + 250);
+      ctx.fillStyle = "#9aa";
+      ctx.font = "400 34px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("/ 10", REC_W / 2 + 48, top + 250);
+
+      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 220);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#cde";
+      ctx.font = "500 32px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(tierFor(remapForContent(fs.cur.result.overall)), REC_W / 2, top + 305);
+
+      const w = worstMetric(fs.cur.result);
+      ctx.globalAlpha = faceAlpha * fadeIn(a.revealStart, 340);
+      ctx.fillStyle = "#c88";
+      ctx.font = "700 22px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText("WORST RATIO", REC_W / 2, top + 365);
+      ctx.fillStyle = "#d98a8a";
+      ctx.font = "600 34px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(`${w.name} — ${w.score.toFixed(1)}`, REC_W / 2, top + 408);
+    } else {
+      if (img?.complete) drawContain(ctx, img, 0, 0, REC_W, REC_H);
+      const st = now - a.faceStart;
+      const sy = -0.04 * REC_H + Math.min(1, st / SCAN_HOLD_MS) * 1.08 * REC_H;
+      const grad = ctx.createLinearGradient(0, 0, REC_W, 0);
+      grad.addColorStop(0, "rgba(110,231,183,0)");
+      grad.addColorStop(0.5, "rgba(110,231,183,0.95)");
+      grad.addColorStop(1, "rgba(110,231,183,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, sy, REC_W, 5);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#6ee7b7";
+      ctx.font = "700 24px Menlo, Consolas, monospace";
+      ctx.fillText(`SCANNING ${fs.cur.name.toUpperCase()}`, REC_W / 2, 70);
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
+
+  if (fs.phase === "board") {
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#fff";
+    ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText("Top 10 — All Time", REC_W * 0.09, REC_H * 0.11);
+    const rowH = 98, top = REC_H * 0.15;
+    fs.boardRanked.forEach((it, i) => {
+      const t = fadeIn(a.boardStart, i * 220, 400);
+      if (t <= 0) return;
+      const y = top + i * rowH;
+      ctx.globalAlpha = t;
+      ctx.fillStyle = i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)";
+      roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
+      ctx.fill();
+      ctx.fillStyle = "#6ee7b7";
+      ctx.font = "800 30px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(String(i + 1), REC_W * 0.09, y + 55);
+      const timg = thumbCache.get(it.id);
+      if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 60, 60, 10);
+      ctx.fillStyle = "#fff";
+      ctx.font = "600 29px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(it.name, REC_W * 0.26, y + 55);
+      ctx.textAlign = "right";
+      ctx.fillStyle = colorForScore(it.score);
+      ctx.font = "800 33px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(it.score.toFixed(1), REC_W * 0.92, y + 55);
+      ctx.globalAlpha = 1;
+    });
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#789";
+    ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText("try your scan → sourcestack", REC_W / 2, REC_H * 0.97);
+  }
+}
+
 type Item = {
   id: string;
   name: string;
@@ -154,11 +335,17 @@ export default function Studio() {
   const [score, runCount, setScore] = useCountUp();
   const timers = useRef<number[]>([]);
 
-  // recording — tab-capture the stage while play() runs, auto-download the result
+  // recording — a hidden canvas redraws the same state every frame and gets captured
+  // directly, so the download is independent of screen/window/tab and needs no permission prompt
   const [recording, setRecording] = useState(false);
-  const [presenting, setPresenting] = useState(false); // true = stage shown fullscreen for a clean capture
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const recCanvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const imgCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
+  const thumbCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
+  const animRef = useRef<AnimTimes>({ hookStart: 0, faceStart: 0, revealStart: 0, boardStart: 0 });
+  const frameRef = useRef<FrameState>({ phase: "hook", revealed: false, hook: "", score: 0, boardRanked: [] });
 
   // per-video reveal order = order photos were entered, not sorted by score
   // (the leaderboard/board phase below uses the separately-sorted `boardRanked` pool)
@@ -198,6 +385,9 @@ export default function Studio() {
       const contentScore = remapForContent(scan.overall);
       setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: "done", result: scan, dataUrl } : p)));
       setPool((prev) => [...prev, { id: it.id, name: it.name, thumb, score: contentScore, tier: tierFor(contentScore), ts: Date.now() }]);
+      // pre-warm the recording canvas's image cache so playback never stalls on a still-loading photo
+      const fullImg = new Image(); fullImg.src = dataUrl; imgCacheRef.current.set(it.id, fullImg);
+      const thumbImg = new Image(); thumbImg.src = thumb; thumbCacheRef.current.set(it.id, thumbImg);
     } catch (e) {
       console.error(e);
       setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: "error", error: "Scan failed" } : p)));
@@ -225,6 +415,7 @@ export default function Studio() {
     setPhase("hook");
     setFaceIdx(0);
     setScore(0);
+    animRef.current.hookStart = performance.now();
 
     at(HOOK_MS, () => stepFace(0));
 
@@ -234,14 +425,18 @@ export default function Studio() {
       setFaceIdx(i);
       setScore(0);
       setRevealed(false);
+      animRef.current.faceStart = performance.now();
+      animRef.current.revealStart = 0;
       at(SCAN_HOLD_MS, () => {
         setRevealed(true);
+        animRef.current.revealStart = performance.now();
         timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), 250));
       });
       at(FACE_MS, () => stepFace(i + 1));
     }
     function showBoard() {
       setPhase("board");
+      animRef.current.boardStart = performance.now();
     }
   };
 
@@ -250,78 +445,76 @@ export default function Studio() {
     setPlaying(false);
     setPhase("hook");
     setRevealed(false);
-    setPresenting(false);
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
+    if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
   };
 
   // ── record & download ──
-  // Captures the actual on-screen stage (via tab capture) while play() runs, so the
-  // downloaded file is pixel-identical to what you see — no separate screen-recorder needed.
-  const recordAndDownload = async () => {
+  // Redraws the exact same state onto a hidden canvas every frame and records THAT — no
+  // screen/tab-share permission, no window-size dependency, no cropping needed afterward.
+  const recordAndDownload = () => {
     if (done.length === 0) return;
-    const md = navigator.mediaDevices as (MediaDevices & { getDisplayMedia?: (opts: unknown) => Promise<MediaStream> }) | undefined;
-    if (!md?.getDisplayMedia || typeof MediaRecorder === "undefined") {
+    if (typeof MediaRecorder === "undefined") {
       alert("Recording isn't supported in this browser — try Chrome, or screen-record the stage manually instead.");
       return;
     }
-    try {
-      setPresenting(true);
-      await new Promise((r) => setTimeout(r, 60)); // let the fullscreen presentation view paint first
-      const stream = await md.getDisplayMedia({
-        video: { frameRate: 30 },
-        audio: false,
-        preferCurrentTab: true, // Chrome-only hint — skips straight to this tab in the share picker
-      });
-      chunksRef.current = [];
-      const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
-      const rec = new MediaRecorder(stream, { mimeType: mime });
-      mediaRecorderRef.current = rec;
-      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      rec.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        setPresenting(false);
-        setRecording(false);
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `sourcestack-reveal-${Date.now()}.webm`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      };
-      stream.getVideoTracks()[0].onended = () => { if (rec.state !== "inactive") rec.stop(); };
-      rec.start();
-      setRecording(true);
-      play();
-      at(HOOK_MS + done.length * FACE_MS + BOARD_HOLD_MS, () => {
-        if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop();
-      });
-    } catch (err) {
-      console.error(err);
-      setPresenting(false);
+    const canvas = recCanvasRef.current!;
+    canvas.width = REC_W;
+    canvas.height = REC_H;
+    const ctx = canvas.getContext("2d")!;
+    const stream = (canvas as HTMLCanvasElement & { captureStream: (fps?: number) => MediaStream }).captureStream(30);
+    chunksRef.current = [];
+    const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
+    mediaRecorderRef.current = rec;
+    rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    rec.onstop = () => {
+      if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
       setRecording(false);
-    }
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sourcestack-reveal-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    rec.start();
+    setRecording(true);
+
+    const loop = () => {
+      drawFrame(ctx, frameRef.current, animRef.current, imgCacheRef.current, thumbCacheRef.current);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    loop();
+
+    play();
+    at(HOOK_MS + done.length * FACE_MS + BOARD_HOLD_MS, () => {
+      if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop();
+    });
   };
 
   // ── styles ──
   const stage: React.CSSProperties = {
-    position: "relative",
-    ...(presenting ? { height: "90vh", width: "auto" } : { width: "min(405px, 90vw)" }),
-    aspectRatio: "9 / 16",
+    position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
     background: "#000",
-    borderRadius: presenting ? 0 : 22, overflow: "hidden",
-    border: presenting ? "none" : "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
     textAlign: "center", color: "#fff", fontFamily: "inherit",
   };
   const cur = done[faceIdx];
 
+  // kept in sync every render so the recording loop (driven by requestAnimationFrame,
+  // outside React's render cycle) always reads the latest state
+  frameRef.current = { phase, revealed, hook, cur, score, boardRanked };
+
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 80px" }}>
       <canvas ref={canvasRef} style={{ display: "none" }} />
+      <canvas ref={recCanvasRef} style={{ display: "none" }} />
 
       <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Content Studio</h1>
       <p style={{ color: "#9aa", fontSize: 14, marginBottom: 24 }}>
@@ -383,8 +576,8 @@ export default function Studio() {
           )}
           {done.length > 0 && (
             <p style={{ fontSize: 12, color: "#788", marginTop: 12, lineHeight: 1.5 }}>
-              "Record &amp; download" captures the stage itself and saves a .webm when it's done — no
-              screen-recorder needed. Chrome will ask you to confirm sharing this tab; that's expected.
+              "Record &amp; download" renders the reveal straight to a video file and saves it
+              automatically — no screen-recorder, no permission prompt.
               The ending board is your all-time top 10, not just today's photos.
               Watch <b>scan sessions</b> after posting, not views.
             </p>
@@ -410,10 +603,7 @@ export default function Studio() {
         </div>
 
         {/* ── right: the 9:16 stage ── */}
-        <div style={presenting
-          ? { position: "fixed", inset: 0, background: "#000", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }
-          : { position: "sticky", top: 20, display: "flex", justifyContent: "center" }
-        }>
+        <div style={{ position: "sticky", top: 20, display: "flex", justifyContent: "center" }}>
           <div style={stage}>
             {phase === "hook" && (
               <div style={{ padding: 30, animation: "sfade .5s ease both" }}>
