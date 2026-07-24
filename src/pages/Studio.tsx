@@ -607,6 +607,10 @@ export default function Studio() {
   // ── styles ──
   const stage: React.CSSProperties = {
     position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
+    // solid fallback color first — if the SVG data-uri background ever fails to load for any
+    // reason, the stage still gets a dark backdrop instead of the browser default (white),
+    // which was also making the white name text invisible (white-on-white)
+    backgroundColor: "#04120a",
     backgroundImage: PITCH_SVG_BG, backgroundSize: "cover",
     borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -814,7 +818,7 @@ export default function Studio() {
                     position: "absolute", top: "55%", left: 0, right: 0, bottom: 0,
                     padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "flex-start",
                   }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, animation: "sfade .5s ease both" }}>{cur.name}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", animation: "sfade .5s ease both" }}>{cur.name}</div>
                     <div style={{
                       display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0",
                       animation: "sfade .5s ease both", animationDelay: "0.12s",
