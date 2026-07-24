@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import AuthModal from "../components/AuthModal";
 import UpgradeModal from "../components/UpgradeModal";
+import ScoreTrend from "../components/ScoreTrend";
 import SEO from "../components/SEO";
 
 type SavedScan = {
@@ -124,6 +125,8 @@ export default function Account() {
 
         {/* Saved scans */}
         <div className="mb-8">
+          {!scansLoading && <ScoreTrend scans={[...scans].reverse()} />}
+
           <div className="flex items-baseline justify-between mb-3">
             <h2 className="text-white font-semibold text-sm">Saved scans</h2>
             <Link to="/scan" className="text-white/35 hover:text-white/70 text-xs transition-colors">
