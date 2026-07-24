@@ -452,12 +452,14 @@ export function analyzeFace(
 
   const totalWeight = metrics.reduce((s, m) => s + m.weight, 0);
   const weightedMean = metrics.reduce((s, m) => s + m.score * m.weight, 0) / totalWeight;
-  // with the harsh band(), raw weighted means cluster ~7.5–9 for real faces;
-  // linear stretch so the overall still differentiates but doesn't over-punish
-  // real faces landing at the low end of that cluster (was 2.4x/-14.0 — a wm
-  // of 7.33 scored 3.6, well under the intended "average" band):
-  // junk ~3.5, average ~5–6.5, strong ~7.5, near-perfect still required to break 9
-  const overall = Math.max(2.9, Math.min(9.1, 1.9 * weightedMean - 9.0));
+  // with the harsh band(), raw weighted means cluster ~7.5–9 for real faces, topping
+  // out around ~8.4-8.5 even for a near-ideal/symmetrical face (band() rarely gives a
+  // clean 10 on every metric from a single 2D photo). Linear stretch calibrated so a
+  // wm of 7.33 (Vic's own scan) lands ~5.7 (was 3.6 under 2.4x/-14.0, then 4.9 under
+  // 1.9x/-9.0 — still too harsh) and a wm of ~8.4 (most symmetrical face testable)
+  // lands ~9.0 (was 6.9 under 1.9x/-9.0, badly undervaluing a near-perfect face):
+  // junk ~3, average ~5.5–6.5, strong ~7.5–8, near-perfect ~9+
+  const overall = Math.max(2.9, Math.min(9.4, 3.1 * weightedMean - 17.0));
 
   return {
     overall,
