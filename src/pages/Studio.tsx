@@ -15,6 +15,9 @@ const HOOK_MS = 2600;
 const SCAN_HOLD_MS = 1300; // full-screen "scanning" moment before zooming out to the read-out
 const FACE_MS = 5800;
 const BOARD_HOLD_MS = 5000; // how long the leaderboard holds before a recording auto-stops
+const ZOOM_MS = 950; // duration of the full-screen -> small-band zoom, once scanning ends
+
+function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
 // which scan metrics roll up into which category — drives the compact per-category rating rows
 const METRIC_CATEGORIES: { label: string; ids: string[] }[] = [
@@ -225,7 +228,13 @@ function renderVideoFrame(
       const faceBottom = faceTop + faceH;
       if (img?.complete) {
         const focus = faceFocus(f.result, img.naturalWidth, img.naturalHeight);
-        drawCover(ctx, img, faceMarginX, faceTop, REC_W - faceMarginX * 2, faceH, 0, focus.x, focus.y);
+        // animate the box from full-height down to the final band; drawCover recomputes the
+        // source crop fresh every frame from whatever box it's given, always centered on the
+        // focus point — so the zoom lands on the face the whole way, never a wrong-then-snap
+        const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
+        const by = lerp(0, faceTop, zt);
+        const bh = lerp(REC_H, faceH, zt);
+        drawCover(ctx, img, faceMarginX, by, REC_W - faceMarginX * 2, bh, 0, focus.x, focus.y);
       }
       ctx.textAlign = "center";
 
@@ -429,7 +438,8 @@ export default function Studio() {
   const [generating, setGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(0);
   const recCanvasRef = useRef<HTMLCanvasElement>(null);
-  const revealCanvasRef = useRef<HTMLCanvasElement>(null); // live-preview equivalent of the video's face crop
+  const liveCanvasRef = useRef<HTMLCanvasElement>(null); // live-preview equivalent of the video's face rendering
+  const faceStartRef = useRef(0); // performance.now() when the current face's phase began
   const imgCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const thumbCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
@@ -512,6 +522,7 @@ export default function Studio() {
       setFaceIdx(i);
       setScore(0);
       setRevealed(false);
+      faceStartRef.current = performance.now();
       at(SCAN_HOLD_MS, () => {
         setRevealed(true);
         timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), 250));
@@ -605,30 +616,49 @@ export default function Studio() {
   };
   const cur = done[faceIdx];
 
-  // draws the face-centered crop into the live-preview canvas — same drawCover() math and same
-  // focusX/focusY the real video uses, so the preview and the generated file always agree
+  // continuously draws the current face into the live-preview canvas — full-screen "contain"
+  // while scanning, then an animated zoom into the focus-centered crop, using real elapsed time
+  // against the same SCAN_HOLD_MS/ZOOM_MS the real video's renderVideoFrame() uses. Same
+  // drawCover() math, same focusX/focusY, so the preview and the generated file always agree —
+  // and because it's recomputed fresh every frame from whatever box it's given, the zoom lands
+  // on the face the whole way through instead of animating toward the wrong spot then snapping.
   useEffect(() => {
-    if (!revealed || !cur) return;
-    const canvas = revealCanvasRef.current;
+    if (phase !== "face" || !cur) return;
+    const canvas = liveCanvasRef.current;
     const img = imgCacheRef.current.get(cur.id);
     if (!canvas || !img) return;
+    let raf = 0;
     const draw = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const w = Math.round(canvas.clientWidth * dpr);
       const h = Math.round(canvas.clientHeight * dpr);
-      if (!w || !h) return;
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d")!;
-      // opaque backdrop first — otherwise transparent pixels in a background-removed photo
-      // let the animating <img> underneath show through (visible as a second, mis-cropped face)
-      ctx.fillStyle = "#04120a";
-      ctx.fillRect(0, 0, w, h);
-      drawCover(ctx, img, 0, 0, w, h, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+      if (w && h && (canvas.width !== w || canvas.height !== h)) { canvas.width = w; canvas.height = h; }
+      if (canvas.width && canvas.height) {
+        const ctx = canvas.getContext("2d")!;
+        // opaque backdrop — otherwise transparent pixels in a background-removed photo would
+        // let whatever's behind the canvas show through
+        ctx.fillStyle = "#04120a";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const marginX = canvas.width * 0.06;
+        const localT = performance.now() - faceStartRef.current;
+        if (localT < SCAN_HOLD_MS) {
+          drawContain(ctx, img, marginX, 0, canvas.width - marginX * 2, canvas.height);
+        } else {
+          const revealT = localT - SCAN_HOLD_MS;
+          const faceTop = canvas.height * 0.15;
+          const faceH = canvas.height * 0.4;
+          const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
+          const by = lerp(0, faceTop, zt);
+          const bh = lerp(canvas.height, faceH, zt);
+          drawCover(ctx, img, marginX, by, canvas.width - marginX * 2, bh, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+        }
+      }
+      raf = requestAnimationFrame(draw);
     };
-    if (img.complete) draw();
-    else img.onload = draw;
-  }, [cur, revealed]);
+    if (img.complete) raf = requestAnimationFrame(draw);
+    else img.onload = () => { raf = requestAnimationFrame(draw); };
+    return () => cancelAnimationFrame(raf);
+  }, [cur, phase]);
 
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 80px" }}>
@@ -743,32 +773,11 @@ export default function Studio() {
 
             {phase === "face" && cur && (
               <div key={cur.id} style={{ position: "absolute", inset: 0, animation: "faceIn 260ms ease" }}>
-                <img
-                  src={cur.dataUrl} alt=""
-                  style={{
-                    position: "absolute", top: revealed ? "15%" : 0, left: "6%", right: "6%",
-                    height: revealed ? "40%" : "100%",
-                    // "contain" while scanning so the whole photo shows uncropped (no zoomed-in-on-face look);
-                    // "cover" (default centered) once zoomed out — only for the ~950ms motion itself, the
-                    // precisely face-centered <canvas> below fades in on top once it settles
-                    objectFit: revealed ? "cover" : "contain",
-                    filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
-                    transition: "top 950ms cubic-bezier(0.22,1,0.36,1), height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
-                  }}
-                />
-                {revealed && (
-                  // canvas (not <img objectFit>) — object-position percentages don't map to "put this
-                  // fraction of the image here", so we crop it ourselves with the same drawCover() math
-                  // the actual generated video uses, guaranteeing the two always match. Fades in once
-                  // the <img>'s zoom motion above has settled into the same box.
-                  <canvas
-                    ref={revealCanvasRef}
-                    style={{
-                      position: "absolute", top: "15%", left: "6%", right: "6%", height: "40%", width: "88%",
-                      borderRadius: 8, animation: "sfade .4s ease both", animationDelay: "0.5s",
-                    }}
-                  />
-                )}
+                {/* single continuously-redrawn canvas (not <img objectFit>) — handles the full-screen
+                    "contain" scan view AND the zoom into the focus-centered crop, using the same
+                    drawCover() math as the real video. Recomputed fresh every frame from the current
+                    box, so the zoom lands on the face the whole way through, never wrong-then-snap. */}
+                <canvas ref={liveCanvasRef} style={{ position: "absolute", inset: 0 }} />
                 {!revealed && (
                   <>
                     <div style={{
