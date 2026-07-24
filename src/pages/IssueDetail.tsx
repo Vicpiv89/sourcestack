@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
+import LockedProtocol from "../components/LockedProtocol";
+import LockedVendors from "../components/LockedVendors";
 import VendorCard from "../components/VendorCard";
 import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
@@ -120,12 +122,7 @@ export default function IssueDetail() {
                         ))}
                       </ul>
                     ) : (
-                      <button
-                        onClick={() => setShowUpgrade(true)}
-                        className="mt-3 flex items-center gap-2 text-xs text-white/30 hover:text-white/60 transition-colors"
-                      >
-                        🔒 {lockedSteps.length} more step{lockedSteps.length !== 1 ? "s" : ""} — unlock with Pro
-                      </button>
+                      <LockedProtocol steps={lockedSteps} startIndex={3} onUnlock={() => setShowUpgrade(true)} />
                     )
                   )}
                 </div>
@@ -143,15 +140,7 @@ export default function IssueDetail() {
                         ))}
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setShowUpgrade(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white/50 hover:border-white/20 hover:text-white/70 transition-colors w-full"
-                      >
-                        <span>🔒</span>
-                        <span>
-                          {treatment.vendorIds.length} vetted vendor{treatment.vendorIds.length !== 1 ? "s" : ""} — unlock with Pro
-                        </span>
-                      </button>
+                      <LockedVendors vendorIds={treatment.vendorIds} onUnlock={() => setShowUpgrade(true)} />
                     )}
                   </div>
                 )}

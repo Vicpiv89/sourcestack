@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { treatments } from "../data/treatments";
 import { issues } from "../data/issues";
 import VendorCard from "../components/VendorCard";
+import LockedProtocol from "../components/LockedProtocol";
+import LockedVendors from "../components/LockedVendors";
 import DisclaimerBanner from "../components/DisclaimerBanner";
 import UpgradeModal from "../components/UpgradeModal";
 import TreatmentFaceAnim from "../components/TreatmentFaceAnim";
@@ -153,28 +155,7 @@ export default function TreatmentDetail() {
                   ))}
                 </ol>
               ) : (
-                <div className="mt-4 relative">
-                  <div className="blur-sm pointer-events-none select-none">
-                    <ol className="flex flex-col gap-4">
-                      {lockedSteps.map((step, i) => (
-                        <li key={i} className="flex gap-4">
-                          <span className="text-white/20 font-mono text-sm shrink-0 w-5 text-right mt-0.5">
-                            {i + 3}
-                          </span>
-                          <span className="text-white/70 text-sm leading-relaxed">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/80 to-transparent flex flex-col items-center justify-end pb-2">
-                    <button
-                      onClick={() => setShowUpgrade(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors"
-                    >
-                      🔒 Unlock full protocol — $19/mo
-                    </button>
-                  </div>
-                </div>
+                <LockedProtocol steps={lockedSteps} startIndex={3} onUnlock={() => setShowUpgrade(true)} />
               )
             )}
           </div>
@@ -210,27 +191,7 @@ export default function TreatmentDetail() {
                 ))}
               </div>
             ) : (
-              <div
-                className="relative cursor-pointer"
-                onClick={() => setShowUpgrade(true)}
-              >
-                <div className="blur-sm pointer-events-none select-none grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {treatment.vendorIds.map((id) => (
-                    <VendorCard key={id} vendorId={id} />
-                  ))}
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                  <p className="text-white font-semibold text-sm">
-                    🔒 Vendors locked
-                  </p>
-                  <p className="text-white/40 text-xs text-center max-w-xs">
-                    Get vetted vendor prices, trust scores, and direct links with Pro
-                  </p>
-                  <button className="px-4 py-2 bg-white text-black text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors">
-                    Unlock for $19/mo
-                  </button>
-                </div>
-              </div>
+              <LockedVendors vendorIds={treatment.vendorIds} onUnlock={() => setShowUpgrade(true)} />
             )}
           </div>
         ) : (
