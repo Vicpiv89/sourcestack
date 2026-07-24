@@ -38,6 +38,14 @@ function remapForContent(raw: number): number {
   return Math.max(3.5, Math.min(9.0, mapped));
 }
 
+// bright red (2.0) → dark green (9.0) heat color for on-screen score displays
+function colorForScore(v: number): string {
+  const t = Math.max(0, Math.min(1, (v - 2) / 7));
+  const hue = t * 120;
+  const light = 58 - t * 20;
+  return `hsl(${hue.toFixed(0)}, 82%, ${light.toFixed(0)}%)`;
+}
+
 type Item = {
   id: string;
   name: string;
@@ -152,6 +160,7 @@ export default function Studio() {
   const [playing, setPlaying] = useState(false);
   const [phase, setPhase] = useState<"hook" | "face" | "board">("hook");
   const [faceIdx, setFaceIdx] = useState(0);
+  const [revealed, setRevealed] = useState(false); // false = full-screen scan moment, true = zoomed-out info view
   const [score, runCount, setScore] = useCountUp();
   const timers = useRef<number[]>([]);
 
@@ -221,7 +230,8 @@ export default function Studio() {
     setScore(0);
 
     const HOOK = 2200;
-    const FACE = 4200; // longer — now shows 2 flaws + a product rec, needs more read time
+    const SCAN_HOLD = 950; // full-screen "scanning" moment before zooming out to the read-out
+    const FACE = 4900;
     at(HOOK, () => stepFace(0));
 
     function stepFace(i: number) {
@@ -229,7 +239,11 @@ export default function Studio() {
       setPhase("face");
       setFaceIdx(i);
       setScore(0);
-      at(0, () => timers.current.push(window.setTimeout(() => runCount(remapForContent(ranked[i].result!.overall)), 500)));
+      setRevealed(false);
+      at(SCAN_HOLD, () => {
+        setRevealed(true);
+        timers.current.push(window.setTimeout(() => runCount(remapForContent(ranked[i].result!.overall)), 200));
+      });
       at(FACE, () => stepFace(i + 1));
     }
     function showBoard() {
@@ -237,12 +251,12 @@ export default function Studio() {
     }
   };
 
-  const stop = () => { clearTimers(); setPlaying(false); setPhase("hook"); };
+  const stop = () => { clearTimers(); setPlaying(false); setPhase("hook"); setRevealed(false); };
 
   // ── styles ──
   const stage: React.CSSProperties = {
     position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
-    background: "radial-gradient(120% 80% at 50% 0%, #14201b 0%, #0b0b0d 60%)",
+    background: "#000",
     borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
     textAlign: "center", color: "#fff", fontFamily: "inherit",
@@ -337,42 +351,85 @@ export default function Studio() {
         <div style={{ position: "sticky", top: 20, display: "flex", justifyContent: "center" }}>
           <div style={stage}>
             {phase === "hook" && (
-              <div style={{ padding: 26 }}>
-                <div style={{ fontSize: 13, letterSpacing: 2, color: "#6ee7b7", marginBottom: 14 }}>SOURCESTACK · FACE SCAN</div>
-                <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.15 }}>{hook}</div>
+              <div style={{ padding: 30, animation: "sfade .5s ease both" }}>
+                <div style={{ fontSize: 12, letterSpacing: 4, color: "#6ee7b7", marginBottom: 18, fontFamily: "monospace" }}>
+                  SOURCESTACK · AI FACE SCAN
+                </div>
+                <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2, color: "#fff" }}>{hook}</div>
+                <div style={{ width: 46, height: 2, background: "#6ee7b7", margin: "22px auto 0" }} />
                 {!playing && done.length > 0 && (
-                  <div style={{ fontSize: 13, color: "#889", marginTop: 20 }}>▶ press Play to run the reveal</div>
+                  <div style={{ fontSize: 13, color: "#5c8", marginTop: 24 }}>▶ press Play to run the reveal</div>
                 )}
                 {!playing && done.length === 0 && (
-                  <div style={{ fontSize: 13, color: "#889", marginTop: 20 }}>add photos to begin</div>
+                  <div style={{ fontSize: 13, color: "#556", marginTop: 24 }}>add photos to begin</div>
                 )}
               </div>
             )}
 
             {phase === "face" && cur && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
-                <img src={cur.dataUrl} alt="" style={{ width: "100%", height: "58%", objectFit: "cover" }} />
-                <div style={{ flex: 1, padding: "12px 18px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>{cur.name}</div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0" }}>
-                    <span style={{ fontSize: 64, fontWeight: 900, color: "#6ee7b7", lineHeight: 1 }}>{score.toFixed(1)}</span>
-                    <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
+              <div key={cur.id} style={{ position: "absolute", inset: 0, animation: "faceIn 260ms ease" }}>
+                <img
+                  src={cur.dataUrl} alt=""
+                  style={{
+                    position: "absolute", top: 0, left: 0, width: "100%",
+                    height: revealed ? "44%" : "100%",
+                    objectFit: "cover",
+                    filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
+                    transition: "height 750ms cubic-bezier(0.22,1,0.36,1), filter 750ms ease",
+                  }}
+                />
+                {!revealed && (
+                  <>
+                    <div style={{
+                      position: "absolute", left: 0, right: 0, height: 2,
+                      background: "linear-gradient(90deg, transparent, rgba(110,231,183,0.95), transparent)",
+                      boxShadow: "0 0 14px 2px rgba(110,231,183,0.55)",
+                      animation: "scanSweep 950ms linear",
+                    }} />
+                    <div style={{
+                      position: "absolute", top: 22, left: 0, right: 0, textAlign: "center",
+                      fontSize: 11, letterSpacing: 3, color: "#6ee7b7", fontFamily: "monospace", textTransform: "uppercase",
+                    }}>
+                      scanning {cur.name}
+                    </div>
+                  </>
+                )}
+                {revealed && (
+                  <div style={{
+                    position: "absolute", top: "44%", left: 0, right: 0, bottom: 0,
+                    padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "center",
+                  }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, animation: "sfade .5s ease both" }}>{cur.name}</div>
+                    <div style={{
+                      display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0",
+                      animation: "sfade .5s ease both", animationDelay: "0.12s",
+                    }}>
+                      <span style={{ fontSize: 64, fontWeight: 900, color: colorForScore(score), lineHeight: 1 }}>{score.toFixed(1)}</span>
+                      <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
+                    </div>
+                    <div style={{ fontSize: 14, color: "#cde", animation: "sfade .5s ease both", animationDelay: "0.22s" }}>
+                      {tierFor(remapForContent(cur.result!.overall))}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginTop: 10 }}>
+                      {worstMetrics(cur.result!, 2).map((m, mi) => (
+                        <span key={m.id} style={{ ...flawPill, animation: "sfade .4s ease both", animationDelay: `${0.34 + mi * 0.1}s` }}>
+                          {m.name} {m.score.toFixed(1)}
+                        </span>
+                      ))}
+                    </div>
+                    {(() => {
+                      const rec = recommendedProduct(cur.result!);
+                      return rec ? (
+                        <div style={{
+                          fontSize: 13, color: "#6ee7b7", fontWeight: 700, marginTop: 12,
+                          animation: "sfade .5s ease both", animationDelay: "0.5s",
+                        }}>
+                          Fix: {rec.treatment}
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
-                  <div style={{ fontSize: 14, color: "#cde" }}>{tierFor(remapForContent(cur.result!.overall))}</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginTop: 10 }}>
-                    {worstMetrics(cur.result!, 2).map((m) => (
-                      <span key={m.id} style={flawPill}>{m.name} {m.score.toFixed(1)}</span>
-                    ))}
-                  </div>
-                  {(() => {
-                    const rec = recommendedProduct(cur.result!);
-                    return rec ? (
-                      <div style={{ fontSize: 13, color: "#6ee7b7", fontWeight: 700, marginTop: 12 }}>
-                        Fix: {rec.treatment}
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
+                )}
               </div>
             )}
 
@@ -388,7 +445,7 @@ export default function Studio() {
                       <span style={{ width: 20, fontWeight: 800, color: "#6ee7b7" }}>{i + 1}</span>
                       <img src={it.thumb} alt="" style={{ width: 34, height: 34, borderRadius: 7, objectFit: "cover" }} />
                       <span style={{ flex: 1, textAlign: "left", fontSize: 15, fontWeight: 600 }}>{it.name}</span>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: "#6ee7b7" }}>{it.score.toFixed(1)}</span>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
@@ -401,7 +458,11 @@ export default function Studio() {
         </div>
       </div>
 
-      <style>{`@keyframes sfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
+      <style>{`
+        @keyframes sfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes faceIn{from{opacity:0}to{opacity:1}}
+        @keyframes scanSweep{0%{top:-4%}100%{top:104%}}
+      `}</style>
     </div>
   );
 }
