@@ -103,30 +103,41 @@ function band(value: number, lo: number, hi: number, unit: number): number {
   return Math.max(1, Math.min(10, 8.5 - ((d - half) / unit) * 1.35));
 }
 
-/** mean luminance, luminance std, and redness of a square patch centered on (cx, cy) */
+/**
+ * Mean luminance, luminance std (texture/roughness), aggregate redness, and
+ * per-pixel redness std (localized red spots — acne/inflammation) of a square
+ * patch centered on (cx, cy).
+ */
 function samplePatch(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number, size: number,
   imgW: number, imgH: number
-): { mean: number; std: number; redness: number } {
+): { mean: number; std: number; redness: number; rednessStd: number } {
   const s = Math.max(4, Math.round(size));
   const x = Math.round(Math.max(0, Math.min(imgW - s, cx - s / 2)));
   const y = Math.round(Math.max(0, Math.min(imgH - s, cy - s / 2)));
   const data = ctx.getImageData(x, y, s, s).data;
   let sum = 0, sumSq = 0, rSum = 0, gbSum = 0, n = 0;
+  let redSum = 0, redSumSq = 0;
   for (let i = 0; i < data.length; i += 4) {
     const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
     sum += lum;
     sumSq += lum * lum;
+    const gb = (data[i + 1] + data[i + 2]) / 2;
     rSum += data[i];
-    gbSum += (data[i + 1] + data[i + 2]) / 2;
+    gbSum += gb;
+    const red = data[i] / Math.max(1, gb);
+    redSum += red;
+    redSumSq += red * red;
     n++;
   }
   const mean = sum / n;
+  const redMean = redSum / n;
   return {
     mean,
     std: Math.sqrt(Math.max(0, sumSq / n - mean * mean)),
     redness: rSum / Math.max(1, gbSum),
+    rednessStd: Math.sqrt(Math.max(0, redSumSq / n - redMean * redMean)),
   };
 }
 
@@ -388,29 +399,41 @@ export function analyzeFace(
 
   // ── pixel-based metrics (need the un-annotated canvas) ──
   if (ctx) {
-    // 13 · Skin clarity — texture (local luminance variation) + tone evenness
+    // 13 · Skin clarity — spottiness (acne, scarring, texture), not skin tone.
+    // Previous version divided local luminance std by the patch's own mean
+    // ("texture" as a %), which systematically inflated the score for darker
+    // skin: the same absolute pixel noise / a smaller mean luminance = a
+    // larger ratio, purely because the denominator is smaller — not because
+    // there was more actual texture. That's what was scoring dark skin near
+    // the floor regardless of real clarity. Fixed by using raw (non-
+    // mean-normalized) luminance std for texture/scarring, adding a
+    // dedicated redness-variance term to actually target red spots/acne
+    // (tone-independent — a spot reads redder than surrounding skin at any
+    // base tone), and dropping the old cross-region "tone" term (evenness
+    // between cheeks/forehead) entirely since that was the piece most
+    // conflated with skin tone rather than blemishes.
     const patchSize = faceW * 0.09;
     const patches = [LM.rCheekSkin, LM.lCheekSkin, LM.foreheadSkin].map((i) => {
       const p = px(i);
       return samplePatch(ctx, p.x, p.y, patchSize, imgW, imgH);
     });
-    const texture = (patches.reduce((s, p) => s + p.std / Math.max(1, p.mean), 0) / patches.length) * 100;
+    const texture = patches.reduce((s, p) => s + p.std, 0) / patches.length;
+    const rednessVar = (patches.reduce((s, p) => s + p.rednessStd, 0) / patches.length) * 100;
     const meanLum = patches.reduce((s, p) => s + p.mean, 0) / patches.length;
-    const tone =
-      (Math.sqrt(patches.reduce((s, p) => s + (p.mean - meanLum) ** 2, 0) / patches.length) /
-        Math.max(1, meanLum)) * 100;
-    const skinValue = 0.65 * texture + 0.35 * tone;
-    const skinScore = band(-skinValue, -6, 0, 2.5);
-    if (meanLum < 60)
+    const skinValue = texture + rednessVar;
+    const skinScore = band(-skinValue, -9, -3, 3);
+    // dark skin naturally reflects less light even under good, even lighting —
+    // only warn on genuine underexposure, not low mean luminance from tone alone
+    if (meanLum < 35)
       warnings.push("Low light — skin reading is unreliable in this photo.");
     add({
       id: "skin-clarity", name: "Skin Clarity (est.)",
-      display: `${Math.max(0, Math.min(100, 100 - (skinValue - 4) * 6)).toFixed(0)}%`,
+      display: `${Math.max(0, Math.min(100, 100 - (skinValue - 4) * 3.3)).toFixed(0)}%`,
       ideal: "75%+",
       score: skinScore, weight: 1.1,
-      note: skinScore >= 8 ? "Even texture and tone — skin is carrying you." :
-        skinScore >= 6 ? "Some texture or unevenness reads on camera. A basic actives routine moves this fast." :
-        "Texture/tone variation is visible — this is the most fixable metric on the list.",
+      note: skinScore >= 8 ? "Clear, even texture — skin is carrying you." :
+        skinScore >= 6 ? "Minor texture or a spot or two reads on camera. A basic actives routine moves this fast." :
+        "Texture, redness, or scarring is visible — this is the most fixable metric on the list.",
       issueSlugs: skinScore < 7 ? ["skin-clarity", "skin-texture"] : [],
     });
 
