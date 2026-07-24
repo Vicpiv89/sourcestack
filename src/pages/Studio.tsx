@@ -402,10 +402,10 @@ export default function Studio() {
                       const w = worstMetric(cur.result!);
                       return (
                         <div style={{ marginTop: 14, animation: "sfade .45s ease both", animationDelay: "0.34s" }}>
-                          <div style={{ fontSize: 11, letterSpacing: 3, color: "#f88", fontWeight: 800, textTransform: "uppercase" }}>
-                            worst ratio 💀
+                          <div style={{ fontSize: 11, letterSpacing: 3, color: "#c88", fontWeight: 700, textTransform: "uppercase" }}>
+                            worst ratio
                           </div>
-                          <div style={{ fontSize: 21, fontWeight: 900, color: "#ff5c5c", marginTop: 2 }}>
+                          <div style={{ fontSize: 17, fontWeight: 600, color: "#d98a8a", marginTop: 2 }}>
                             {w.name} — {w.score.toFixed(1)}
                           </div>
                         </div>
