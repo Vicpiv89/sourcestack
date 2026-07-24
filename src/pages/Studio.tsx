@@ -112,7 +112,7 @@ function renderVideoFrame(
     ctx.fillText("SOURCESTACK · AI FACE SCAN", REC_W / 2, REC_H * 0.4);
     ctx.fillStyle = "#fff";
     ctx.font = "800 64px -apple-system, Helvetica, Arial, sans-serif";
-    const lines = wrapLines(ctx, hookText || "", REC_W * 0.82);
+    const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
     let ly = REC_H * 0.46;
     for (const line of lines) { ctx.fillText(line, REC_W / 2, ly); ly += 76; }
     ctx.fillStyle = "#6ee7b7";
@@ -146,14 +146,17 @@ function renderVideoFrame(
       ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
     } else {
       const revealT = localT - SCAN_HOLD_MS;
-      if (img?.complete) drawCover(ctx, img, 0, 0, REC_W, REC_H * 0.44);
-      const top = REC_H * 0.44;
+      // face band sits centered-ish in the frame (starts ~15% down) rather than pinned to the top
+      const faceTop = REC_H * 0.15;
+      const faceH = REC_H * 0.4;
+      const faceBottom = faceTop + faceH;
+      if (img?.complete) drawCover(ctx, img, 0, faceTop, REC_W, faceH);
       ctx.textAlign = "center";
 
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
       ctx.fillStyle = "#fff";
       ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(f.name, REC_W / 2, top + 120);
+      ctx.fillText(f.name, REC_W / 2, faceBottom + 80);
 
       const scoreT = Math.max(0, Math.min(1, (revealT - 250) / 1450));
       const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
@@ -161,26 +164,18 @@ function renderVideoFrame(
       ctx.fillStyle = colorForScore(liveScore);
       ctx.font = "900 136px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 34, top + 250);
+      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 34, faceBottom + 220);
       ctx.fillStyle = "#9aa";
       ctx.font = "400 34px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("/ 10", REC_W / 2 + 48, top + 250);
-
-      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 220);
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#cde";
-      ctx.font = "500 32px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(tierFor(f.contentScore), REC_W / 2, top + 305);
+      ctx.fillText("/ 10", REC_W / 2 + 48, faceBottom + 220);
 
       const w = worstMetric(f.result);
-      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 340);
-      ctx.fillStyle = "#c88";
-      ctx.font = "700 22px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText("WORST RATIO", REC_W / 2, top + 365);
+      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 240);
+      ctx.textAlign = "center";
       ctx.fillStyle = "#d98a8a";
       ctx.font = "600 34px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(`${w.name} — ${w.score.toFixed(1)}`, REC_W / 2, top + 408);
+      ctx.fillText(`${w.name} — ${w.score.toFixed(1)}`, REC_W / 2, faceBottom + 300);
     }
     ctx.globalAlpha = 1;
     return;
@@ -190,35 +185,37 @@ function renderVideoFrame(
   ctx.textAlign = "left";
   ctx.fillStyle = "#fff";
   ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
-  ctx.fillText("Top 10 — All Time", REC_W * 0.09, REC_H * 0.11);
-  const rowH = 98, top = REC_H * 0.15;
+  ctx.fillText("Top 10 — All Time", REC_W * 0.09, REC_H * 0.13);
+  const rowH = 112, top = REC_H * 0.185;
   boardRanked.forEach((it, i) => {
     const t = fadeIn(boardT, i * 220, 400);
     if (t <= 0) return;
     const y = top + i * rowH;
+    const baseline = y + 63;
     ctx.globalAlpha = t;
     ctx.fillStyle = i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)";
     roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
     ctx.fill();
     ctx.fillStyle = "#6ee7b7";
-    ctx.font = "800 30px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 34px -apple-system, Helvetica, Arial, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText(String(i + 1), REC_W * 0.09, y + 55);
+    ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
-    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 60, 60, 10);
+    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 72, 72, 12);
     ctx.fillStyle = "#fff";
-    ctx.font = "600 29px -apple-system, Helvetica, Arial, sans-serif";
-    ctx.fillText(it.name, REC_W * 0.26, y + 55);
+    ctx.font = "600 35px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText(it.name, REC_W * 0.26, baseline);
+    // ratings sit inset from the right edge (middle-right), clear of TikTok's right-side icon column
     ctx.textAlign = "right";
     ctx.fillStyle = colorForScore(it.score);
-    ctx.font = "800 33px -apple-system, Helvetica, Arial, sans-serif";
-    ctx.fillText(it.score.toFixed(1), REC_W * 0.92, y + 55);
+    ctx.font = "800 40px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText(it.score.toFixed(1), REC_W * 0.79, baseline);
     ctx.globalAlpha = 1;
   });
   ctx.textAlign = "center";
-  ctx.fillStyle = "#789";
-  ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
-  ctx.fillText("try your scan → sourcestack", REC_W / 2, REC_H * 0.97);
+  ctx.fillStyle = "#9ab";
+  ctx.font = "600 30px -apple-system, Helvetica, Arial, sans-serif";
+  ctx.fillText("Try it yourself - sourcestack.app", REC_W / 2, REC_H * 0.84);
 }
 
 type Item = {
@@ -617,7 +614,7 @@ export default function Studio() {
                 <div style={{ fontSize: 12, letterSpacing: 4, color: "#6ee7b7", marginBottom: 18, fontFamily: "monospace" }}>
                   SOURCESTACK · AI FACE SCAN
                 </div>
-                <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2, color: "#fff" }}>{hook}</div>
+                <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2, color: "#fff", width: "70%", margin: "0 auto" }}>{hook}</div>
                 <div style={{ width: 46, height: 2, background: "#6ee7b7", margin: "22px auto 0" }} />
                 {!playing && done.length > 0 && (
                   <div style={{ fontSize: 13, color: "#5c8", marginTop: 24 }}>▶ press Play to run the reveal</div>
@@ -633,14 +630,14 @@ export default function Studio() {
                 <img
                   src={cur.dataUrl} alt=""
                   style={{
-                    position: "absolute", top: 0, left: 0, width: "100%",
-                    height: revealed ? "44%" : "100%",
+                    position: "absolute", top: revealed ? "15%" : 0, left: 0, width: "100%",
+                    height: revealed ? "40%" : "100%",
                     // "contain" while scanning so the whole photo shows uncropped (no zoomed-in-on-face look);
-                    // "cover" once zoomed out to the small strip, where a crop reads normally
+                    // "cover" once zoomed out, centered rather than pinned to the top
                     objectFit: revealed ? "cover" : "contain",
                     background: "#000",
                     filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
-                    transition: "height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
+                    transition: "top 950ms cubic-bezier(0.22,1,0.36,1), height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
                   }}
                 />
                 {!revealed && (
@@ -661,8 +658,8 @@ export default function Studio() {
                 )}
                 {revealed && (
                   <div style={{
-                    position: "absolute", top: "44%", left: 0, right: 0, bottom: 0,
-                    padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "center",
+                    position: "absolute", top: "55%", left: 0, right: 0, bottom: 0,
+                    padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "flex-start",
                   }}>
                     <div style={{ fontSize: 22, fontWeight: 700, animation: "sfade .5s ease both" }}>{cur.name}</div>
                     <div style={{
@@ -672,19 +669,11 @@ export default function Studio() {
                       <span style={{ fontSize: 64, fontWeight: 900, color: colorForScore(score), lineHeight: 1 }}>{score.toFixed(1)}</span>
                       <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
                     </div>
-                    <div style={{ fontSize: 14, color: "#cde", animation: "sfade .5s ease both", animationDelay: "0.22s" }}>
-                      {tierFor(remapForContent(cur.result!.overall))}
-                    </div>
                     {(() => {
                       const w = worstMetric(cur.result!);
                       return (
-                        <div style={{ marginTop: 14, animation: "sfade .45s ease both", animationDelay: "0.34s" }}>
-                          <div style={{ fontSize: 11, letterSpacing: 3, color: "#c88", fontWeight: 700, textTransform: "uppercase" }}>
-                            worst ratio
-                          </div>
-                          <div style={{ fontSize: 17, fontWeight: 600, color: "#d98a8a", marginTop: 2 }}>
-                            {w.name} — {w.score.toFixed(1)}
-                          </div>
+                        <div style={{ fontSize: 17, fontWeight: 600, color: "#d98a8a", marginTop: 10, animation: "sfade .45s ease both", animationDelay: "0.24s" }}>
+                          {w.name} — {w.score.toFixed(1)}
                         </div>
                       );
                     })()}
@@ -695,22 +684,22 @@ export default function Studio() {
 
             {phase === "board" && (
               <div style={{ position: "absolute", inset: 0, padding: "34px 20px", display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Top 10 — All Time</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, overflow: "hidden" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 14, marginBottom: 20 }}>Top 10 — All Time</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
                   {boardRanked.map((it, i) => (
-                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10,
+                    <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12,
                       background: i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)",
-                      borderRadius: 10, padding: "7px 10px",
+                      borderRadius: 10, padding: "8px 12%", paddingLeft: 12,
                       animation: `sfade .4s ease both`, animationDelay: `${i * 0.22}s` }}>
-                      <span style={{ width: 20, fontWeight: 800, color: "#6ee7b7" }}>{i + 1}</span>
-                      <img src={it.thumb} alt="" style={{ width: 34, height: 34, borderRadius: 7, objectFit: "cover" }} />
-                      <span style={{ flex: 1, textAlign: "left", fontSize: 15, fontWeight: 600 }}>{it.name}</span>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
+                      <span style={{ width: 22, fontWeight: 800, color: "#6ee7b7", fontSize: 17 }}>{i + 1}</span>
+                      <img src={it.thumb} alt="" style={{ width: 41, height: 41, borderRadius: 9, objectFit: "cover" }} />
+                      <span style={{ flex: 1, textAlign: "left", fontSize: 18, fontWeight: 600 }}>{it.name}</span>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: "auto", paddingTop: 14, fontSize: 12, color: "#789" }}>
-                  try your scan → sourcestack
+                <div style={{ marginTop: "auto", marginBottom: "16%", fontSize: 15, fontWeight: 600, color: "#9ab" }}>
+                  Try it yourself - sourcestack.app
                 </div>
               </div>
             )}
