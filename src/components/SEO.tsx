@@ -26,9 +26,13 @@ export default function SEO({ title, description, path = "" }: Props) {
       <meta property="og:url" content={canonical} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="SourceStack" />
-      <meta name="twitter:card" content="summary" />
+      <meta property="og:image" content={`${BASE_URL}/brand/og-image.png`} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
+      <meta name="twitter:image" content={`${BASE_URL}/brand/og-image.png`} />
     </Helmet>
   );
 }

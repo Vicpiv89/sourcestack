@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#111111"/>
+  <g transform="translate(160,225) scale(1.3)">
+    <rect x="34" y="18" width="46" height="16" rx="8" fill="#F2F1EA"/>
+    <rect x="20" y="42" width="46" height="16" rx="8" fill="#3ED8C3"/>
+    <rect x="34" y="66" width="46" height="16" rx="8" fill="#F2F1EA"/>
+  </g>
+  <text x="340" y="305" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="46" fill="#F2F1EA">SourceStack</text>
+  <text x="342" y="345" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="400" font-size="16" fill="#93989F">LOOKSMAXXING PROTOCOL &amp; VENDOR HUB</text>
+</svg>

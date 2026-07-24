@@ -27,7 +27,12 @@ export default function Nav() {
     <>
       <header className="border-b border-white/[0.07] px-4 sm:px-6 py-3.5 flex items-center justify-between sticky top-0 bg-[#111]/95 backdrop-blur-sm z-40 relative">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5" onClick={closeMenu}>
+        <Link to="/" className="flex items-center gap-2 sm:gap-2.5" onClick={closeMenu}>
+          <svg viewBox="0 0 100 100" className="w-5 h-5 shrink-0" aria-hidden="true">
+            <rect x="34" y="18" width="46" height="16" rx="8" fill="#F2F1EA" />
+            <rect x="20" y="42" width="46" height="16" rx="8" fill="#3ED8C3" />
+            <rect x="34" y="66" width="46" height="16" rx="8" fill="#F2F1EA" />
+          </svg>
           <span className="text-base font-semibold tracking-tight text-white">SourceStack</span>
           <span className="text-[10px] text-white/30 uppercase tracking-widest hidden sm:block">Protocol Hub</span>
         </Link>
