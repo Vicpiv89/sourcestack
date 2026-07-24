@@ -604,6 +604,26 @@ export default function Studio() {
   };
   const cur = done[faceIdx];
 
+  // draws the face-centered crop into the live-preview canvas — same drawCover() math and same
+  // focusX/focusY the real video uses, so the preview and the generated file always agree
+  useEffect(() => {
+    if (!revealed || !cur) return;
+    const canvas = revealCanvasRef.current;
+    const img = imgCacheRef.current.get(cur.id);
+    if (!canvas || !img) return;
+    const draw = () => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const w = Math.round(canvas.clientWidth * dpr);
+      const h = Math.round(canvas.clientHeight * dpr);
+      if (!w || !h) return;
+      canvas.width = w;
+      canvas.height = h;
+      drawCover(canvas.getContext("2d")!, img, 0, 0, w, h, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+    };
+    if (img.complete) draw();
+    else img.onload = draw;
+  }, [cur, revealed]);
+
   return (
     <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 80px" }}>
       <canvas ref={canvasRef} style={{ display: "none" }} />
