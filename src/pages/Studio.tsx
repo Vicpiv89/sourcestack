@@ -4,7 +4,7 @@
 // Not for public users; no nav link. See scan-content-scripts.md.
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult, type ScanMetric } from "../lib/faceScan";
+import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult } from "../lib/faceScan";
 import { Output, Mp4OutputFormat, BufferTarget, CanvasSource, QUALITY_HIGH, canEncodeVideo } from "mediabunny";
 
 const MAX_DIM = 1100;
@@ -16,9 +16,29 @@ const SCAN_HOLD_MS = 1300; // full-screen "scanning" moment before zooming out t
 const FACE_MS = 5800;
 const BOARD_HOLD_MS = 5000; // how long the leaderboard holds before a recording auto-stops
 
-// worst-scoring metric — the roast-bait "worst ratio" callout per face in the reveal
-function worstMetric(result: ScanResult): ScanMetric {
-  return [...result.metrics].sort((a, b) => a.score - b.score)[0];
+// which scan metrics roll up into which category — drives the compact per-category rating rows
+const METRIC_CATEGORIES: { label: string; ids: string[] }[] = [
+  { label: "Eyes & Brows", ids: ["canthal-tilt", "eye-spacing", "eye-aspect", "brow-tilt", "brow-density"] },
+  { label: "Nose & Mouth", ids: ["chin-philtrum", "lip-ratio", "lip-fullness", "mouth-nose", "nose-width"] },
+  { label: "Face & Ratios", ids: ["fwhr", "midface", "thirds", "jaw-taper", "symmetry", "face-index"] },
+  { label: "Skin Clarity", ids: ["skin-clarity"] },
+];
+
+function categoryScores(result: ScanResult): { label: string; score: number }[] {
+  return METRIC_CATEGORIES.map((c) => {
+    const ms = result.metrics.filter((m) => c.ids.includes(m.id));
+    const avg = ms.length ? ms.reduce((s, m) => s + m.score, 0) / ms.length : 0;
+    return { label: c.label, score: avg };
+  });
+}
+
+// face center as a 0-1 fraction of the source image — lets the zoomed-out crop actually center
+// on the detected face instead of the image's raw geometric center (player cutouts vary a lot)
+function faceFocus(result: ScanResult, imgW: number, imgH: number): { x: number; y: number } {
+  const o = result.overlay;
+  const x = (o.rCheek.x + o.lCheek.x) / 2 / imgW;
+  const y = (o.foreheadTop.y + o.chin.y) / 2 / imgH;
+  return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
 }
 
 // content-only score remap: same underlying engine/analysis, just a wider, slightly
@@ -51,12 +71,17 @@ function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.closePath();
 }
 
-function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, dx: number, dy: number, dw: number, dh: number, radius = 0) {
+function drawCover(
+  ctx: CanvasRenderingContext2D, img: HTMLImageElement,
+  dx: number, dy: number, dw: number, dh: number,
+  radius = 0, focusX = 0.5, focusY = 0.5,
+) {
   const ir = img.width / img.height;
   const tr = dw / dh;
-  let sx, sy, sw, sh;
-  if (ir > tr) { sh = img.height; sw = sh * tr; sx = (img.width - sw) / 2; sy = 0; }
-  else { sw = img.width; sh = sw / tr; sx = 0; sy = (img.height - sh) / 2; }
+  let sw, sh;
+  if (ir > tr) { sh = img.height; sw = sh * tr; } else { sw = img.width; sh = sw / tr; }
+  const sx = Math.max(0, Math.min(img.width - sw, img.width * focusX - sw / 2));
+  const sy = Math.max(0, Math.min(img.height - sh, img.height * focusY - sh / 2));
   ctx.save();
   if (radius) { roundRectPath(ctx, dx, dy, dw, dh, radius); ctx.clip(); }
   ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
@@ -198,7 +223,10 @@ function renderVideoFrame(
       const faceTop = REC_H * 0.15;
       const faceH = REC_H * 0.4;
       const faceBottom = faceTop + faceH;
-      if (img?.complete) drawCover(ctx, img, faceMarginX, faceTop, REC_W - faceMarginX * 2, faceH);
+      if (img?.complete) {
+        const focus = faceFocus(f.result, img.naturalWidth, img.naturalHeight);
+        drawCover(ctx, img, faceMarginX, faceTop, REC_W - faceMarginX * 2, faceH, 0, focus.x, focus.y);
+      }
       ctx.textAlign = "center";
 
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
@@ -218,12 +246,21 @@ function renderVideoFrame(
       ctx.textAlign = "left";
       ctx.fillText("/ 10", REC_W / 2 + 48, faceBottom + 220);
 
-      const w = worstMetric(f.result);
-      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 240);
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#d98a8a";
-      ctx.font = "600 34px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(`${w.name} — ${w.score.toFixed(1)}`, REC_W / 2, faceBottom + 300);
+      const cats = categoryScores(f.result);
+      const catTop = faceBottom + 260;
+      const catRowH = 44;
+      cats.forEach((c, ci) => {
+        ctx.globalAlpha = faceAlpha * fadeIn(revealT, 240 + ci * 70, 350);
+        const cy = catTop + ci * catRowH;
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#cde";
+        ctx.font = "600 26px -apple-system, Helvetica, Arial, sans-serif";
+        ctx.fillText(c.label, REC_W * 0.22, cy);
+        ctx.textAlign = "right";
+        ctx.fillStyle = colorForScore(c.score);
+        ctx.font = "800 28px -apple-system, Helvetica, Arial, sans-serif";
+        ctx.fillText(c.score.toFixed(1), REC_W * 0.78, cy);
+      });
     }
     ctx.globalAlpha = 1;
     return;
@@ -249,7 +286,7 @@ function renderVideoFrame(
     ctx.textAlign = "left";
     ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
-    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 72, 72, 12);
+    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, 72, 72, 12, it.focusX ?? 0.5, it.focusY ?? 0.5);
     ctx.fillStyle = "#fff";
     ctx.font = "600 35px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.name, REC_W * 0.26, baseline);
@@ -273,10 +310,12 @@ type Item = {
   dataUrl?: string; // photo with overlay drawn, cropped square-ish for cards
   result?: ScanResult;
   error?: string;
+  focusX?: number; // detected face center, 0-1 fraction of image — drives the zoomed-out crop
+  focusY?: number;
 };
 
 // all-time leaderboard entry — persisted to localStorage so it survives across videos/reloads
-type PoolItem = { id: string; name: string; thumb: string; score: number; tier: string; ts: number };
+type PoolItem = { id: string; name: string; thumb: string; score: number; tier: string; ts: number; focusX?: number; focusY?: number };
 
 function makeThumb(canvas: HTMLCanvasElement, maxDim = 220): string {
   const scale = Math.min(1, maxDim / Math.max(canvas.width, canvas.height));
@@ -286,7 +325,8 @@ function makeThumb(canvas: HTMLCanvasElement, maxDim = 220): string {
   small.width = w;
   small.height = h;
   small.getContext("2d")!.drawImage(canvas, 0, 0, w, h);
-  return small.toDataURL("image/jpeg", 0.8);
+  // webp (not jpeg) — preserves transparency for background-removed cutouts
+  return small.toDataURL("image/webp", 0.85);
 }
 
 // ── overlay (mirrors FaceScan.drawOverlay) ──
@@ -425,11 +465,13 @@ export default function Studio() {
       }
       const scan = analyzeFace(detection.faceLandmarks[0], w, h, ctx);
       drawOverlay(ctx, scan, w);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      // webp (not jpeg) — preserves transparency for background-removed player cutouts
+      const dataUrl = canvas.toDataURL("image/webp", 0.92);
       const thumb = makeThumb(canvas);
       const contentScore = remapForContent(scan.overall);
-      setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: "done", result: scan, dataUrl } : p)));
-      setPool((prev) => [...prev, { id: it.id, name: it.name, thumb, score: contentScore, tier: tierFor(contentScore), ts: Date.now() }]);
+      const focus = faceFocus(scan, w, h);
+      setItems((prev) => prev.map((p) => (p.id === it.id ? { ...p, status: "done", result: scan, dataUrl, focusX: focus.x, focusY: focus.y } : p)));
+      setPool((prev) => [...prev, { id: it.id, name: it.name, thumb, score: contentScore, tier: tierFor(contentScore), ts: Date.now(), focusX: focus.x, focusY: focus.y }]);
       // pre-warm the recording canvas's image cache so playback never stalls on a still-loading photo
       const fullImg = new Image(); fullImg.src = dataUrl; imgCacheRef.current.set(it.id, fullImg);
       const thumbImg = new Image(); thumbImg.src = thumb; thumbCacheRef.current.set(it.id, thumbImg);
@@ -681,8 +723,10 @@ export default function Studio() {
                     position: "absolute", top: revealed ? "15%" : 0, left: "6%", right: "6%",
                     height: revealed ? "40%" : "100%",
                     // "contain" while scanning so the whole photo shows uncropped (no zoomed-in-on-face look);
-                    // "cover" once zoomed out, centered rather than pinned to the top
+                    // "cover" once zoomed out — objectPosition uses the detected face center, not the
+                    // image's raw geometric center, so off-center player cutouts still land centered
                     objectFit: revealed ? "cover" : "contain",
+                    objectPosition: revealed ? `${((cur.focusX ?? 0.5) * 100).toFixed(1)}% ${((cur.focusY ?? 0.5) * 100).toFixed(1)}%` : undefined,
                     filter: revealed ? "none" : "contrast(1.08) saturate(0.85)",
                     transition: "top 950ms cubic-bezier(0.22,1,0.36,1), height 950ms cubic-bezier(0.22,1,0.36,1), filter 950ms ease",
                   }}
@@ -717,10 +761,18 @@ export default function Studio() {
                       <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
                     </div>
                     {(() => {
-                      const w = worstMetric(cur.result!);
+                      const cats = categoryScores(cur.result!);
                       return (
-                        <div style={{ fontSize: 17, fontWeight: 600, color: "#d98a8a", marginTop: 10, animation: "sfade .45s ease both", animationDelay: "0.24s" }}>
-                          {w.name} — {w.score.toFixed(1)}
+                        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                          {cats.map((c, ci) => (
+                            <div key={c.label} style={{
+                              display: "flex", justifyContent: "space-between", padding: "0 12%", fontSize: 13,
+                              animation: "sfade .4s ease both", animationDelay: `${0.24 + ci * 0.07}s`,
+                            }}>
+                              <span style={{ color: "#cde", fontWeight: 600 }}>{c.label}</span>
+                              <span style={{ color: colorForScore(c.score), fontWeight: 800 }}>{c.score.toFixed(1)}</span>
+                            </div>
+                          ))}
                         </div>
                       );
                     })()}
