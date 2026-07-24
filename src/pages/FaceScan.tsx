@@ -24,6 +24,22 @@ const SELF_REPORT: { slug: string; label: string }[] = [
   { slug: "dandruff", label: "Dandruff" },
 ];
 
+// groups the 17 metrics into sleek, legend-able categories for the measurement grid —
+// distinct hues from scoreColor's green/amber/red so category color never reads as a score signal
+const METRIC_CATEGORY: Record<string, string> = {
+  "canthal-tilt": "Eyes & Brows", "eye-spacing": "Eyes & Brows", "eye-aspect": "Eyes & Brows",
+  "brow-tilt": "Eyes & Brows", "brow-density": "Eyes & Brows",
+  "chin-philtrum": "Nose & Mouth", "lip-ratio": "Nose & Mouth", "lip-fullness": "Nose & Mouth",
+  "mouth-nose": "Nose & Mouth", "nose-width": "Nose & Mouth",
+  "fwhr": "Proportions", "midface": "Proportions", "thirds": "Proportions",
+  "jaw-taper": "Proportions", "symmetry": "Proportions", "face-index": "Proportions",
+  "skin-clarity": "Skin",
+};
+const CATEGORY_ORDER = ["Eyes & Brows", "Nose & Mouth", "Proportions", "Skin"];
+const CATEGORY_COLOR: Record<string, string> = {
+  "Eyes & Brows": "#60a5fa", "Nose & Mouth": "#a78bfa", "Proportions": "#2dd4bf", "Skin": "#e0b482",
+};
+
 function scoreColor(s: number): string {
   if (s >= 8) return "#34d399";
   if (s >= 6.5) return "#a3e635";
@@ -546,25 +562,46 @@ export default function FaceScan() {
                     {showAllMetrics ? "Hide" : "See"} all {result.metrics.length} measurements {showAllMetrics ? "↑" : "↓"}
                   </button>
                   {showAllMetrics && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-3">
-                      {result.metrics.map((m) => (
-                        <div key={m.id} className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10">
-                          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">{m.name}</p>
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-white text-lg font-semibold">{m.display}</span>
-                            <span className="text-xs font-medium" style={{ color: scoreColor(m.score) }}>
-                              {m.score.toFixed(1)}
-                            </span>
+                    <div className="flex flex-col gap-5 mt-4">
+                      {CATEGORY_ORDER.map((cat) => {
+                        const items = result.metrics.filter((m) => METRIC_CATEGORY[m.id] === cat);
+                        if (items.length === 0) return null;
+                        const color = CATEGORY_COLOR[cat];
+                        return (
+                          <div key={cat}>
+                            <div className="flex items-center gap-2 mb-2.5">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+                              <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color }}>
+                                {cat}
+                              </p>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                              {items.map((m) => (
+                                <div
+                                  key={m.id}
+                                  className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10 border-t-2"
+                                  style={{ borderTopColor: color + "70" }}
+                                >
+                                  <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">{m.name}</p>
+                                  <div className="flex items-baseline justify-between">
+                                    <span className="text-white text-lg font-semibold">{m.display}</span>
+                                    <span className="text-xs font-medium" style={{ color: scoreColor(m.score) }}>
+                                      {m.score.toFixed(1)}
+                                    </span>
+                                  </div>
+                                  <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full rounded-full"
+                                      style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
+                                    />
+                                  </div>
+                                  <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
-                            />
-                          </div>
-                          <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
