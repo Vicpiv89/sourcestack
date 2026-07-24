@@ -5,29 +5,13 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult, type ScanMetric } from "../lib/faceScan";
-import { issues } from "../data/issues";
-import { treatments } from "../data/treatments";
 
 const MAX_DIM = 1100;
 const POOL_KEY = "studio_alltime_leaderboard";
 
-// worst-scoring metrics — the "flaws" called out per face in the reveal
-function worstMetrics(result: ScanResult, n = 2): ScanMetric[] {
-  return [...result.metrics].sort((a, b) => a.score - b.score).slice(0, n);
-}
-
-// first treatment tied to the single worst actionable (has an issue mapping) metric
-function recommendedProduct(result: ScanResult): { treatment: string; forFlaw: string } | null {
-  const worst = [...result.metrics].sort((a, b) => a.score - b.score);
-  for (const m of worst) {
-    for (const slug of m.issueSlugs) {
-      const issue = issues.find((i) => i.slug === slug);
-      const treatSlug = issue?.treatmentSlugs[0];
-      const treatment = treatments.find((t) => t.slug === treatSlug);
-      if (treatment) return { treatment: treatment.name, forFlaw: m.name };
-    }
-  }
-  return null;
+// worst-scoring metric — the roast-bait "worst ratio" callout per face in the reveal
+function worstMetric(result: ScanResult): ScanMetric {
+  return [...result.metrics].sort((a, b) => a.score - b.score)[0];
 }
 
 // content-only score remap: same underlying engine/analysis, just a wider, slightly
@@ -414,23 +398,18 @@ export default function Studio() {
                     <div style={{ fontSize: 14, color: "#cde", animation: "sfade .5s ease both", animationDelay: "0.22s" }}>
                       {tierFor(remapForContent(cur.result!.overall))}
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginTop: 10 }}>
-                      {worstMetrics(cur.result!, 2).map((m, mi) => (
-                        <span key={m.id} style={{ ...flawPill, animation: "sfade .4s ease both", animationDelay: `${0.34 + mi * 0.1}s` }}>
-                          {m.name} {m.score.toFixed(1)}
-                        </span>
-                      ))}
-                    </div>
                     {(() => {
-                      const rec = recommendedProduct(cur.result!);
-                      return rec ? (
-                        <div style={{
-                          fontSize: 13, color: "#6ee7b7", fontWeight: 700, marginTop: 12,
-                          animation: "sfade .5s ease both", animationDelay: "0.5s",
-                        }}>
-                          Fix: {rec.treatment}
+                      const w = worstMetric(cur.result!);
+                      return (
+                        <div style={{ marginTop: 14, animation: "sfade .45s ease both", animationDelay: "0.34s" }}>
+                          <div style={{ fontSize: 11, letterSpacing: 3, color: "#f88", fontWeight: 800, textTransform: "uppercase" }}>
+                            worst ratio 💀
+                          </div>
+                          <div style={{ fontSize: 21, fontWeight: 900, color: "#ff5c5c", marginTop: 2 }}>
+                            {w.name} — {w.score.toFixed(1)}
+                          </div>
                         </div>
-                      ) : null;
+                      );
                     })()}
                   </div>
                 )}
@@ -474,7 +453,4 @@ export default function Studio() {
 const btn: React.CSSProperties = {
   background: "#6ee7b7", color: "#062", fontWeight: 700, border: "none",
   padding: "11px 20px", borderRadius: 10, cursor: "pointer", fontSize: 15,
-};
-const flawPill: React.CSSProperties = {
-  background: "rgba(248,136,136,0.12)", borderRadius: 999, padding: "4px 10px", fontSize: 12, color: "#f88",
 };
