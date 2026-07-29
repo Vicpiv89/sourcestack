@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { issues as allIssues } from '../data/issues';
 
@@ -94,14 +94,14 @@ const ZONES: ZoneDef[] = [
   },
 ];
 
-// A plain, true ellipse (center 100,128 · rx 74 · ry 112) — standard 4-bezier
+// A plain, true ellipse (center 100,128 · rx 86 · ry 110) — standard 4-bezier
 // ellipse approximation, no hand-tuned tapering.
 const HEAD_PATH =
-  'M 100 16 ' +
-  'C 140.9 16 174 66.1 174 128 ' +
-  'C 174 189.9 140.9 240 100 240 ' +
-  'C 59.1 240 26 189.9 26 128 ' +
-  'C 26 66.1 59.1 16 100 16 Z';
+  'M 100 18 ' +
+  'C 147.5 18 186 67.25 186 128 ' +
+  'C 186 188.75 147.5 238 100 238 ' +
+  'C 52.5 238 14 188.75 14 128 ' +
+  'C 14 67.25 52.5 18 100 18 Z';
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -112,16 +112,76 @@ function hexToRgba(hex: string, alpha: number) {
 
 export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
+  const [sweepPlayed, setSweepPlayed] = useState(false);
   const navigate = useNavigate();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const tiltRef = useRef<HTMLDivElement>(null);
+  const pupilLRef = useRef<SVGCircleElement>(null);
+  const pupilRRef = useRef<SVGCircleElement>(null);
 
   const zone = ZONES.find(z => z.id === activeZoneId) ?? null;
   const relatedIssues = zone
     ? zone.issueSlugs.map(s => allIssues.find(i => i.slug === s)).filter(Boolean)
     : [];
 
+  // Plays a one-time scan sweep the first time the face scrolls into view.
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const el = wrapperRef.current;
+    if (!el || reduceMotion) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setSweepPlayed(true); obs.disconnect(); } },
+      { threshold: 0.4 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // While in view, the face tilts in 3D and the eyes glance based on how far
+  // it sits from the vertical center of the viewport — it "watches" you scroll
+  // past rather than just sliding with the page.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const el = wrapperRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const vh = window.innerHeight || 1;
+        const centerOffset = (rect.top + rect.height / 2 - vh / 2) / (vh / 2); // ~ -1..1
+        const clamped = Math.max(-1, Math.min(1, centerOffset));
+        if (tiltRef.current) {
+          tiltRef.current.style.transform =
+            `perspective(700px) rotateX(${(-clamped * 7).toFixed(2)}deg) rotateY(${(clamped * 4).toFixed(2)}deg)`;
+        }
+        const pupilShift = (clamped * 2.4).toFixed(2);
+        if (pupilLRef.current) pupilLRef.current.style.transform = `translateY(${pupilShift}px)`;
+        if (pupilRRef.current) pupilRRef.current.style.transform = `translateY(${pupilShift}px)`;
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col items-center gap-5 select-none w-full">
-      <div className="relative mx-auto" style={{ width: '100%', maxWidth }}>
+      <div ref={wrapperRef} className="relative mx-auto overflow-hidden" style={{ width: '100%', maxWidth, perspective: 700 }}>
+        {sweepPlayed && (
+          <div
+            className="face-sweep-play absolute inset-x-0 top-0 h-1/4 pointer-events-none z-10"
+            style={{
+              background: 'linear-gradient(rgba(62,216,195,0) 0%, rgba(62,216,195,0.35) 50%, rgba(62,216,195,0) 100%)',
+            }}
+          />
+        )}
+        <div ref={tiltRef} style={{ transition: 'transform 0.4s cubic-bezier(0.22,1,0.36,1)', transformStyle: 'preserve-3d' }}>
         <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block' }}>
           <defs>
             <filter id="face-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -146,7 +206,7 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
             <path d={HEAD_PATH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
             {/* Hairline — widened to match the head */}
             <path
-              d="M 46 82 C 58 58 78 49 100 49 C 122 49 142 58 154 82"
+              d="M 34 84 C 48 56 74 47 100 47 C 126 47 152 56 166 84"
               stroke="rgba(255,255,255,0.12)"
               strokeWidth="0.7"
             />
@@ -158,9 +218,9 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
               <circle cx="52" cy="60" r="1.3" /><circle cx="62" cy="55" r="1.3" /><circle cx="138" cy="55" r="1.3" /><circle cx="148" cy="60" r="1.3" />
             </g>
             {/* Left ear — simple bump attached to the outline */}
-            <path d="M 27 118 Q 15 133 28 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            <path d="M 16 118 Q 4 133 17 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
             {/* Right ear */}
-            <path d="M 173 118 Q 185 133 172 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            <path d="M 184 118 Q 196 133 183 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
             {/* Left eye — clean almond, single pupil */}
             <path
               d="M 62 124 Q 76 114 90 128 Q 76 137 62 124 Z"
@@ -175,8 +235,8 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
               strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
-            <circle cx="76" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
-            <circle cx="124" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
+            <circle ref={pupilLRef} cx="76" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
+            <circle ref={pupilRRef} cx="124" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
             {/* Brows */}
             <path d="M 91 111 C 80 106 68 105 58 108" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
             <path d="M 109 111 C 120 106 132 105 142 108" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
@@ -236,6 +296,7 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
             );
           })}
         </svg>
+        </div>
       </div>
 
       {/* Info panel */}

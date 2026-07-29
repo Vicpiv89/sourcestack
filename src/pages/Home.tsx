@@ -8,7 +8,6 @@ import { vendors } from "../data/vendors";
 import { scoreMatch } from "../data/synonyms";
 import { CameraIcon, HairIcon, SparkleIcon, DnaIcon, PillIcon, MicroscopeIcon, GearIcon, TrendUpIcon, AiSparkIcon } from "../components/icons";
 import { useReveal } from "../lib/useReveal";
-import ScrollBackground from "../components/ScrollBackground";
 
 const CATEGORIES = [
   { label: "Hair Loss", slug: "Hair Loss", Icon: HairIcon },
@@ -77,9 +76,7 @@ export default function Home() {
   const hasResults = issueResults.length > 0 || treatmentResults.length > 0;
 
   return (
-    <div className="min-h-screen text-[#e5e5e5]">
-      <ScrollBackground />
-      <div className="relative z-10">
+    <div className="min-h-screen bg-[#111] text-[#e5e5e5]">
       <SEO
         title="Your Protocol, Sourced"
         description="Search by issue or compound — get vetted protocols, interaction warnings, and trusted vendor sources for hair loss, skincare, peptides, and supplements."
@@ -336,7 +333,6 @@ export default function Home() {
           </div>
         </div>
       </Reveal>
-      </div>
     </div>
   );
 }

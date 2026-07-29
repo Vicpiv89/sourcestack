@@ -39,9 +39,19 @@ body {
 }
 .scan-bracket { animation: bracketIn 0.6s ease 0.3s both; }
 
+/* One-time scan sweep over the homepage face graphic on scroll-into-view */
+@keyframes faceSweep {
+  0%   { transform: translateY(-40px); opacity: 0; }
+  12%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(650%); opacity: 0; }
+}
+.face-sweep-play { animation: faceSweep 1.4s cubic-bezier(0.4,0,0.2,1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   .scan-bracket { animation: none; opacity: 1; }
+  .face-sweep-play { display: none; }
   .animate-fade-up, .animate-fade-up-delay-1, .animate-fade-up-delay-2,
   .animate-fade-up-delay-3, .animate-fade-up-delay-4 { animation: none; opacity: 1; transform: none; }
 }

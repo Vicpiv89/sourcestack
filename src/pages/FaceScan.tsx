@@ -232,8 +232,8 @@ function runScanAnimation(
   onDone: (scan: ScanResult) => void
 ) {
   const start = performance.now();
-  // subsample so the dot cloud reads as "scanning", not a solid mesh
-  const dotIdx = landmarks.map((_, i) => i).filter((i) => i % 4 === 0);
+  // subsample so the dot cloud reads as a few scan points, not a wash of color
+  const dotIdx = landmarks.map((_, i) => i).filter((i) => i % 9 === 0);
 
   const frame = (now: number) => {
     const elapsed = now - start;
@@ -243,32 +243,30 @@ function runScanAnimation(
     ctx.drawImage(img, 0, 0, w, h);
 
     if (pct < 1) {
-      // revealed landmark dots, pulsing gently
+      // revealed landmark dots — small, sparse, no fill/glow behind them
       const revealCount = Math.floor(pct * dotIdx.length);
       for (let i = 0; i < revealCount; i++) {
         const p = landmarks[dotIdx[i]];
         const pulse = 0.5 + 0.5 * Math.sin(elapsed / 160 + i);
-        ctx.fillStyle = `rgba(62,216,195,${0.3 + 0.3 * pulse})`;
+        ctx.fillStyle = `rgba(62,216,195,${0.25 + 0.25 * pulse})`;
         ctx.beginPath();
-        ctx.arc(p.x * w, p.y * h, Math.max(1.2, w / 400), 0, Math.PI * 2);
+        ctx.arc(p.x * w, p.y * h, Math.max(1, w / 500), 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // thin sweeping scan line (soft glow, not a solid band), loops every ~1.3s
+      // crisp sweeping scan line — a stroked line with a soft shadow glow,
+      // not a filled band, so it never reads as a solid backdrop
       const sweepY = ((elapsed % 1300) / 1300) * h;
-      const glowH = Math.max(10, h * 0.035);
-      const grad = ctx.createLinearGradient(0, sweepY - glowH, 0, sweepY + glowH);
-      grad.addColorStop(0, "rgba(62,216,195,0)");
-      grad.addColorStop(0.5, "rgba(62,216,195,0.22)");
-      grad.addColorStop(1, "rgba(62,216,195,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, sweepY - glowH, w, glowH * 2);
-      ctx.strokeStyle = "rgba(62,216,195,0.75)";
+      ctx.save();
+      ctx.shadowColor = "rgba(62,216,195,0.9)";
+      ctx.shadowBlur = Math.max(4, w / 90);
+      ctx.strokeStyle = "rgba(62,216,195,0.8)";
       ctx.lineWidth = Math.max(1, w / 900);
       ctx.beginPath();
       ctx.moveTo(0, sweepY);
       ctx.lineTo(w, sweepY);
       ctx.stroke();
+      ctx.restore();
 
       animRef.current = requestAnimationFrame(frame);
     } else {
