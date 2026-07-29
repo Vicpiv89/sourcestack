@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import SEO from "../components/SEO";
 import FaceZoneMap from "../components/FaceZoneMap";
@@ -7,6 +7,7 @@ import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
 import { scoreMatch } from "../data/synonyms";
 import { CameraIcon, HairIcon, SparkleIcon, DnaIcon, PillIcon, MicroscopeIcon, GearIcon, TrendUpIcon, AiSparkIcon } from "../components/icons";
+import { useReveal } from "../lib/useReveal";
 
 const CATEGORIES = [
   { label: "Hair Loss", slug: "Hair Loss", Icon: HairIcon },
@@ -16,6 +17,37 @@ const CATEGORIES = [
   { label: "Research",  slug: "Research Compounds", Icon: MicroscopeIcon },
   { label: "Mechanical", slug: "Mechanical", Icon: GearIcon },
 ];
+
+// counts up on mount — a small "systems reading live data" beat for the hero stat line
+function CountUp({ value, duration = 900 }: { value: number; duration?: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      setN(Math.round((1 - Math.pow(1 - t, 3)) * value));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{n}</>;
+}
+
+// fades/slides a section in the first time it scrolls into view
+function Reveal({ children, className = "", delayMs = 0 }: { children: ReactNode; className?: string; delayMs?: number }) {
+  const { ref, visible } = useReveal<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      className={`reveal ${visible ? "is-visible" : ""} ${className}`}
+      style={{ transitionDelay: visible ? `${delayMs}ms` : "0ms" }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -58,7 +90,7 @@ export default function Home() {
           {/* Left: copy + search */}
           <div className="text-center sm:text-left">
             <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 mb-3">
-              {treatments.length} compounds · {vendors.length} vetted vendors · {issues.length} issues
+              <CountUp value={treatments.length} /> compounds · <CountUp value={vendors.length} /> vetted vendors · <CountUp value={issues.length} /> issues
             </p>
             <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3 leading-tight">
               Scanned. Sourced.<br />Fixed.
@@ -177,9 +209,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: face zone map */}
-          <div className="flex flex-col items-center">
-            <p className="text-white/25 text-xs mb-4 text-center">
+          {/* Right: face zone map — framed like a scanner viewfinder */}
+          <div className="relative flex flex-col items-center px-4 pt-4 pb-2">
+            <span className="scan-bracket pointer-events-none absolute top-0 left-0 w-6 h-6 border-t border-l border-accent/40 rounded-tl-md" />
+            <span className="scan-bracket pointer-events-none absolute top-0 right-0 w-6 h-6 border-t border-r border-accent/40 rounded-tr-md" />
+            <span className="scan-bracket pointer-events-none absolute bottom-0 left-0 w-6 h-6 border-b border-l border-accent/40 rounded-bl-md" />
+            <span className="scan-bracket pointer-events-none absolute bottom-0 right-0 w-6 h-6 border-b border-r border-accent/40 rounded-br-md" />
+            <p className="font-mono text-white/25 text-xs mb-4 text-center uppercase tracking-wider">
               Or tap any zone to explore treatments
             </p>
             <FaceZoneMap maxWidth={300} />
@@ -188,7 +224,7 @@ export default function Home() {
       </div>
 
       {/* ── Face Scan promo ───────────────────────────── */}
-      <div className="px-4 sm:px-6 pb-4 max-w-5xl mx-auto">
+      <Reveal className="px-4 sm:px-6 pb-4 max-w-5xl mx-auto">
         <Link
           to="/scan"
           className="group flex items-center justify-between gap-4 px-6 py-5 bg-white/[0.04] border border-white/[0.15] rounded-2xl hover:border-white/35 transition-colors"
@@ -209,10 +245,10 @@ export default function Home() {
           </div>
           <span className="text-white/30 group-hover:text-white/70 text-sm transition-colors shrink-0">→</span>
         </Link>
-      </div>
+      </Reveal>
 
       {/* ── Progress tracking promo ───────────────────── */}
-      <div className="px-4 sm:px-6 pb-4 max-w-5xl mx-auto">
+      <Reveal className="px-4 sm:px-6 pb-4 max-w-5xl mx-auto" delayMs={80}>
         <Link
           to="/scan"
           className="group flex items-center justify-between gap-4 px-6 py-5 bg-white/[0.04] border border-white/[0.15] rounded-2xl hover:border-white/35 transition-colors"
@@ -233,10 +269,10 @@ export default function Home() {
           </div>
           <span className="text-white/30 group-hover:text-white/70 text-sm transition-colors shrink-0">→</span>
         </Link>
-      </div>
+      </Reveal>
 
       {/* ── Protocol AI promo ─────────────────────────── */}
-      <div className="px-4 sm:px-6 pb-10 max-w-5xl mx-auto">
+      <Reveal className="px-4 sm:px-6 pb-10 max-w-5xl mx-auto" delayMs={160}>
         <Link
           to="/ai"
           className="group flex items-center justify-between gap-4 px-6 py-5 bg-accent/[0.04] border border-accent/[0.15] rounded-2xl hover:border-accent/30 transition-colors"
@@ -257,10 +293,10 @@ export default function Home() {
           </div>
           <span className="text-accent/40 group-hover:text-accent/70 text-sm transition-colors shrink-0">→</span>
         </Link>
-      </div>
+      </Reveal>
 
       {/* ── Who this is for ───────────────────────────── */}
-      <div className="px-4 sm:px-6 pb-16 max-w-5xl mx-auto">
+      <Reveal className="px-4 sm:px-6 pb-16 max-w-5xl mx-auto">
         <div className="border-t border-white/[0.07] pt-12 text-center sm:text-left">
           <p className="font-mono text-white/25 text-[10px] uppercase tracking-widest mb-3">Not for the TikTok-comment crowd</p>
           <p className="text-white text-lg sm:text-xl font-semibold max-w-xl leading-snug mb-3 mx-auto sm:mx-0">
@@ -270,10 +306,10 @@ export default function Home() {
             If you're already spending money on this — compounds, skincare, supplements — SourceStack is where that money stops being a guess.
           </p>
         </div>
-      </div>
+      </Reveal>
 
       {/* ── Stack / Quiz promo ────────────────────────── */}
-      <div className="px-4 sm:px-6 pb-24 max-w-5xl mx-auto">
+      <Reveal className="px-4 sm:px-6 pb-24 max-w-5xl mx-auto">
         <div className="border border-white/[0.07] rounded-2xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
             <p className="text-white font-semibold text-sm mb-1">Build your personal stack</p>
@@ -296,7 +332,7 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

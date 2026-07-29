@@ -7,9 +7,20 @@ import UpgradeModal from "../components/UpgradeModal";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabase";
 import { analyzeFace, loadFaceLandmarker, type ScanResult } from "../lib/faceScan";
-import { LockIcon } from "../components/icons";
+import { LockIcon, WarningIcon } from "../components/icons";
 
 const MAX_DIM = 1100;
+
+// staged scan animation — the real analysis is near-instant, so this manufactures
+// a legible, technical-feeling sequence instead of a blink-and-you-miss-it flash
+const SCAN_DURATION_MS = 2600;
+const SCAN_STEPS = [
+  "Detecting face…",
+  "Mapping 478 landmarks…",
+  "Measuring proportions…",
+  "Sampling skin & brow texture…",
+  "Calculating your score…",
+];
 
 // issues the camera can't measure — user self-reports
 const SELF_REPORT: { slug: string; label: string }[] = [
@@ -65,6 +76,208 @@ function categoriesFor(issueSlugs: string[]): string[] {
   )] as string[];
 }
 
+// Circular score gauge — fills from 0 to the score on mount. Only ever mounted
+// fresh per scan (the results section it lives in unmounts between scans via
+// the idle/null transition in reset()), so a mount-once effect is enough.
+function ScoreRing({ score }: { score: number }) {
+  const [animateIn, setAnimateIn] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setAnimateIn(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const size = 92, stroke = 6, r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference * (1 - (animateIn ? score / 10 : 0));
+  const color = scoreColor(score);
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 1.1s cubic-bezier(0.16,1,0.3,1)" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-bold text-white leading-none tracking-tight">{score.toFixed(1)}</span>
+        <span className="text-white/30 text-[9px] mt-0.5">/ 10</span>
+      </div>
+    </div>
+  );
+}
+
+// Metric bar that fills in on mount instead of appearing pre-filled — same
+// mount-once pattern as ScoreRing, colocated so each card animates independently.
+function AnimatedBar({ score, color, delaySeconds }: { score: number; color: string; delaySeconds: number }) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setOn(true)));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return (
+    <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full"
+        style={{
+          width: on ? `${score * 10}%` : "0%",
+          background: color,
+          transition: `width 0.7s cubic-bezier(0.16,1,0.3,1) ${delaySeconds}s`,
+        }}
+      />
+    </div>
+  );
+}
+
+function drawOverlay(
+  ctx: CanvasRenderingContext2D,
+  scan: ScanResult,
+  w: number
+) {
+  const o = scan.overlay;
+  ctx.lineWidth = Math.max(1, w / 700);
+  const dot = (p: { x: number; y: number }, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(2, w / 350), 0, Math.PI * 2);
+    ctx.fill();
+  };
+  const line = (a: { x: number; y: number }, b: { x: number; y: number }, color: string) => {
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    dot(a, color);
+    dot(b, color);
+  };
+  const faint = "rgba(255,255,255,0.35)";
+  const accent = "rgba(62,216,195,0.9)";
+
+  // thirds — horizontal guides across the face
+  const xL = Math.min(o.rCheek.x, o.lCheek.x);
+  const xR = Math.max(o.rCheek.x, o.lCheek.x);
+  [o.foreheadTop.y, o.nasion.y, o.subnasale.y, o.chin.y].forEach((y) => {
+    ctx.strokeStyle = faint;
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.moveTo(xL, y);
+    ctx.lineTo(xR, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // widths
+  line(o.rCheek, o.lCheek, faint);
+  line(o.rGonion, o.lGonion, accent);
+  // canthal tilt
+  line(o.rEyeOuter, o.rEyeInner, accent);
+  line(o.lEyeInner, o.lEyeOuter, accent);
+  // brows
+  line(o.rBrowMedial, o.rBrowTail, faint);
+  line(o.lBrowMedial, o.lBrowTail, faint);
+
+  // sample-zone ovals, colored by the pixel-metric scores
+  const ellipse = (
+    c: { x: number; y: number }, rx: number, ry: number, rot: number, color: string
+  ) => {
+    ctx.strokeStyle = color;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y, rx, ry, rot, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  };
+
+  // skin quality — the three sampled patches (cheeks + forehead)
+  const skinScore = scan.metrics.find((m) => m.id === "skin-clarity")?.score;
+  if (skinScore !== undefined) {
+    const c = scoreColor(skinScore) + "cc";
+    const r = o.skinPatchR;
+    ellipse(o.rCheekSkin, r * 0.9, r * 0.65, -0.2, c);
+    ellipse(o.lCheekSkin, r * 0.9, r * 0.65, 0.2, c);
+    ellipse(o.foreheadSkin, r * 1.4, r * 0.55, 0, c);
+  }
+
+  // brow health — oval traced along each sampled brow
+  const browScore = scan.metrics.find((m) => m.id === "brow-density")?.score;
+  if (browScore !== undefined) {
+    const c = scoreColor(browScore) + "cc";
+    const browOval = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+      const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      ellipse({ x: cx, y: cy }, len * 0.62, len * 0.2, Math.atan2(b.y - a.y, b.x - a.x), c);
+    };
+    browOval(o.rBrowMedial, o.rBrowTail);
+    browOval(o.lBrowMedial, o.lBrowTail);
+  }
+}
+
+// Drives the analyzing-state visual: sweeps a scan line + progressively reveals
+// landmark dots over the actual photo while a step label and % counter advance.
+// The real analysis already ran by this point (fast) — this just paces the reveal.
+// Module-level (not a hook/component) so calling performance.now()/rAF here isn't
+// treated as impure render-time work by react-hooks/purity.
+function runScanAnimation(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  w: number, h: number,
+  landmarks: { x: number; y: number }[],
+  scan: ScanResult,
+  animRef: { current: number | null },
+  onTick: (progress: number, step: number) => void,
+  onDone: (scan: ScanResult) => void
+) {
+  const start = performance.now();
+  // subsample so the dot cloud reads as "scanning", not a solid mesh
+  const dotIdx = landmarks.map((_, i) => i).filter((i) => i % 4 === 0);
+
+  const frame = (now: number) => {
+    const elapsed = now - start;
+    const pct = Math.min(1, elapsed / SCAN_DURATION_MS);
+    onTick(Math.round(pct * 100), Math.min(SCAN_STEPS.length - 1, Math.floor(pct * SCAN_STEPS.length)));
+
+    ctx.drawImage(img, 0, 0, w, h);
+
+    // revealed landmark dots, pulsing gently
+    const revealCount = Math.floor(pct * dotIdx.length);
+    for (let i = 0; i < revealCount; i++) {
+      const p = landmarks[dotIdx[i]];
+      const pulse = 0.5 + 0.5 * Math.sin(elapsed / 160 + i);
+      ctx.fillStyle = `rgba(62,216,195,${0.35 + 0.4 * pulse})`;
+      ctx.beginPath();
+      ctx.arc(p.x * w, p.y * h, Math.max(1.2, w / 400), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // sweeping scan line, loops every ~1.3s
+    const sweepY = ((elapsed % 1300) / 1300) * h;
+    const grad = ctx.createLinearGradient(0, sweepY - 30, 0, sweepY + 30);
+    grad.addColorStop(0, "rgba(62,216,195,0)");
+    grad.addColorStop(0.5, "rgba(62,216,195,0.55)");
+    grad.addColorStop(1, "rgba(62,216,195,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, sweepY - 30, w, 60);
+    ctx.strokeStyle = "rgba(62,216,195,0.85)";
+    ctx.lineWidth = Math.max(1, w / 700);
+    ctx.beginPath();
+    ctx.moveTo(0, sweepY);
+    ctx.lineTo(w, sweepY);
+    ctx.stroke();
+
+    if (pct < 1) {
+      animRef.current = requestAnimationFrame(frame);
+    } else {
+      drawOverlay(ctx, scan, w);
+      onDone(scan);
+    }
+  };
+  animRef.current = requestAnimationFrame(frame);
+}
+
 export default function FaceScan() {
   const { user, isPro } = useAuth();
   const [state, setState] = useState<"idle" | "analyzing" | "done" | "error">("idle");
@@ -74,17 +287,25 @@ export default function FaceScan() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [dragOver, setDragOver] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanStep, setScanStep] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const animRef = useRef<number | null>(null);
 
   // warm the model while the user picks a photo
   useEffect(() => {
     loadFaceLandmarker().catch(() => {});
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, []);
+
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
+    if (animRef.current) cancelAnimationFrame(animRef.current);
     setState("analyzing");
+    setScanProgress(0);
+    setScanStep(0);
     setError("");
     setSelfReported([]);
     try {
@@ -109,9 +330,11 @@ export default function FaceScan() {
 
       // sample skin/brow pixels before the overlay is drawn on top
       const scan = analyzeFace(detection.faceLandmarks[0], w, h, ctx);
-      drawOverlay(ctx, scan, w);
-      setResult(scan);
-      setState("done");
+      runScanAnimation(
+        ctx, img, w, h, detection.faceLandmarks[0], scan, animRef,
+        (progress, step) => { setScanProgress(progress); setScanStep(step); },
+        (finalScan) => { setResult(finalScan); setState("done"); }
+      );
     } catch (e) {
       console.error(e);
       setError("Analysis failed to load. Check your connection and try again.");
@@ -127,90 +350,6 @@ export default function FaceScan() {
       img.onerror = reject;
       img.src = url;
     });
-
-  const drawOverlay = (
-    ctx: CanvasRenderingContext2D,
-    scan: ScanResult,
-    w: number
-  ) => {
-    const o = scan.overlay;
-    ctx.lineWidth = Math.max(1, w / 700);
-    const dot = (p: { x: number; y: number }, color: string) => {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, Math.max(2, w / 350), 0, Math.PI * 2);
-      ctx.fill();
-    };
-    const line = (a: { x: number; y: number }, b: { x: number; y: number }, color: string) => {
-      ctx.strokeStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-      dot(a, color);
-      dot(b, color);
-    };
-    const faint = "rgba(255,255,255,0.35)";
-    const accent = "rgba(62,216,195,0.9)";
-
-    // thirds — horizontal guides across the face
-    const xL = Math.min(o.rCheek.x, o.lCheek.x);
-    const xR = Math.max(o.rCheek.x, o.lCheek.x);
-    [o.foreheadTop.y, o.nasion.y, o.subnasale.y, o.chin.y].forEach((y) => {
-      ctx.strokeStyle = faint;
-      ctx.setLineDash([6, 5]);
-      ctx.beginPath();
-      ctx.moveTo(xL, y);
-      ctx.lineTo(xR, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    });
-
-    // widths
-    line(o.rCheek, o.lCheek, faint);
-    line(o.rGonion, o.lGonion, accent);
-    // canthal tilt
-    line(o.rEyeOuter, o.rEyeInner, accent);
-    line(o.lEyeInner, o.lEyeOuter, accent);
-    // brows
-    line(o.rBrowMedial, o.rBrowTail, faint);
-    line(o.lBrowMedial, o.lBrowTail, faint);
-
-    // sample-zone ovals, colored by the pixel-metric scores
-    const ellipse = (
-      c: { x: number; y: number }, rx: number, ry: number, rot: number, color: string
-    ) => {
-      ctx.strokeStyle = color;
-      ctx.setLineDash([5, 4]);
-      ctx.beginPath();
-      ctx.ellipse(c.x, c.y, rx, ry, rot, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    };
-
-    // skin quality — the three sampled patches (cheeks + forehead)
-    const skinScore = scan.metrics.find((m) => m.id === "skin-clarity")?.score;
-    if (skinScore !== undefined) {
-      const c = scoreColor(skinScore) + "cc";
-      const r = o.skinPatchR;
-      ellipse(o.rCheekSkin, r * 0.9, r * 0.65, -0.2, c);
-      ellipse(o.lCheekSkin, r * 0.9, r * 0.65, 0.2, c);
-      ellipse(o.foreheadSkin, r * 1.4, r * 0.55, 0, c);
-    }
-
-    // brow health — oval traced along each sampled brow
-    const browScore = scan.metrics.find((m) => m.id === "brow-density")?.score;
-    if (browScore !== undefined) {
-      const c = scoreColor(browScore) + "cc";
-      const browOval = (a: { x: number; y: number }, b: { x: number; y: number }) => {
-        const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
-        const len = Math.hypot(b.x - a.x, b.y - a.y);
-        ellipse({ x: cx, y: cy }, len * 0.62, len * 0.2, Math.atan2(b.y - a.y, b.x - a.x), c);
-      };
-      browOval(o.rBrowMedial, o.rBrowTail);
-      browOval(o.lBrowMedial, o.lBrowTail);
-    }
-  };
 
   // issues: from weak metrics + self-reported (7.5 = anything meaningfully off-ideal flags)
   const metricIssueSlugs = result
@@ -258,7 +397,7 @@ export default function FaceScan() {
       />
       <div className="px-6 pt-12 pb-24 max-w-4xl mx-auto">
         {/* ── Upload / idle ── */}
-        {(state === "idle" || state === "error" || state === "analyzing") && (
+        {(state === "idle" || state === "error") && (
           <div className="max-w-xl mx-auto">
             <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Face Scan</p>
             <h1 className="text-3xl font-bold text-white mb-2">Photo → protocol.</h1>
@@ -277,22 +416,13 @@ export default function FaceScan() {
                 const f = e.dataTransfer.files?.[0];
                 if (f) handleFile(f);
               }}
-              onClick={() => state !== "analyzing" && fileInputRef.current?.click()}
+              onClick={() => fileInputRef.current?.click()}
               className={`rounded-2xl border-2 border-dashed px-8 py-14 text-center cursor-pointer transition-colors ${
                 dragOver ? "border-accent/60 bg-accent/[0.04]" : "border-white/15 bg-white/[0.02] hover:border-white/30"
               }`}
             >
-              {state === "analyzing" ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  <p className="text-white/50 text-sm">Measuring ratios…</p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-white text-sm font-medium mb-1">Drop a photo or tap to upload</p>
-                  <p className="text-white/30 text-xs">Front-facing, good lighting, neutral expression, hair off the face</p>
-                </>
-              )}
+              <p className="text-white text-sm font-medium mb-1">Drop a photo or tap to upload</p>
+              <p className="text-white/30 text-xs">Front-facing, good lighting, neutral expression, hair off the face</p>
             </div>
             <input
               ref={fileInputRef}
@@ -319,63 +449,99 @@ export default function FaceScan() {
           </div>
         )}
 
-        {/* ── Results ── */}
-        <div className={state === "done" ? "" : "hidden"}>
-          <div className="grid md:grid-cols-[minmax(0,340px)_1fr] gap-8 items-start">
+        {/* ── Analyzing + Results — canvas stays mounted across both so it's never remounted mid-draw ── */}
+        <div className={state === "analyzing" || state === "done" ? "" : "hidden"}>
+          {state === "analyzing" && (
+            <div className="max-w-xs mx-auto mb-5 text-center">
+              <p className="font-mono text-accent/70 text-[10px] uppercase tracking-widest mb-1">Face Scan</p>
+              <p className="text-white text-sm font-medium">{SCAN_STEPS[scanStep]}</p>
+            </div>
+          )}
+          <div className={state === "analyzing" ? "max-w-xs mx-auto" : "grid md:grid-cols-[minmax(0,340px)_1fr] gap-8 items-start"}>
             {/* Photo + overlay */}
-            <div className="md:sticky md:top-20">
+            <div className={state === "done" ? "md:sticky md:top-20" : ""}>
               <canvas ref={canvasRef} className="w-full rounded-2xl border border-white/10" />
-              <button
-                onClick={reset}
-                className="mt-3 w-full py-2.5 border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/70 transition-colors"
-              >
-                Scan a different photo
-              </button>
-              {isPro && user ? (
-                <button
-                  onClick={saveScan}
-                  disabled={saveState === "saving" || saveState === "saved"}
-                  className="mt-2 w-full py-2.5 bg-white/[0.06] border border-white/15 text-white/70 text-xs rounded-xl hover:border-white/35 hover:text-white transition-colors disabled:opacity-60"
-                >
-                  {saveState === "saved" ? "✓ Saved to your account" :
-                   saveState === "saving" ? "Saving…" :
-                   saveState === "error" ? "Save failed — try again" :
-                   "Save scan to track progress"}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowUpgrade(true)}
-                  className="mt-2 w-full py-2.5 bg-white/[0.04] border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/60 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <LockIcon size={12} /> Save scans & track progress — Pro
-                </button>
+
+              {state === "analyzing" && (
+                <div className="mt-3">
+                  <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full transition-[width] duration-150 ease-linear"
+                      style={{ width: `${scanProgress}%` }}
+                    />
+                  </div>
+                  <p className="font-mono text-accent/60 text-[10px] mt-1.5 text-right tabular-nums">
+                    {scanProgress}%
+                  </p>
+                </div>
               )}
-              <p className="text-white/20 text-[10px] mt-2 text-center">
-                Saves measurements only — never your photo.
-              </p>
+
+              {state === "done" && (
+                <>
+                  <button
+                    onClick={reset}
+                    className="mt-3 w-full py-2.5 border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/70 transition-colors"
+                  >
+                    Scan a different photo
+                  </button>
+                  {isPro && user ? (
+                    <button
+                      onClick={saveScan}
+                      disabled={saveState === "saving" || saveState === "saved"}
+                      className="mt-2 w-full py-2.5 bg-white/[0.06] border border-white/15 text-white/70 text-xs rounded-xl hover:border-white/35 hover:text-white transition-colors disabled:opacity-60"
+                    >
+                      {saveState === "saved" ? "✓ Saved to your account" :
+                       saveState === "saving" ? "Saving…" :
+                       saveState === "error" ? "Save failed — try again" :
+                       "Save scan to track progress"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowUpgrade(true)}
+                      className="mt-2 w-full py-2.5 bg-white/[0.04] border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/60 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <LockIcon size={12} /> Save scans & track progress — Pro
+                    </button>
+                  )}
+                  <p className="text-white/20 text-[10px] mt-2 text-center">
+                    Saves measurements only — never your photo.
+                  </p>
+                </>
+              )}
             </div>
 
             {result && (
               <div>
                 {/* Score hero */}
-                <div className="flex items-end gap-4 mb-1">
-                  <span className="text-6xl font-bold text-white leading-none tracking-tight">
-                    {result.overall.toFixed(1)}
-                  </span>
-                  <span className="text-white/30 text-lg mb-1">/ 10</span>
+                <div className="flex items-center gap-5 mb-4">
+                  <ScoreRing score={result.overall} />
+                  <div>
+                    <p className="text-sm font-semibold mb-1" style={{ color: scoreColor(result.overall) }}>
+                      {result.tier}
+                    </p>
+                    <p className="text-white/40 text-xs leading-relaxed">
+                      {flaggedCount > 0
+                        ? `${flaggedCount} of ${result.metrics.length} metrics flagged for improvement`
+                        : `All ${result.metrics.length} metrics in the ideal band — near-perfect scan`}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm mb-1" style={{ color: scoreColor(result.overall) }}>
-                  {result.tier}
-                </p>
-                <p className="text-white/40 text-xs mb-4">
-                  {flaggedCount > 0
-                    ? `${flaggedCount} of ${result.metrics.length} metrics flagged for improvement`
-                    : `All ${result.metrics.length} metrics in the ideal band — near-perfect scan`}
-                </p>
 
-                {result.warnings.map((w) => (
-                  <p key={w} className="text-amber-400/70 text-xs mb-2">⚠ {w}</p>
-                ))}
+                {result.warnings.length > 0 && (
+                  <div className="mb-5 px-4 py-3 rounded-xl border border-amber-500/15 bg-amber-500/[0.04]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <WarningIcon size={13} className="text-amber-400/80 shrink-0" />
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-amber-400/80 font-semibold">
+                        May be skewing your results
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {result.warnings.map((w) => (
+                        <p key={w} className="text-amber-400/70 text-xs leading-relaxed">{w}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Full measurement grid — the diagnostic, up front. Not collapsible: this is what people came for. */}
                 <div className="mt-6 mb-10 flex flex-col gap-5">
@@ -395,7 +561,7 @@ export default function FaceScan() {
                           </p>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                          {items.map((m) => (
+                          {items.map((m, i) => (
                             <div
                               key={m.id}
                               className="px-3.5 py-3 rounded-xl bg-white/[0.03] border border-white/10 border-t-2"
@@ -408,12 +574,7 @@ export default function FaceScan() {
                                   {m.score.toFixed(1)}
                                 </span>
                               </div>
-                              <div className="mt-2 h-[3px] bg-white/10 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full rounded-full"
-                                  style={{ width: `${m.score * 10}%`, background: scoreColor(m.score) }}
-                                />
-                              </div>
+                              <AnimatedBar score={m.score} color={scoreColor(m.score)} delaySeconds={i * 0.05} />
                               <p className="text-white/25 text-[10px] mt-1.5">ideal {m.ideal}</p>
                             </div>
                           ))}

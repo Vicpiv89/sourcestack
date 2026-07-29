@@ -189,6 +189,13 @@ export function analyzeFace(
   if (Math.abs((rollRad * 180) / Math.PI) > 8)
     warnings.push("Photo is tilted — results were roll-corrected but a straight photo scores cleaner.");
 
+  // mouth not neutral: an open or smiling mouth stretches the inner lip gap,
+  // which throws off lip ratio and lower-third-adjacent reads
+  const innerLipGap = dist(P.lipUpperInner, P.lipLowerInner);
+  const lipThicknessRef = dist(P.lipTop, P.lipUpperInner) + dist(P.lipLowerInner, P.lipBottom);
+  if (innerLipGap / Math.max(lipThicknessRef, 0.001) > 0.35)
+    warnings.push("Mouth doesn't look fully relaxed — lip ratio and chin-to-philtrum read most accurately with a neutral, closed-mouth expression.");
+
   const metrics: ScanMetric[] = [];
   const add = (m: ScanMetric) => metrics.push(m);
 
@@ -450,6 +457,15 @@ export function analyzeFace(
       issueSlugs: skinScore < 7 ? ["skin-clarity", "skin-texture"] : [],
     });
 
+    // Facial hair on the jaw/chin reads as heavy local texture (stubble edges) —
+    // much noisier than smooth cheek skin. Flag it before jaw-taper / chin-philtrum,
+    // which measure geometry through it either way.
+    const chinSamplePt = mid(px(LM.lipBottom), px(LM.chin));
+    const chinTexture = samplePatch(ctx, chinSamplePt.x, chinSamplePt.y, patchSize, imgW, imgH).std;
+    const cheekTextureAvg = (patches[0].std + patches[1].std) / 2;
+    if (chinTexture > cheekTextureAvg * 1.8 && chinTexture > 8)
+      warnings.push("Facial hair on the jaw/chin can skew jaw-taper and chin-to-philtrum — those measure geometry through the hair.");
+
     // 14 · Brow density — brow-vs-forehead contrast + physical thickness
     const browPairs: [number, number][] = [];
     R_BROW_UPPER.forEach((u, i) => browPairs.push([u, R_BROW_LOWER[i]]));
@@ -474,6 +490,11 @@ export function analyzeFace(
       }, 0) / browMidPairs.length;
     const contrast = ((foreLum - browLum) / Math.max(1, foreLum)) * 100;
     const browScore = Math.min(10, 0.7 * band(contrast, 38, 100, 5) + 0.3 * band(browThickness, 0.22, 0.5, 0.04));
+    // hair/bangs over the brow-forehead zone read as a dark patch right above the
+    // brow, well below the actual forehead's exposure — that's the "hair skewed my
+    // brow reading" case, distinct from genuinely sparse/light brows
+    if (foreLum < meanLum * 0.72 && foreLum < 90)
+      warnings.push("Hair may be covering part of your forehead or brows — brow density and forehead skin reads can be skewed.");
     add({
       id: "brow-density", name: "Brow Density (est.)",
       display: `${Math.max(0, contrast).toFixed(0)}%`,
