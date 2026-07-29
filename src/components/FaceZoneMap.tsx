@@ -94,21 +94,14 @@ const ZONES: ZoneDef[] = [
   },
 ];
 
-// One head outline, shared by the fill and the line art.
-// Cranium dome → temple taper → cheekbones (widest) → jaw taper → chin — natural oval,
-// wide enough not to read as lanky (~1.5:1 length:width).
+// A plain, true ellipse (center 100,128 · rx 74 · ry 112) — standard 4-bezier
+// ellipse approximation, no hand-tuned tapering.
 const HEAD_PATH =
   'M 100 16 ' +
-  'C 130 16 150 34 160 54 ' +
-  'C 168 74 174 94 174 112 ' +
-  'C 174 136 166 158 158 176 ' +
-  'C 152 188 146 200 140 208 ' +
-  'C 130 218 116 232 100 240 ' +
-  'C 84 232 70 218 60 208 ' +
-  'C 54 200 48 188 42 176 ' +
-  'C 34 158 26 136 26 112 ' +
-  'C 26 94 32 74 40 54 ' +
-  'C 50 34 70 16 100 16 Z';
+  'C 140.9 16 174 66.1 174 128 ' +
+  'C 174 189.9 140.9 240 100 240 ' +
+  'C 59.1 240 26 189.9 26 128 ' +
+  'C 26 66.1 59.1 16 100 16 Z';
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);

@@ -60,9 +60,9 @@ function FindVisual() {
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      {/* Face outline — oval taper to chin, not a shield point */}
+      {/* Face outline — true ellipse (center 100,88 · rx 44 · ry 66) */}
       <path
-        d="M 100 22 C 116 22 128 30 135 44 C 141 58 144 74 144 90 C 144 108 138 124 126 136 C 116 146 108 152 100 154 C 92 152 84 146 74 136 C 62 124 56 108 56 90 C 56 74 59 58 65 44 C 72 30 84 22 100 22 Z"
+        d="M 100 22 C 124.3 22 144 51.5 144 88 C 144 124.5 124.3 154 100 154 C 75.7 154 56 124.5 56 88 C 56 51.5 75.7 22 100 22 Z"
         fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"
       />
       {/* Zone highlights */}

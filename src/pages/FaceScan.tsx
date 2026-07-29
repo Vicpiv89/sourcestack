@@ -242,35 +242,37 @@ function runScanAnimation(
 
     ctx.drawImage(img, 0, 0, w, h);
 
-    // revealed landmark dots, pulsing gently
-    const revealCount = Math.floor(pct * dotIdx.length);
-    for (let i = 0; i < revealCount; i++) {
-      const p = landmarks[dotIdx[i]];
-      const pulse = 0.5 + 0.5 * Math.sin(elapsed / 160 + i);
-      ctx.fillStyle = `rgba(62,216,195,${0.35 + 0.4 * pulse})`;
-      ctx.beginPath();
-      ctx.arc(p.x * w, p.y * h, Math.max(1.2, w / 400), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // sweeping scan line, loops every ~1.3s
-    const sweepY = ((elapsed % 1300) / 1300) * h;
-    const grad = ctx.createLinearGradient(0, sweepY - 30, 0, sweepY + 30);
-    grad.addColorStop(0, "rgba(62,216,195,0)");
-    grad.addColorStop(0.5, "rgba(62,216,195,0.55)");
-    grad.addColorStop(1, "rgba(62,216,195,0)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, sweepY - 30, w, 60);
-    ctx.strokeStyle = "rgba(62,216,195,0.85)";
-    ctx.lineWidth = Math.max(1, w / 700);
-    ctx.beginPath();
-    ctx.moveTo(0, sweepY);
-    ctx.lineTo(w, sweepY);
-    ctx.stroke();
-
     if (pct < 1) {
+      // revealed landmark dots, pulsing gently
+      const revealCount = Math.floor(pct * dotIdx.length);
+      for (let i = 0; i < revealCount; i++) {
+        const p = landmarks[dotIdx[i]];
+        const pulse = 0.5 + 0.5 * Math.sin(elapsed / 160 + i);
+        ctx.fillStyle = `rgba(62,216,195,${0.3 + 0.3 * pulse})`;
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, Math.max(1.2, w / 400), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // thin sweeping scan line (soft glow, not a solid band), loops every ~1.3s
+      const sweepY = ((elapsed % 1300) / 1300) * h;
+      const glowH = Math.max(10, h * 0.035);
+      const grad = ctx.createLinearGradient(0, sweepY - glowH, 0, sweepY + glowH);
+      grad.addColorStop(0, "rgba(62,216,195,0)");
+      grad.addColorStop(0.5, "rgba(62,216,195,0.22)");
+      grad.addColorStop(1, "rgba(62,216,195,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, sweepY - glowH, w, glowH * 2);
+      ctx.strokeStyle = "rgba(62,216,195,0.75)";
+      ctx.lineWidth = Math.max(1, w / 900);
+      ctx.beginPath();
+      ctx.moveTo(0, sweepY);
+      ctx.lineTo(w, sweepY);
+      ctx.stroke();
+
       animRef.current = requestAnimationFrame(frame);
     } else {
+      // clean image is already drawn above — no leftover dots/scanline baked in
       drawOverlay(ctx, scan, w);
       onDone(scan);
     }
