@@ -20,7 +20,7 @@ const TIMING_COLORS: Record<string, string> = {
 function YesNo({ value, invert = false }: { value: boolean; invert?: boolean }) {
   const positive = invert ? !value : value;
   return (
-    <span className={positive ? "text-emerald-400" : "text-white/25"}>
+    <span className={positive ? "text-accent" : "text-white/25"}>
       {value ? "Yes" : "No"}
     </span>
   );

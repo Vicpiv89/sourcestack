@@ -6,14 +6,15 @@ import { issues } from "../data/issues";
 import { treatments } from "../data/treatments";
 import { vendors } from "../data/vendors";
 import { scoreMatch } from "../data/synonyms";
+import { CameraIcon, HairIcon, SparkleIcon, DnaIcon, PillIcon, MicroscopeIcon, GearIcon, TrendUpIcon, AiSparkIcon } from "../components/icons";
 
 const CATEGORIES = [
-  { label: "Hair Loss", slug: "Hair Loss", emoji: "💈" },
-  { label: "Skincare",  slug: "Skincare",  emoji: "✨" },
-  { label: "Peptides",  slug: "Peptides",  emoji: "🧬" },
-  { label: "Supplements", slug: "Supplements", emoji: "💊" },
-  { label: "Research",  slug: "Research Compounds", emoji: "🔬" },
-  { label: "Mechanical", slug: "Mechanical", emoji: "⚙️" },
+  { label: "Hair Loss", slug: "Hair Loss", Icon: HairIcon },
+  { label: "Skincare",  slug: "Skincare",  Icon: SparkleIcon },
+  { label: "Peptides",  slug: "Peptides",  Icon: DnaIcon },
+  { label: "Supplements", slug: "Supplements", Icon: PillIcon },
+  { label: "Research",  slug: "Research Compounds", Icon: MicroscopeIcon },
+  { label: "Mechanical", slug: "Mechanical", Icon: GearIcon },
 ];
 
 export default function Home() {
@@ -55,14 +56,14 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
 
           {/* Left: copy + search */}
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/30 mb-3">
+          <div className="text-center sm:text-left">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 mb-3">
               {treatments.length} compounds · {vendors.length} vetted vendors · {issues.length} issues
             </p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-3 leading-tight">
+            <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3 leading-tight">
               Scanned. Sourced.<br />Fixed.
             </h1>
-            <p className="text-white/40 text-sm sm:text-base mb-6 leading-relaxed max-w-sm">
+            <p className="text-white/40 text-sm sm:text-base mb-6 leading-relaxed max-w-sm mx-auto sm:mx-0">
               Random TikToks and sketchy vendors get you the wrong dose and wasted money. SourceStack replaces the guessing with a measured plan — and a vendor you can trust.
             </p>
 
@@ -72,7 +73,7 @@ export default function Home() {
               className="group flex items-center justify-between gap-3 w-full mb-6 px-4 py-3.5 bg-white text-black rounded-xl hover:bg-white/90 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-base">📷</span>
+                <CameraIcon size={18} className="shrink-0" />
                 <div>
                   <p className="text-sm font-semibold leading-tight">Scan your face — see what to improve</p>
                   <p className="text-black/50 text-[11px] mt-0.5">Free · 100% private · 30 seconds</p>
@@ -149,7 +150,7 @@ export default function Home() {
             </div>
 
             {/* Quick chips */}
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <div className="flex items-center gap-2 mt-3 flex-wrap justify-center sm:justify-start">
               {["hair loss", "tretinoin", "skin texture", "jaw", "BPC-157"].map((q) => (
                 <button
                   key={q}
@@ -167,9 +168,9 @@ export default function Home() {
                 <Link
                   key={cat.slug}
                   to={`/treatments?category=${encodeURIComponent(cat.slug)}`}
-                  className="flex flex-col gap-1 px-3 py-2.5 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-white/15 transition-colors"
+                  className="flex flex-col items-center text-center gap-1.5 px-3 py-2.5 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-white/15 transition-colors"
                 >
-                  <span className="text-base">{cat.emoji}</span>
+                  <cat.Icon size={16} className="text-white/45" />
                   <span className="text-white/60 text-xs font-medium">{cat.label}</span>
                 </Link>
               ))}
@@ -194,12 +195,12 @@ export default function Home() {
         >
           <div className="flex items-center gap-4">
             <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-              <span className="text-sm">📷</span>
+              <CameraIcon size={16} />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-white font-semibold text-sm">Face Scan</p>
-                <span className="text-[9px] font-bold tracking-widest uppercase text-white/60 bg-white/10 px-1.5 py-0.5 rounded-full border border-white/15">New</span>
+                <span className="font-mono text-[9px] font-bold tracking-widest uppercase text-white/60 bg-white/10 px-1.5 py-0.5 rounded-full border border-white/15">New</span>
               </div>
               <p className="text-white/35 text-xs">
                 One photo → 17 facial metrics measured → exactly what you need to improve, with the fix for each. Nothing uploaded.
@@ -217,13 +218,13 @@ export default function Home() {
           className="group flex items-center justify-between gap-4 px-6 py-5 bg-white/[0.04] border border-white/[0.15] rounded-2xl hover:border-white/35 transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-              <span className="text-sm">📈</span>
+            <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+              <TrendUpIcon size={16} className="text-accent" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-white font-semibold text-sm">Score Tracking</p>
-                <span className="text-[9px] font-bold tracking-widest uppercase text-emerald-400/60 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/15">Pro</span>
+                <span className="font-mono text-[9px] font-bold tracking-widest uppercase text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded-full border border-accent/15">Pro</span>
               </div>
               <p className="text-white/35 text-xs">
                 One scan is a snapshot. Pro saves every scan and charts the trend — so you can actually see the plan working, month over month.
@@ -238,34 +239,34 @@ export default function Home() {
       <div className="px-4 sm:px-6 pb-10 max-w-5xl mx-auto">
         <Link
           to="/ai"
-          className="group flex items-center justify-between gap-4 px-6 py-5 bg-emerald-500/[0.04] border border-emerald-500/[0.15] rounded-2xl hover:border-emerald-500/30 transition-colors"
+          className="group flex items-center justify-between gap-4 px-6 py-5 bg-accent/[0.04] border border-accent/[0.15] rounded-2xl hover:border-accent/30 transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-              <span className="text-[11px] font-bold text-emerald-400">AI</span>
+            <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+              <AiSparkIcon size={16} className="text-accent" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <p className="text-white font-semibold text-sm">Protocol AI</p>
-                <span className="text-[9px] font-bold tracking-widest uppercase text-emerald-400/60 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/15">New</span>
+                <span className="font-mono text-[9px] font-bold tracking-widest uppercase text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded-full border border-accent/15">New</span>
               </div>
               <p className="text-white/35 text-xs">
                 Describe your goal in plain language — get a full protocol pulled straight from the database.
               </p>
             </div>
           </div>
-          <span className="text-emerald-400/40 group-hover:text-emerald-400/70 text-sm transition-colors shrink-0">→</span>
+          <span className="text-accent/40 group-hover:text-accent/70 text-sm transition-colors shrink-0">→</span>
         </Link>
       </div>
 
       {/* ── Who this is for ───────────────────────────── */}
       <div className="px-4 sm:px-6 pb-16 max-w-5xl mx-auto">
-        <div className="border-t border-white/[0.07] pt-12">
-          <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">Not for the TikTok-comment crowd</p>
-          <p className="text-white text-lg sm:text-xl font-semibold max-w-xl leading-snug mb-3">
+        <div className="border-t border-white/[0.07] pt-12 text-center sm:text-left">
+          <p className="font-mono text-white/25 text-[10px] uppercase tracking-widest mb-3">Not for the TikTok-comment crowd</p>
+          <p className="text-white text-lg sm:text-xl font-semibold max-w-xl leading-snug mb-3 mx-auto sm:mx-0">
             Anyone can tell you to "just use tretinoin." Almost nobody tells you the dose, the timeline, or which vendor won't sell you chalk.
           </p>
-          <p className="text-white/35 text-sm max-w-lg leading-relaxed">
+          <p className="text-white/35 text-sm max-w-lg leading-relaxed mx-auto sm:mx-0">
             If you're already spending money on this — compounds, skincare, supplements — SourceStack is where that money stops being a guess.
           </p>
         </div>
@@ -274,9 +275,9 @@ export default function Home() {
       {/* ── Stack / Quiz promo ────────────────────────── */}
       <div className="px-4 sm:px-6 pb-24 max-w-5xl mx-auto">
         <div className="border border-white/[0.07] rounded-2xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
+          <div className="text-center sm:text-left">
             <p className="text-white font-semibold text-sm mb-1">Build your personal stack</p>
-            <p className="text-white/35 text-xs max-w-xs">
+            <p className="text-white/35 text-xs max-w-xs mx-auto sm:mx-0">
               Answer 3 questions and get a curated starter protocol — or build your own.
             </p>
           </div>

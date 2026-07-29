@@ -78,7 +78,7 @@ function SubscribedHandler() {
   if (pending) {
     return (
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl flex items-center gap-3 shadow-2xl">
-        <div className="w-4 h-4 border-2 border-white/20 border-t-emerald-400 rounded-full animate-spin" />
+        <div className="w-4 h-4 border-2 border-white/20 border-t-accent rounded-full animate-spin" />
         <p className="text-white/70 text-sm">Confirming your subscription…</p>
       </div>
     );
@@ -89,9 +89,9 @@ function SubscribedHandler() {
         className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4"
         onClick={() => setCelebrate(false)}
       >
-        <div className="bg-[#1a1a1a] border border-emerald-500/25 rounded-2xl w-full max-w-sm p-8 text-center">
-          <p className="text-3xl mb-3">🎉</p>
-          <h2 className="text-xl font-bold text-white mb-2">You're Pro.</h2>
+        <div className="bg-[#1a1a1a] border border-accent/25 rounded-2xl w-full max-w-sm p-8 text-center">
+          <div className="w-10 h-10 mx-auto mb-4 rounded-full bg-accent/10 border border-accent/25 flex items-center justify-center text-accent font-display font-bold text-sm">OK</div>
+          <h2 className="font-display text-xl font-bold text-white mb-2">You're Pro.</h2>
           <p className="text-white/45 text-sm mb-6 leading-relaxed">
             Full protocols, vendor directory, and interaction warnings are unlocked.
             Your plan is waiting.

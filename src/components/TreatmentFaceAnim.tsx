@@ -134,9 +134,9 @@ const RIGHT_LASHES_X = [112, 116, 120, 124, 128, 132, 136];
 function FaceLines() {
   return (
     <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-      {/* Face outline */}
+      {/* Face outline — oval taper to chin, not a round jaw */}
       <path
-        d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 162 164 188 146 208 A 50 28 0 0 1 54 208 C 36 188 28 162 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
+        d="M 100 42 C 120 44 138 52 150 68 C 166 84 172 110 172 136 C 172 156 168 174 156 188 C 146 206 128 220 100 226 C 72 220 54 206 44 188 C 32 174 28 156 28 136 C 28 110 34 84 50 68 C 62 52 80 44 100 42 Z"
         stroke="rgba(255,255,255,0.22)" strokeWidth="0.9"
       />
       {/* Hairline */}

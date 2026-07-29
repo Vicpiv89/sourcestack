@@ -93,7 +93,7 @@ export default function Account() {
             <div>
               <p className="text-white text-sm font-semibold mb-1">Subscription</p>
               {isPro ? (
-                <p className="text-emerald-400 text-xs">Pro — active · $19/month</p>
+                <p className="text-accent text-xs">Pro — active · $19/month</p>
               ) : (
                 <p className="text-white/35 text-xs">No active subscription</p>
               )}

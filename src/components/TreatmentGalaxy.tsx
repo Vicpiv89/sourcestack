@@ -9,13 +9,14 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+// Same categorical palette used for the treatment-category badges site-wide (ProtocolAI, etc).
 const CATEGORY_COLORS: Record<string, string> = {
-  'Hair Loss':           '#10b981',
-  'Skincare':            '#60a5fa',
-  'Supplements':         '#f59e0b',
-  'Peptides':            '#c084fc',
-  'Research Compounds':  '#f87171',
-  'Mechanical':          '#94a3b8',
+  'Hair Loss':           '#6fae7c',
+  'Skincare':            '#6b93c9',
+  'Supplements':         '#a084d1',
+  'Peptides':            '#c96b8f',
+  'Research Compounds':  '#c9a227',
+  'Mechanical':          '#8c8f96',
 };
 
 const CATEGORY_ORDER = ['Hair Loss', 'Skincare', 'Supplements', 'Peptides', 'Research Compounds', 'Mechanical'];

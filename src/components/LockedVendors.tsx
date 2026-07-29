@@ -1,4 +1,5 @@
 import VendorCard from "./VendorCard";
+import { LockIcon } from "./icons";
 
 type Props = {
   vendorIds: string[];
@@ -16,7 +17,7 @@ export default function LockedVendors({ vendorIds, onUnlock }: Props) {
         ))}
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-white font-semibold text-sm">🔒 Vendors locked</p>
+        <p className="text-white font-semibold text-sm flex items-center gap-1.5"><LockIcon size={14} /> Vendors locked</p>
         <p className="text-white/40 text-xs max-w-xs">
           Get vetted vendor prices, trust scores, and direct links with Pro
         </p>

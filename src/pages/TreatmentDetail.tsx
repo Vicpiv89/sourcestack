@@ -72,7 +72,7 @@ export default function TreatmentDetail() {
             onClick={toggleStack}
             className={`px-5 py-2.5 text-sm font-semibold rounded-xl transition-colors ${
               inStack
-                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+                ? "bg-accent/15 border border-accent/30 text-accent"
                 : "bg-white text-black hover:bg-white/90"
             }`}
           >

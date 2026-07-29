@@ -7,6 +7,7 @@ import UpgradeModal from "../components/UpgradeModal";
 import SEO from "../components/SEO";
 import { supabase } from "../lib/supabase";
 import { analyzeFace, loadFaceLandmarker, type ScanResult } from "../lib/faceScan";
+import { LockIcon } from "../components/icons";
 
 const MAX_DIM = 1100;
 
@@ -150,7 +151,7 @@ export default function FaceScan() {
       dot(b, color);
     };
     const faint = "rgba(255,255,255,0.35)";
-    const accent = "rgba(52,211,153,0.9)";
+    const accent = "rgba(62,216,195,0.9)";
 
     // thirds — horizontal guides across the face
     const xL = Math.min(o.rCheek.x, o.lCheek.x);
@@ -278,7 +279,7 @@ export default function FaceScan() {
               }}
               onClick={() => state !== "analyzing" && fileInputRef.current?.click()}
               className={`rounded-2xl border-2 border-dashed px-8 py-14 text-center cursor-pointer transition-colors ${
-                dragOver ? "border-emerald-400/60 bg-emerald-400/[0.04]" : "border-white/15 bg-white/[0.02] hover:border-white/30"
+                dragOver ? "border-accent/60 bg-accent/[0.04]" : "border-white/15 bg-white/[0.02] hover:border-white/30"
               }`}
             >
               {state === "analyzing" ? (
@@ -308,10 +309,10 @@ export default function FaceScan() {
               <p className="mt-4 text-red-400/80 text-sm text-center">{error}</p>
             )}
 
-            <div className="mt-6 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/15">
-              <span className="text-emerald-400 text-sm leading-none mt-0.5">●</span>
+            <div className="mt-6 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-accent/[0.05] border border-accent/15">
+              <span className="text-accent text-sm leading-none mt-0.5">●</span>
               <p className="text-white/50 text-xs leading-relaxed">
-                <span className="text-emerald-400/90 font-medium">100% private.</span>{" "}
+                <span className="text-accent/90 font-medium">100% private.</span>{" "}
                 Analysis runs in your browser. Your photo is never uploaded, stored, or sent anywhere.
               </p>
             </div>
@@ -344,9 +345,9 @@ export default function FaceScan() {
               ) : (
                 <button
                   onClick={() => setShowUpgrade(true)}
-                  className="mt-2 w-full py-2.5 bg-white/[0.04] border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/60 transition-colors"
+                  className="mt-2 w-full py-2.5 bg-white/[0.04] border border-white/10 text-white/40 text-xs rounded-xl hover:border-white/25 hover:text-white/60 transition-colors flex items-center justify-center gap-1.5"
                 >
-                  🔒 Save scans & track progress — Pro
+                  <LockIcon size={12} /> Save scans & track progress — Pro
                 </button>
               )}
               <p className="text-white/20 text-[10px] mt-2 text-center">
@@ -449,7 +450,7 @@ export default function FaceScan() {
                             </p>
                             <p className="text-white/40 text-xs mt-1 leading-relaxed">{m.note}</p>
                             {fixes.length > 0 && (
-                              <p className="text-emerald-400/80 text-xs mt-2">
+                              <p className="text-accent/80 text-xs mt-2">
                                 Protocol options: {fixes.join(" · ")} — details in your plan ↓
                               </p>
                             )}
@@ -491,7 +492,7 @@ export default function FaceScan() {
                                 <p className="text-white/35 text-xs mt-1 leading-relaxed line-clamp-2">
                                   {issue.description.split(". ")[0]}.
                                 </p>
-                                <p className="text-emerald-400/80 text-xs mt-2">
+                                <p className="text-accent/80 text-xs mt-2">
                                   Protocol options: {fixNames.join(" · ")}
                                   {issue.treatmentSlugs.length > 3 ? ` +${issue.treatmentSlugs.length - 3} more` : ""}
                                 </p>
@@ -552,7 +553,7 @@ export default function FaceScan() {
                               "Monthly cost breakdown — built for a budget",
                             ].map((f) => (
                               <li key={f} className="flex items-start gap-2 text-xs text-white/60">
-                                <span className="text-emerald-400 shrink-0">✓</span>{f}
+                                <span className="text-accent shrink-0">✓</span>{f}
                               </li>
                             ))}
                           </ul>
@@ -584,7 +585,7 @@ export default function FaceScan() {
                 </div>
 
                 {/* Goal selection — adds to the plan above */}
-                <div className="mt-10 mb-10 px-4 py-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04]">
+                <div className="mt-10 mb-10 px-4 py-4 rounded-2xl border border-accent/20 bg-accent/[0.04]">
                   <h2 className="text-white font-semibold text-sm mb-1">What do you want to improve?</h2>
                   <p className="text-white/40 text-xs mb-3.5 leading-relaxed">
                     The scan reads your ratios, skin, and brows — but you know the rest.
@@ -603,7 +604,7 @@ export default function FaceScan() {
                           }
                           className={`px-3.5 py-2 rounded-full text-xs border transition-colors ${
                             on
-                              ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-300 font-medium"
+                              ? "border-accent/60 bg-accent/15 text-accent font-medium"
                               : "border-white/15 bg-white/[0.03] text-white/50 hover:border-white/30 hover:text-white/80"
                           }`}
                         >
@@ -613,7 +614,7 @@ export default function FaceScan() {
                     })}
                   </div>
                   {selfReported.length > 0 && (
-                    <p className="text-emerald-400/70 text-xs mt-3">
+                    <p className="text-accent/70 text-xs mt-3">
                       {selfReported.length} goal{selfReported.length > 1 ? "s" : ""} added to your plan ↑
                     </p>
                   )}

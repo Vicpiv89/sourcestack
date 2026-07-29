@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  /* Signature accent — the mint/teal from the actual logo mark
+     (favicon, app icon, socials), carried into the UI instead of the
+     default emerald/blue/amber trio scattered across most components. */
+  --color-accent: #3ed8c3;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -8,6 +16,12 @@ body {
   color: #e5e5e5;
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Display type — headlines read like a printout, not a template hero. */
+.font-display {
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: -0.02em;
 }
 
 /* ── Page entrance ─────────────────────────────────────────────────────────── */

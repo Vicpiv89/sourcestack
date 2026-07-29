@@ -6,12 +6,12 @@ interface Props {
 }
 
 const TYPE_STYLES: Record<VendorType, { label: string; classes: string }> = {
-  pharmacy:         { label: "Pharmacy",        classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  "big-box":        { label: "Big Box",         classes: "bg-slate-500/10 text-slate-400 border-slate-500/20" },
-  "niche-ecom":     { label: "Specialist",      classes: "bg-violet-500/10 text-violet-400 border-violet-500/20" },
-  marketplace:      { label: "Marketplace",     classes: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
-  research:         { label: "Research",        classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  "supplement-store": { label: "Supplement Store", classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  pharmacy:         { label: "Pharmacy",        classes: "bg-[#6b93c9]/10 text-[#8fadd6] border-[#6b93c9]/25" },
+  "big-box":        { label: "Big Box",         classes: "bg-[#8c8f96]/10 text-[#a4a7ad] border-[#8c8f96]/25" },
+  "niche-ecom":     { label: "Specialist",      classes: "bg-[#a084d1]/10 text-[#b7a2dd] border-[#a084d1]/25" },
+  marketplace:      { label: "Marketplace",     classes: "bg-[#c9793f]/10 text-[#d6996b] border-[#c9793f]/25" },
+  research:         { label: "Research",        classes: "bg-[#c9a227]/10 text-[#d6bb5c] border-[#c9a227]/25" },
+  "supplement-store": { label: "Supplement Store", classes: "bg-[#6fae7c]/10 text-[#8fc099] border-[#6fae7c]/25" },
 };
 
 export default function VendorCard({ vendorId, productUrl }: Props) {
@@ -33,7 +33,7 @@ export default function VendorCard({ vendorId, productUrl }: Props) {
             {typeStyle.label}
           </span>
           {vendor.trusted && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
               Vetted
             </span>
           )}

@@ -60,9 +60,9 @@ function FindVisual() {
           <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-      {/* Face outline */}
+      {/* Face outline — oval taper to chin, not a shield point */}
       <path
-        d="M 100 22 C 114 24 124 31 131 43 C 140 55 144 72 144 88 C 144 104 140 120 131 133 L 100 152 L 69 133 C 60 120 56 104 56 88 C 56 72 60 55 69 43 C 76 31 86 24 100 22 Z"
+        d="M 100 22 C 116 22 128 30 135 44 C 141 58 144 74 144 90 C 144 108 138 124 126 136 C 116 146 108 152 100 154 C 92 152 84 146 74 136 C 62 124 56 108 56 90 C 56 74 59 58 65 44 C 72 30 84 22 100 22 Z"
         fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"
       />
       {/* Zone highlights */}
@@ -100,12 +100,12 @@ function ProtocolVisual() {
       {steps.map((s, i) => (
         <g key={i}>
           <circle cx={31} cy={52 + i * 30} r={8}
-            fill={s.done ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)'}
-            stroke={s.done ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}
+            fill={s.done ? 'rgba(62,216,195,0.12)' : 'rgba(255,255,255,0.04)'}
+            stroke={s.done ? 'rgba(62,216,195,0.4)' : 'rgba(255,255,255,0.1)'}
             strokeWidth="0.7"
           />
           {s.done ? (
-            <path d={`M ${27} ${52 + i*30} l 2.5 2.5 l 5 -5`} stroke="#10b981" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={`M ${27} ${52 + i*30} l 2.5 2.5 l 5 -5`} stroke="#3ed8c3" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           ) : (
             <text x={31} y={55.5 + i*30} textAnchor="middle" style={{ fontSize: 8, fill: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>{i + 1}</text>
           )}
@@ -190,8 +190,8 @@ function VendorVisual() {
       <rect x={15} y={28} width={170} height={10} fill="rgba(255,255,255,0.03)" />
       <text x={28} y={28} style={{ fontSize: 10, fill: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>Peptide Sciences</text>
       {/* Trust score */}
-      <rect x={138} y={16} width={34} height={13} rx={5} fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)" strokeWidth="0.7" />
-      <text x={155} y={24.5} textAnchor="middle" style={{ fontSize: 7, fill: '#10b981', fontWeight: 700 }}>9.4 / 10</text>
+      <rect x={138} y={16} width={34} height={13} rx={5} fill="rgba(62,216,195,0.12)" stroke="rgba(62,216,195,0.35)" strokeWidth="0.7" />
+      <text x={155} y={24.5} textAnchor="middle" style={{ fontSize: 7, fill: '#3ed8c3', fontWeight: 700 }}>9.4 / 10</text>
       {/* Badges */}
       {['COA ✓','3rd Party','GMP'].map((badge, i) => (
         <g key={i}>
@@ -207,8 +207,10 @@ function VendorVisual() {
       <rect x={28} y={108} width={76} height={17} rx={5} fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
       <text x={66} y={118.5} textAnchor="middle" style={{ fontSize: 7.5, fill: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>View source →</text>
       {/* Lock overlay for non-pro hint */}
-      <rect x={110} y={108} width={62} height={17} rx={5} fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.25)" strokeWidth="0.7" />
-      <text x={141} y={118.5} textAnchor="middle" style={{ fontSize: 7, fill: '#f59e0b', fontWeight: 600 }}>🔒 Pro only</text>
+      <rect x={110} y={108} width={62} height={17} rx={5} fill="rgba(62,216,195,0.08)" stroke="rgba(62,216,195,0.25)" strokeWidth="0.7" />
+      <rect x={120} y={112.5} width={7} height={5.5} rx={1.2} fill="none" stroke="#3ed8c3" strokeWidth="0.9" />
+      <path d="M121.5 112.5v-2a2 2 0 0 1 4 0v2" fill="none" stroke="#3ed8c3" strokeWidth="0.9" />
+      <text x={144} y={118.5} textAnchor="middle" style={{ fontSize: 7, fill: '#3ed8c3', fontWeight: 600 }}>Pro only</text>
     </svg>
   );
 }

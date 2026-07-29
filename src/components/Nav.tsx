@@ -33,8 +33,8 @@ export default function Nav() {
             <rect x="20" y="42" width="46" height="16" rx="8" fill="#3ED8C3" />
             <rect x="34" y="66" width="46" height="16" rx="8" fill="#F2F1EA" />
           </svg>
-          <span className="text-base font-semibold tracking-tight text-white">SourceStack</span>
-          <span className="text-[10px] text-white/30 uppercase tracking-widest hidden sm:block">Protocol Hub</span>
+          <span className="font-display text-base font-semibold text-white">SourceStack</span>
+          <span className="font-mono text-[10px] text-white/30 uppercase tracking-widest hidden sm:block">Protocol Hub</span>
         </Link>
 
         {/* Desktop nav */}
@@ -57,7 +57,7 @@ export default function Nav() {
           {user ? (
             <>
               {isPro && (
-                <span className="px-2 py-1 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="px-2 py-1 rounded-full text-[10px] bg-accent/10 text-accent border border-accent/20">
                   Pro
                 </span>
               )}
@@ -101,7 +101,7 @@ export default function Nav() {
             </button>
           )}
           {user && isPro && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-accent/10 text-accent border border-accent/20">
               Pro
             </span>
           )}

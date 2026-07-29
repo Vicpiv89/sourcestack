@@ -82,7 +82,7 @@ export default function UpgradeModal({ onClose }: Props) {
         <ul className="flex flex-col gap-3 mb-8">
           {FEATURES.map((f) => (
             <li key={f} className="flex items-start gap-3 text-sm text-white/70">
-              <span className="text-emerald-400 shrink-0 mt-0.5">✓</span>
+              <span className="text-accent shrink-0 mt-0.5">✓</span>
               {f}
             </li>
           ))}

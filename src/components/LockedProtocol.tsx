@@ -1,3 +1,5 @@
+import { LockIcon } from "./icons";
+
 type Props = {
   steps: string[];
   /** 1-based display number for the first locked step. */
@@ -27,7 +29,7 @@ export default function LockedProtocol({ steps, startIndex, onUnlock }: Props) {
           onClick={onUnlock}
           className="flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors"
         >
-          🔒 Unlock full protocol — $19/mo
+          <LockIcon size={13} /> Unlock full protocol — $19/mo
         </button>
       </div>
     </div>

@@ -95,18 +95,20 @@ const ZONES: ZoneDef[] = [
 ];
 
 // One head outline, shared by the fill and the line art.
-// Cranium dome → temple taper → cheekbones (widest) → jaw taper → chin.
+// Cranium dome → temple taper → cheekbones (widest) → jaw taper → chin — natural oval,
+// wide enough not to read as lanky (~1.5:1 length:width).
 const HEAD_PATH =
-  'M 100 18 ' +
-  'C 128 18 152 34 158 66 ' +
-  'C 162 84 163 106 161 124 ' +
-  'C 158 150 150 172 138 196 ' +
-  'C 130 214 122 234 110 241 ' +
-  'C 104 244 96 244 90 241 ' +
-  'C 78 234 70 214 62 196 ' +
-  'C 50 172 42 150 39 124 ' +
-  'C 37 106 38 84 42 66 ' +
-  'C 48 34 72 18 100 18 Z';
+  'M 100 16 ' +
+  'C 130 16 150 34 160 54 ' +
+  'C 168 74 174 94 174 112 ' +
+  'C 174 136 166 158 158 176 ' +
+  'C 152 188 146 200 140 208 ' +
+  'C 130 218 116 232 100 240 ' +
+  'C 84 232 70 218 60 208 ' +
+  'C 54 200 48 188 42 176 ' +
+  'C 34 158 26 136 26 112 ' +
+  'C 26 94 32 74 40 54 ' +
+  'C 50 34 70 16 100 16 Z';
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -149,60 +151,56 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
             {/* Outline */}
             <path d={HEAD_PATH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-            {/* Hairline — inside the skull */}
+            {/* Hairline — widened to match the head */}
             <path
-              d="M 52 80 C 62 60 80 51 100 51 C 120 51 138 60 148 80"
+              d="M 46 82 C 58 58 78 49 100 49 C 122 49 142 58 154 82"
               stroke="rgba(255,255,255,0.12)"
               strokeWidth="0.7"
             />
-            {/* Left ear */}
-            <path
-              d="M 40 122 C 32 116 28 127 33 139 C 36 147 41 149 42 143"
-              stroke="rgba(255,255,255,0.14)"
-              strokeWidth="0.7"
-            />
+            {/* Hair texture — small dots scattered across the crown */}
+            <g fill="rgba(255,255,255,0.22)" stroke="none">
+              <circle cx="76" cy="27" r="1.4" /><circle cx="88" cy="24" r="1.4" /><circle cx="100" cy="23" r="1.4" /><circle cx="112" cy="24" r="1.4" /><circle cx="124" cy="27" r="1.4" />
+              <circle cx="66" cy="35" r="1.4" /><circle cx="79" cy="31" r="1.4" /><circle cx="93" cy="29" r="1.4" /><circle cx="107" cy="29" r="1.4" /><circle cx="121" cy="31" r="1.4" /><circle cx="134" cy="35" r="1.4" />
+              <circle cx="58" cy="47" r="1.4" /><circle cx="70" cy="41" r="1.4" /><circle cx="86" cy="38" r="1.4" /><circle cx="100" cy="37" r="1.4" /><circle cx="114" cy="38" r="1.4" /><circle cx="130" cy="41" r="1.4" /><circle cx="142" cy="47" r="1.4" />
+              <circle cx="52" cy="60" r="1.3" /><circle cx="62" cy="55" r="1.3" /><circle cx="138" cy="55" r="1.3" /><circle cx="148" cy="60" r="1.3" />
+            </g>
+            {/* Left ear — simple bump attached to the outline */}
+            <path d="M 27 118 Q 15 133 28 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
             {/* Right ear */}
+            <path d="M 173 118 Q 185 133 172 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            {/* Left eye — clean almond, single pupil */}
             <path
-              d="M 160 122 C 168 116 172 127 167 139 C 164 147 159 149 158 143"
-              stroke="rgba(255,255,255,0.14)"
-              strokeWidth="0.7"
-            />
-            {/* Left eye — almond, positive canthal tilt */}
-            <path
-              d="M 58 125 Q 70 116 87 128 Q 71 135 58 125 Z"
-              stroke="rgba(255,255,255,0.32)"
-              strokeWidth="0.9"
+              d="M 62 124 Q 76 114 90 128 Q 76 137 62 124 Z"
+              stroke="rgba(255,255,255,0.34)"
+              strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
             {/* Right eye */}
             <path
-              d="M 142 125 Q 130 116 113 128 Q 129 135 142 125 Z"
-              stroke="rgba(255,255,255,0.32)"
-              strokeWidth="0.9"
+              d="M 138 124 Q 124 114 110 128 Q 124 137 138 124 Z"
+              stroke="rgba(255,255,255,0.34)"
+              strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
-            {/* Irises + pupils */}
-            <circle cx="72" cy="126" r="4.5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
-            <circle cx="128" cy="126" r="4.5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
-            <circle cx="72" cy="126" r="2.2" fill="rgba(255,255,255,0.28)" />
-            <circle cx="128" cy="126" r="2.2" fill="rgba(255,255,255,0.28)" />
-            {/* Brows — thick, tail slightly higher than head */}
-            <path d="M 89 114 C 78 109 66 108 56 111" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
-            <path d="M 111 114 C 122 109 134 108 144 111" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
+            <circle cx="76" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
+            <circle cx="124" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
+            {/* Brows */}
+            <path d="M 91 111 C 80 106 68 105 58 108" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
+            <path d="M 109 111 C 120 106 132 105 142 108" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
             {/* Nose — bridge, tip, nostril hints */}
             <path
-              d="M 97 132 C 96 146 92 158 90 166 C 89 171 93 174 100 174 C 107 174 111 171 110 166 C 108 158 104 146 103 132"
-              stroke="rgba(255,255,255,0.12)"
-              strokeWidth="0.7"
+              d="M 97 133 C 96 147 92 159 90 167 C 89 172 93 175 100 175 C 107 175 111 172 110 167 C 108 159 104 147 103 133"
+              stroke="rgba(255,255,255,0.14)"
+              strokeWidth="0.8"
             />
-            <path d="M 90 166 Q 85 168 87 171" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
-            <path d="M 110 166 Q 115 168 113 171" stroke="rgba(255,255,255,0.12)" strokeWidth="0.7" />
+            <path d="M 90 167 Q 85 169 87 172" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
+            <path d="M 110 167 Q 115 169 113 172" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
             {/* Lips — Cupid's bow + fuller lower lip */}
-            <path d="M 83 196 C 90 190 96 189 100 191 C 104 189 110 190 117 196" stroke="rgba(255,255,255,0.26)" strokeWidth="0.9" />
-            <path d="M 83 196 Q 100 208 117 196" stroke="rgba(255,255,255,0.26)" strokeWidth="0.9" />
+            <path d="M 82 197 C 89 191 96 190 100 192 C 104 190 111 191 118 197" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
+            <path d="M 82 197 Q 100 210 118 197" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
             {/* Cheekbone hints */}
-            <path d="M 45 140 C 50 152 56 159 62 162" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
-            <path d="M 155 140 C 150 152 144 159 138 162" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
+            <path d="M 42 142 C 47 154 54 161 61 165" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
+            <path d="M 158 142 C 153 154 146 161 139 165" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
           </g>
 
           {/* ── Interactive zones ─────────────────────── */}

@@ -10,14 +10,14 @@ export default function EmailConfirmedModal({ onClose }: Props) {
       >
         {/* Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center">
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <path d="M6 14l6 6L22 8" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 14l6 6L22 8" stroke="#3ed8c3" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
         </div>
 
-        <p className="text-[10px] text-emerald-400/60 uppercase tracking-widest mb-3">Email confirmed</p>
+        <p className="text-[10px] text-accent/60 uppercase tracking-widest mb-3">Email confirmed</p>
         <h2 className="text-white text-xl font-bold mb-3 leading-tight">You're in.</h2>
         <p className="text-white/40 text-sm leading-relaxed mb-8">
           Your account is active. Build your protocol, stack your compounds, and get vetted sources — all in one place.

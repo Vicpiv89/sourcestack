@@ -19,11 +19,11 @@ const SUGGESTIONS = [
 ];
 
 const CAT_COLORS: Record<string, string> = {
-  "Hair Loss":           "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  "Skincare":            "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Supplements":         "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  "Peptides":            "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  "Research Compounds":  "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  "Hair Loss":           "bg-[#6fae7c]/10 text-[#8fc099] border-[#6fae7c]/25",
+  "Skincare":            "bg-[#6b93c9]/10 text-[#8fadd6] border-[#6b93c9]/25",
+  "Supplements":         "bg-[#a084d1]/10 text-[#b7a2dd] border-[#a084d1]/25",
+  "Peptides":            "bg-[#c96b8f]/10 text-[#d68fac] border-[#c96b8f]/25",
+  "Research Compounds":  "bg-[#c9a227]/10 text-[#d6bb5c] border-[#c9a227]/25",
   "Mechanical":          "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
@@ -122,7 +122,7 @@ function TreatmentCard({ t }: { t: Treatment }) {
       <div className="flex items-start justify-between gap-3 mb-2">
         <Link
           to={`/treatments/${t.slug}`}
-          className="text-sm font-semibold text-white hover:text-emerald-400 transition-colors leading-snug"
+          className="text-sm font-semibold text-white hover:text-accent transition-colors leading-snug"
         >
           {t.name}
         </Link>
@@ -135,7 +135,7 @@ function TreatmentCard({ t }: { t: Treatment }) {
         <ul className="space-y-1.5 mb-3">
           {t.protocol.slice(0, 2).map((step, i) => (
             <li key={i} className="flex gap-2 text-xs text-white/60 leading-snug">
-              <span className="text-emerald-500/60 shrink-0 font-mono mt-px">{i + 1}.</span>
+              <span className="text-accent/60 shrink-0 font-mono mt-px">{i + 1}.</span>
               <span>{step}</span>
             </li>
           ))}
@@ -146,7 +146,7 @@ function TreatmentCard({ t }: { t: Treatment }) {
       )}
       <Link
         to={`/treatments/${t.slug}`}
-        className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+        className="text-[11px] font-semibold text-accent hover:text-accent transition-colors"
       >
         Full protocol + vendors →
       </Link>
@@ -157,8 +157,8 @@ function TreatmentCard({ t }: { t: Treatment }) {
 function AIBubble({ msg, onSuggest }: { msg: AIMsg; onSuggest?: (s: string) => void }) {
   return (
     <div className="flex gap-3 max-w-3xl">
-      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-        <span className="text-[10px] font-bold text-emerald-400">SS</span>
+      <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 mt-0.5">
+        <span className="text-[10px] font-bold text-accent">SS</span>
       </div>
       <div className="flex-1 space-y-3">
         <p className="text-sm text-white/80 leading-relaxed">{msg.intro}</p>
@@ -205,8 +205,8 @@ function UserBubble({ msg }: { msg: UserMsg }) {
 function TypingIndicator() {
   return (
     <div className="flex gap-3">
-      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-        <span className="text-[10px] font-bold text-emerald-400">SS</span>
+      <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+        <span className="text-[10px] font-bold text-accent">SS</span>
       </div>
       <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 flex gap-1.5 items-center">
         {[0, 1, 2].map((i) => (
@@ -266,7 +266,7 @@ export default function ProtocolAI() {
         {/* Header */}
         <div className="border-b border-white/[0.07] px-4 sm:px-6 py-3 flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             <span className="text-sm font-semibold text-white">Protocol AI</span>
           </div>
           <span className="text-xs text-white/25">Powered by the SourceStack database · Not medical advice</span>
@@ -298,7 +298,7 @@ export default function ProtocolAI() {
               ))}
             </div>
           )}
-          <div className="flex gap-3 items-center bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-emerald-500/30 transition-colors">
+          <div className="flex gap-3 items-center bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-accent/30 transition-colors">
             <input
               ref={inputRef}
               type="text"
@@ -311,7 +311,7 @@ export default function ProtocolAI() {
             <button
               onClick={() => send()}
               disabled={!input.trim() || typing}
-              className="shrink-0 w-8 h-8 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+              className="shrink-0 w-8 h-8 rounded-lg bg-accent hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
