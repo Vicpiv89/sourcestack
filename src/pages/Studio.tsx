@@ -64,7 +64,7 @@ function faceFocus(result: ScanResult, imgW: number, imgH: number): { x: number;
 function remapForContent(raw: number): number {
   const center = 5.5; // empirical midpoint of raw scores on real photos
   const mapped = center + 0.5 + (raw - center) * 2.15;
-  return Math.max(3.5, Math.min(9.0, mapped));
+  return Math.max(0, Math.min(9.0, mapped));
 }
 
 // bright red (2.0) → dark green (9.0) heat color for on-screen score displays
