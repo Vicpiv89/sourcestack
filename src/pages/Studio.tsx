@@ -13,7 +13,7 @@ const POOL_KEY = "studio_alltime_leaderboard";
 // reveal pacing — shared by the on-screen sequencer and the auto-stop timer for recording
 const HOOK_MS = 1600;
 const SCAN_HOLD_MS = 900; // full-screen "scanning" moment before zooming out to the read-out
-const FACE_MS = 2700;
+const FACE_MS = 2900; // includes SCAN_HOLD_MS + reveal + a hold after the rating finishes counting up
 const BOARD_HOLD_MS = 3000; // how long the leaderboard holds before a recording auto-stops
 const ZOOM_MS = 700; // duration of the full-screen -> small-band zoom, once scanning ends
 const SCORE_DELAY_MS = 150; // pause after zoom before the score starts counting up
@@ -28,8 +28,9 @@ function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 const METRIC_CATEGORIES: { label: string; ids: string[] }[] = [
   { label: "Eyes & Brows", ids: ["canthal-tilt", "eye-spacing", "eye-aspect", "brow-tilt", "brow-density"] },
   { label: "Nose & Mouth", ids: ["chin-philtrum", "lip-ratio", "lip-fullness", "mouth-nose", "nose-width"] },
-  { label: "Face & Ratios", ids: ["fwhr", "midface", "thirds", "jaw-taper", "symmetry", "face-index"] },
+  { label: "Face & Ratios", ids: ["fwhr", "midface", "thirds", "jaw-taper", "face-index"] },
   { label: "Skin Clarity", ids: ["skin-clarity"] },
+  { label: "Symmetry", ids: ["symmetry"] },
 ];
 
 function categoryScores(result: ScanResult): { label: string; score: number }[] {
@@ -283,7 +284,7 @@ function renderVideoFrame(
   const boardT = afterHook - faceTotal;
   ctx.textAlign = "left";
   ctx.fillStyle = "#fff";
-  ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
+  ctx.font = "800 41px -apple-system, Helvetica, Arial, sans-serif";
   ctx.fillText("Leaderboard", REC_W * 0.09, REC_H * 0.13);
   // no bottom CTA text anymore — rows use that freed space and run further down the screen
   const rowH = 132, top = REC_H * 0.185;
@@ -297,18 +298,18 @@ function renderVideoFrame(
     roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
     ctx.fill();
     ctx.fillStyle = "#6ee7b7";
-    ctx.font = "800 34px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 31px -apple-system, Helvetica, Arial, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
     if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 20, 84, 84, 14, it.focusX ?? 0.5, it.focusY ?? 0.5);
     ctx.fillStyle = "#fff";
-    ctx.font = "600 35px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "600 32px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.name, REC_W * 0.26, baseline);
     // ratings sit inset from the right edge (middle-right), clear of TikTok's right-side icon column
     ctx.textAlign = "right";
     ctx.fillStyle = colorForScore(it.score);
-    ctx.font = "800 40px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 36px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.score.toFixed(1), REC_W * 0.79, baseline);
     ctx.globalAlpha = 1;
   });
@@ -878,7 +879,7 @@ export default function Studio() {
 
             {phase === "board" && (
               <div style={{ position: "absolute", inset: 0, padding: "34px 20px", display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 24, fontWeight: 800, marginTop: 14, marginBottom: 20 }}>Leaderboard</div>
+                <div style={{ fontSize: 22, fontWeight: 800, marginTop: 14, marginBottom: 20 }}>Leaderboard</div>
                 {/* no bottom CTA text — rows use that freed space and run further down the screen */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
                   {boardRanked.map((it, i) => (
@@ -886,10 +887,10 @@ export default function Studio() {
                       background: i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)",
                       borderRadius: 10, padding: "10px 12%", paddingLeft: 12,
                       animation: `sfade .4s ease both`, animationDelay: `${i * 0.14}s` }}>
-                      <span style={{ width: 22, fontWeight: 800, color: "#6ee7b7", fontSize: 17 }}>{i + 1}</span>
+                      <span style={{ width: 22, fontWeight: 800, color: "#6ee7b7", fontSize: 15 }}>{i + 1}</span>
                       <img src={it.thumb} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} />
-                      <span style={{ flex: 1, textAlign: "left", fontSize: 18, fontWeight: 600 }}>{it.name}</span>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
+                      <span style={{ flex: 1, textAlign: "left", fontSize: 16, fontWeight: 600 }}>{it.name}</span>
+                      <span style={{ fontSize: 20, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
