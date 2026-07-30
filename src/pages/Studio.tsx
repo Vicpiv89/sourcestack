@@ -499,6 +499,16 @@ export default function Studio() {
     setItems((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
     setPool((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
   };
+  const moveItem = (id: string, dir: -1 | 1) => {
+    setItems((prev) => {
+      const i = prev.findIndex((p) => p.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  };
   const remove = (id: string) => {
     setItems((prev) => prev.filter((p) => p.id !== id));
     setPool((prev) => prev.filter((p) => p.id !== id));
@@ -714,9 +724,20 @@ export default function Studio() {
                 background: "#17171b", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
           </div>
 
-          {items.map((it) => (
+          {items.length > 1 && (
+            <p style={{ fontSize: 11, color: "#667", marginTop: 4 }}>Use ▲▼ to set play order</p>
+          )}
+          {items.map((it, idx) => (
             <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0",
               borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <button onClick={() => moveItem(it.id, -1)} disabled={idx === 0}
+                  style={{ color: idx === 0 ? "#444" : "#9aa", background: "none", border: "none",
+                    cursor: idx === 0 ? "default" : "pointer", fontSize: 11, lineHeight: 1, padding: 2 }}>▲</button>
+                <button onClick={() => moveItem(it.id, 1)} disabled={idx === items.length - 1}
+                  style={{ color: idx === items.length - 1 ? "#444" : "#9aa", background: "none", border: "none",
+                    cursor: idx === items.length - 1 ? "default" : "pointer", fontSize: 11, lineHeight: 1, padding: 2 }}>▼</button>
+              </div>
               {it.dataUrl
                 ? <img src={it.dataUrl} alt="" style={{ width: 42, height: 42, borderRadius: 8, objectFit: "cover" }} />
                 : <div style={{ width: 42, height: 42, borderRadius: 8, background: "#222" }} />}
