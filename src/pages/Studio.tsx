@@ -215,15 +215,15 @@ function renderVideoFrame(
     ctx.globalAlpha = tagT;
     ctx.fillStyle = "#6ee7b7";
     ctx.font = "700 28px Menlo, Consolas, monospace";
-    ctx.fillText("SOURCESTACK · AI FACE SCAN", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
+    ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
 
     // headline — punchy scale pop (slight overshoot) instead of a plain fade
     const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
     ctx.globalAlpha = fadeIn(tMs, 120, 260);
     ctx.fillStyle = "#fff";
-    ctx.font = "800 64px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 54px -apple-system, Helvetica, Arial, sans-serif";
     const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
-    const lineH = 76;
+    const lineH = 64;
     lines.forEach((line, i) => {
       const ly = REC_H * 0.46 + i * lineH;
       ctx.save();
@@ -855,10 +855,10 @@ export default function Studio() {
                   position: "relative", fontSize: 12, letterSpacing: 4, color: "#6ee7b7", marginBottom: 18,
                   fontFamily: "monospace", animation: "tagIn 220ms ease-out both", animationDelay: "0.04s",
                 }}>
-                  SOURCESTACK · AI FACE SCAN
+                  sourcestack.app
                 </div>
                 <div style={{
-                  position: "relative", fontSize: 32, fontWeight: 800, lineHeight: 1.2, color: "#fff",
+                  position: "relative", fontSize: 27, fontWeight: 800, lineHeight: 1.2, color: "#fff",
                   width: "70%", margin: "0 auto", animation: "headPop 460ms ease-out both", animationDelay: "0.12s",
                 }}>{hook}</div>
                 <div style={{
