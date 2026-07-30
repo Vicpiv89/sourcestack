@@ -399,12 +399,13 @@ export default function FaceScan() {
         {/* ── Upload / idle ── */}
         {(state === "idle" || state === "error") && (
           <div className="max-w-xl mx-auto">
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-2">Face Scan</p>
-            <h1 className="text-3xl font-bold text-white mb-2">Photo → protocol.</h1>
+            <p className="text-white/30 text-xs uppercase tracking-widest mb-2">SourceStack</p>
+            <h1 className="text-3xl font-bold text-white mb-1">Free Face Scan</h1>
+            <p className="text-accent text-sm font-medium mb-3">Photo → protocol.</p>
             <p className="text-white/40 text-sm mb-8 leading-relaxed">
-              One front-facing photo. We measure 17 facial metrics — canthal tilt, fWHR,
+              Upload one front-facing photo and we measure 17 facial metrics — canthal tilt, fWHR,
               jaw taper, lip ratios, eye shape, symmetry, skin clarity, brow density —
-              and show you exactly what needs improving, with the fix for each.
+              then show you exactly what needs improving, with the fix for each.
             </p>
 
             <div

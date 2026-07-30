@@ -39,8 +39,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['thin-brows'],
     color: '#c084fc',
     shapes: [
-      { type: 'ellipse', cx: 76, cy: 112, rx: 17, ry: 7 },
-      { type: 'ellipse', cx: 124, cy: 112, rx: 17, ry: 7 },
+      { type: 'ellipse', cx: 76, cy: 108, rx: 17, ry: 5 },
+      { type: 'ellipse', cx: 124, cy: 108, rx: 17, ry: 5 },
     ],
   },
   {
@@ -50,8 +50,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['under-eye-hollows', 'dark-circles', 'eyelash-growth'],
     color: '#818cf8',
     shapes: [
-      { type: 'ellipse', cx: 76, cy: 134, rx: 15, ry: 9 },
-      { type: 'ellipse', cx: 124, cy: 134, rx: 15, ry: 9 },
+      { type: 'ellipse', cx: 76, cy: 139, rx: 14, ry: 7 },
+      { type: 'ellipse', cx: 124, cy: 139, rx: 14, ry: 7 },
     ],
   },
   {
@@ -219,24 +219,24 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
             <path d="M 28 136 C 24 126 20 134 24 144 C 26 150 28 147" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
             {/* Right ear */}
             <path d="M 172 136 C 176 126 180 134 176 144 C 174 150 172 147" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
-            {/* Left eye — fox eye, outer corner well above inner */}
+            {/* Left eye — level almond, no tilt */}
             <path
-              d="M 62 121 Q 72 113 90 130 Q 76 136 62 121 Z"
+              d="M 60 124 Q 76 116 92 124 Q 76 132 60 124 Z"
               stroke="rgba(255,255,255,0.34)"
               strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
             {/* Right eye */}
             <path
-              d="M 138 121 Q 128 113 110 130 Q 124 136 138 121 Z"
+              d="M 140 124 Q 124 116 108 124 Q 124 132 140 124 Z"
               stroke="rgba(255,255,255,0.34)"
               strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
-            <circle cx="75" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
-            <circle cx="125" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
-            <circle ref={pupilLRef} cx="75" cy="124" r="2.6" fill="rgba(255,255,255,0.4)" />
-            <circle ref={pupilRRef} cx="125" cy="124" r="2.6" fill="rgba(255,255,255,0.4)" />
+            <circle cx="76" cy="124" r="4.5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+            <circle cx="124" cy="124" r="4.5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+            <circle ref={pupilLRef} cx="76" cy="124" r="2.4" fill="rgba(255,255,255,0.4)" />
+            <circle ref={pupilRRef} cx="124" cy="124" r="2.4" fill="rgba(255,255,255,0.4)" />
             {/* Brows */}
             <path d="M 59 110 C 68 106 78 105 91 109" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
             <path d="M 109 109 C 122 105 132 106 141 110" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
