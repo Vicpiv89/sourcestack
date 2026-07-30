@@ -22,7 +22,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'hair loss · dandruff · density',
     issueSlugs: ['hair-loss', 'dandruff'],
     color: '#10b981',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 46, rx: 44, ry: 24 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 50, rx: 50, ry: 22 }],
   },
   {
     id: 'forehead',
@@ -30,7 +30,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'clarity · texture · melasma',
     issueSlugs: ['skin-clarity', 'skin-texture', 'melasma'],
     color: '#60a5fa',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 88, rx: 42, ry: 19 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 90, rx: 38, ry: 17 }],
   },
   {
     id: 'brows',
@@ -39,8 +39,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['thin-brows'],
     color: '#c084fc',
     shapes: [
-      { type: 'ellipse', cx: 73, cy: 112, rx: 17, ry: 6 },
-      { type: 'ellipse', cx: 127, cy: 112, rx: 17, ry: 6 },
+      { type: 'ellipse', cx: 76, cy: 112, rx: 17, ry: 7 },
+      { type: 'ellipse', cx: 124, cy: 112, rx: 17, ry: 7 },
     ],
   },
   {
@@ -50,8 +50,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['under-eye-hollows', 'dark-circles', 'eyelash-growth'],
     color: '#818cf8',
     shapes: [
-      { type: 'ellipse', cx: 73, cy: 139, rx: 15, ry: 9 },
-      { type: 'ellipse', cx: 127, cy: 139, rx: 15, ry: 9 },
+      { type: 'ellipse', cx: 76, cy: 134, rx: 15, ry: 9 },
+      { type: 'ellipse', cx: 124, cy: 134, rx: 15, ry: 9 },
     ],
   },
   {
@@ -61,8 +61,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['skin-clarity', 'oily-skin', 'enlarged-pores', 'facial-puffiness', 'acne-scarring'],
     color: '#fb923c',
     shapes: [
-      { type: 'ellipse', cx: 59, cy: 158, rx: 15, ry: 22 },
-      { type: 'ellipse', cx: 141, cy: 158, rx: 15, ry: 22 },
+      { type: 'ellipse', cx: 52, cy: 162, rx: 20, ry: 24 },
+      { type: 'ellipse', cx: 148, cy: 162, rx: 20, ry: 24 },
     ],
   },
   {
@@ -71,7 +71,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'enlarged pores · excess oil',
     issueSlugs: ['enlarged-pores', 'oily-skin'],
     color: '#94a3b8',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 155, rx: 12, ry: 19 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 153, rx: 11, ry: 17 }],
   },
   {
     id: 'beard',
@@ -80,8 +80,8 @@ const ZONES: ZoneDef[] = [
     issueSlugs: ['beard-growth', 'razor-bumps'],
     color: '#a3e635',
     shapes: [
-      { type: 'ellipse', cx: 79, cy: 209, rx: 15, ry: 12 },
-      { type: 'ellipse', cx: 121, cy: 209, rx: 15, ry: 12 },
+      { type: 'ellipse', cx: 73, cy: 216, rx: 20, ry: 14 },
+      { type: 'ellipse', cx: 127, cy: 216, rx: 20, ry: 14 },
     ],
   },
   {
@@ -90,28 +90,16 @@ const ZONES: ZoneDef[] = [
     sublabel: 'definition · hormonal acne',
     issueSlugs: ['jawline-definition', 'androgenic-acne'],
     color: '#fbbf24',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 227, rx: 20, ry: 13 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 214, rx: 28, ry: 11 }],
   },
 ];
 
-// Tapered to canonical "ideal" male proportions rather than a plain ellipse:
-// wide zygomatic (cheekbone) peak around eye level, then a defined gonial
-// angle tapering into a forward chin — bigonial:bizygomatic ~0.7, roughly
-// matching the fWHR / V-taper ratios cited in looksmaxxing canon.
+// True ellipse (center 100,134 · rx 72 · ry 92) — matches the outline already
+// shipped in TreatmentFaceAnim. Hand-tapered "ideal jaw" bezier attempts kept
+// reading as broken/lanky; a plain mathematical oval reads clean at small size.
 const HEAD_PATH =
-  'M 100 16 ' +
-  'C 140 18 172 40 176 58 ' +
-  'C 180 80 184 105 184 130 ' +
-  'C 182 150 178 162 174 168 ' +
-  'C 168 182 162 190 158 196 ' +
-  'L 132 222 ' +
-  'Q 112 244 100 248 ' +
-  'Q 88 244 68 222 ' +
-  'L 42 196 ' +
-  'C 38 190 32 182 26 168 ' +
-  'C 22 162 18 150 16 130 ' +
-  'C 16 105 20 80 24 58 ' +
-  'C 28 40 60 18 100 16 Z';
+  'M 100 42 C 139.8 42 172 83.2 172 134 C 172 184.8 139.8 226 100 226 ' +
+  'C 60.2 226 28 184.8 28 134 C 28 83.2 60.2 42 100 42 Z';
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -214,56 +202,55 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
           <g fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
             {/* Outline */}
             <path d={HEAD_PATH} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-            {/* Hairline — widened to match the head */}
+            {/* Hairline */}
             <path
-              d="M 34 84 C 48 56 74 47 100 47 C 126 47 152 56 166 84"
+              d="M 50 68 C 64 52 80 44 100 42 C 120 44 136 52 150 68"
               stroke="rgba(255,255,255,0.12)"
               strokeWidth="0.7"
             />
             {/* Hair texture — small dots scattered across the crown */}
             <g fill="rgba(255,255,255,0.22)" stroke="none">
-              <circle cx="76" cy="27" r="1.4" /><circle cx="88" cy="24" r="1.4" /><circle cx="100" cy="23" r="1.4" /><circle cx="112" cy="24" r="1.4" /><circle cx="124" cy="27" r="1.4" />
-              <circle cx="66" cy="35" r="1.4" /><circle cx="79" cy="31" r="1.4" /><circle cx="93" cy="29" r="1.4" /><circle cx="107" cy="29" r="1.4" /><circle cx="121" cy="31" r="1.4" /><circle cx="134" cy="35" r="1.4" />
-              <circle cx="58" cy="47" r="1.4" /><circle cx="70" cy="41" r="1.4" /><circle cx="86" cy="38" r="1.4" /><circle cx="100" cy="37" r="1.4" /><circle cx="114" cy="38" r="1.4" /><circle cx="130" cy="41" r="1.4" /><circle cx="142" cy="47" r="1.4" />
-              <circle cx="52" cy="60" r="1.3" /><circle cx="62" cy="55" r="1.3" /><circle cx="138" cy="55" r="1.3" /><circle cx="148" cy="60" r="1.3" />
+              <circle cx="79" cy="51" r="1.4" /><circle cx="90" cy="48" r="1.4" /><circle cx="100" cy="48" r="1.4" /><circle cx="110" cy="48" r="1.4" /><circle cx="121" cy="51" r="1.4" />
+              <circle cx="71" cy="57" r="1.4" /><circle cx="82" cy="54" r="1.4" /><circle cx="94" cy="52" r="1.4" /><circle cx="106" cy="52" r="1.4" /><circle cx="118" cy="54" r="1.4" /><circle cx="129" cy="57" r="1.4" />
+              <circle cx="64" cy="67" r="1.4" /><circle cx="74" cy="62" r="1.4" /><circle cx="88" cy="59" r="1.4" /><circle cx="100" cy="59" r="1.4" /><circle cx="112" cy="59" r="1.4" /><circle cx="126" cy="62" r="1.4" /><circle cx="136" cy="67" r="1.4" />
+              <circle cx="59" cy="77" r="1.3" /><circle cx="67" cy="73" r="1.3" /><circle cx="133" cy="73" r="1.3" /><circle cx="141" cy="77" r="1.3" />
             </g>
-            {/* Left ear — simple bump attached to the outline */}
-            <path d="M 16 118 Q 4 133 17 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            {/* Left ear */}
+            <path d="M 28 136 C 24 126 20 134 24 144 C 26 150 28 147" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
             {/* Right ear */}
-            <path d="M 184 118 Q 196 133 183 148" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
-            {/* Left eye — clean almond, single pupil */}
+            <path d="M 172 136 C 176 126 180 134 176 144 C 174 150 172 147" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            {/* Left eye — fox eye, outer corner well above inner */}
             <path
-              d="M 62 124 Q 76 114 90 128 Q 76 137 62 124 Z"
+              d="M 62 121 Q 72 113 90 130 Q 76 136 62 121 Z"
               stroke="rgba(255,255,255,0.34)"
               strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
             {/* Right eye */}
             <path
-              d="M 138 124 Q 124 114 110 128 Q 124 137 138 124 Z"
+              d="M 138 121 Q 128 113 110 130 Q 124 136 138 121 Z"
               stroke="rgba(255,255,255,0.34)"
               strokeWidth="1"
               fill="rgba(255,255,255,0.03)"
             />
-            <circle ref={pupilLRef} cx="76" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
-            <circle ref={pupilRRef} cx="124" cy="128" r="2.6" fill="rgba(255,255,255,0.4)" />
+            <circle cx="75" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+            <circle cx="125" cy="124" r="5" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" fill="none" />
+            <circle ref={pupilLRef} cx="75" cy="124" r="2.6" fill="rgba(255,255,255,0.4)" />
+            <circle ref={pupilRRef} cx="125" cy="124" r="2.6" fill="rgba(255,255,255,0.4)" />
             {/* Brows */}
-            <path d="M 91 111 C 80 106 68 105 58 108" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
-            <path d="M 109 111 C 120 106 132 105 142 108" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
+            <path d="M 59 110 C 68 106 78 105 91 109" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
+            <path d="M 109 109 C 122 105 132 106 141 110" stroke="rgba(255,255,255,0.38)" strokeWidth="2" />
             {/* Nose — bridge, tip, nostril hints */}
             <path
-              d="M 97 133 C 96 147 92 159 90 167 C 89 172 93 175 100 175 C 107 175 111 172 110 167 C 108 159 104 147 103 133"
+              d="M 98 136 C 96 150 93 162 93 167 C 93 172 96 174 100 174 C 104 174 107 172 107 167 C 107 162 104 150 102 136"
               stroke="rgba(255,255,255,0.14)"
               strokeWidth="0.8"
             />
-            <path d="M 90 167 Q 85 169 87 172" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
-            <path d="M 110 167 Q 115 169 113 172" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
+            <path d="M 93 167 Q 88 169 90 172" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
+            <path d="M 107 167 Q 112 169 110 172" stroke="rgba(255,255,255,0.14)" strokeWidth="0.7" />
             {/* Lips — Cupid's bow + fuller lower lip */}
-            <path d="M 82 197 C 89 191 96 190 100 192 C 104 190 111 191 118 197" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
-            <path d="M 82 197 Q 100 210 118 197" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
-            {/* Cheekbone hints */}
-            <path d="M 42 142 C 47 154 54 161 61 165" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
-            <path d="M 158 142 C 153 154 146 161 139 165" stroke="rgba(255,255,255,0.06)" strokeWidth="0.7" />
+            <path d="M 84 190 C 90 184 95 182 100 184 C 105 182 110 184 116 190" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
+            <path d="M 84 190 Q 100 201 116 190" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
           </g>
 
           {/* ── Interactive zones ─────────────────────── */}
