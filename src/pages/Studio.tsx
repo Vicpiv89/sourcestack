@@ -11,11 +11,16 @@ const MAX_DIM = 1100;
 const POOL_KEY = "studio_alltime_leaderboard";
 
 // reveal pacing — shared by the on-screen sequencer and the auto-stop timer for recording
-const HOOK_MS = 2600;
-const SCAN_HOLD_MS = 1300; // full-screen "scanning" moment before zooming out to the read-out
-const FACE_MS = 5800;
-const BOARD_HOLD_MS = 5000; // how long the leaderboard holds before a recording auto-stops
-const ZOOM_MS = 950; // duration of the full-screen -> small-band zoom, once scanning ends
+const HOOK_MS = 1600;
+const SCAN_HOLD_MS = 900; // full-screen "scanning" moment before zooming out to the read-out
+const FACE_MS = 2700;
+const BOARD_HOLD_MS = 3000; // how long the leaderboard holds before a recording auto-stops
+const ZOOM_MS = 700; // duration of the full-screen -> small-band zoom, once scanning ends
+const SCORE_DELAY_MS = 150; // pause after zoom before the score starts counting up
+const SCORE_MS = 900; // score count-up duration
+const CAT_DELAY_MS = 150; // pause before the first category row fades in
+const CAT_STAGGER_MS = 50; // gap between each category row's fade-in
+const CAT_FADE_MS = 260; // each category row's own fade-in duration
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
@@ -243,7 +248,7 @@ function renderVideoFrame(
       ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
       ctx.fillText(f.name, REC_W / 2, faceBottom + 80);
 
-      const scoreT = Math.max(0, Math.min(1, (revealT - 250) / 1450));
+      const scoreT = Math.max(0, Math.min(1, (revealT - SCORE_DELAY_MS) / SCORE_MS));
       const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 120);
       ctx.fillStyle = colorForScore(liveScore);
@@ -259,7 +264,7 @@ function renderVideoFrame(
       const catTop = faceBottom + 260;
       const catRowH = 44;
       cats.forEach((c, ci) => {
-        ctx.globalAlpha = faceAlpha * fadeIn(revealT, 240 + ci * 70, 350);
+        ctx.globalAlpha = faceAlpha * fadeIn(revealT, CAT_DELAY_MS + ci * CAT_STAGGER_MS, CAT_FADE_MS);
         const cy = catTop + ci * catRowH;
         ctx.textAlign = "left";
         ctx.fillStyle = "#cde";
@@ -390,7 +395,7 @@ const cleanName = (filename: string) =>
 // count-up hook for the score reveal
 function useCountUp() {
   const [val, setVal] = useState(0);
-  const run = useCallback((target: number, ms = 1450) => {
+  const run = useCallback((target: number, ms = SCORE_MS) => {
     const start = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / ms);
@@ -523,7 +528,7 @@ export default function Studio() {
       faceStartRef.current = performance.now();
       at(SCAN_HOLD_MS, () => {
         setRevealed(true);
-        timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), 250));
+        timers.current.push(window.setTimeout(() => runCount(remapForContent(done[i].result!.overall)), SCORE_DELAY_MS));
       });
       at(FACE_MS, () => stepFace(i + 1));
     }
@@ -806,7 +811,7 @@ export default function Studio() {
                       position: "absolute", left: 0, right: 0, height: 2,
                       background: "linear-gradient(90deg, transparent, rgba(110,231,183,0.95), transparent)",
                       boxShadow: "0 0 14px 2px rgba(110,231,183,0.55)",
-                      animation: "scanSweep 950ms linear",
+                      animation: `scanSweep ${ZOOM_MS}ms linear`,
                     }} />
                     <div style={{
                       position: "absolute", top: 22, left: 0, right: 0, textAlign: "center",
@@ -824,7 +829,7 @@ export default function Studio() {
                     <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", animation: "sfade .5s ease both" }}>{cur.name}</div>
                     <div style={{
                       display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0",
-                      animation: "sfade .5s ease both", animationDelay: "0.12s",
+                      animation: "sfade .5s ease both", animationDelay: `${SCORE_DELAY_MS / 1000}s`,
                     }}>
                       <span style={{ fontSize: 64, fontWeight: 900, color: colorForScore(score), lineHeight: 1 }}>{score.toFixed(1)}</span>
                       <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
@@ -836,7 +841,7 @@ export default function Studio() {
                           {cats.map((c, ci) => (
                             <div key={c.label} style={{
                               display: "flex", justifyContent: "space-between", padding: "0 12%", fontSize: 13,
-                              animation: "sfade .4s ease both", animationDelay: `${0.24 + ci * 0.07}s`,
+                              animation: "sfade .4s ease both", animationDelay: `${(CAT_DELAY_MS + ci * CAT_STAGGER_MS) / 1000}s`,
                             }}>
                               <span style={{ color: "#cde", fontWeight: 600 }}>{c.label}</span>
                               <span style={{ color: colorForScore(c.score), fontWeight: 800 }}>{c.score.toFixed(1)}</span>
@@ -859,7 +864,7 @@ export default function Studio() {
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12,
                       background: i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)",
                       borderRadius: 10, padding: "10px 12%", paddingLeft: 12,
-                      animation: `sfade .4s ease both`, animationDelay: `${i * 0.22}s` }}>
+                      animation: `sfade .4s ease both`, animationDelay: `${i * 0.14}s` }}>
                       <span style={{ width: 22, fontWeight: 800, color: "#6ee7b7", fontSize: 17 }}>{i + 1}</span>
                       <img src={it.thumb} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} />
                       <span style={{ flex: 1, textAlign: "left", fontSize: 18, fontWeight: 600 }}>{it.name}</span>
