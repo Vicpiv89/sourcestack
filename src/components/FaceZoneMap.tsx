@@ -182,7 +182,7 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
           />
         )}
         <div ref={tiltRef} style={{ transition: 'transform 0.4s cubic-bezier(0.22,1,0.36,1)', transformStyle: 'preserve-3d' }}>
-        <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block' }}>
+        <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block', transform: 'scaleX(0.85)' }}>
           <defs>
             <filter id="face-glow" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="5" result="blur" />
