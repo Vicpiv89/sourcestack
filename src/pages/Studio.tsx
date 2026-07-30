@@ -11,7 +11,7 @@ const MAX_DIM = 1100;
 const POOL_KEY = "studio_alltime_leaderboard";
 
 // reveal pacing — shared by the on-screen sequencer and the auto-stop timer for recording
-const HOOK_MS = 1600;
+const HOOK_MS = 1800;
 const SCAN_HOLD_MS = 900; // full-screen "scanning" moment before zooming out to the read-out
 const FACE_MS = 2900; // includes SCAN_HOLD_MS + reveal + a hold after the rating finishes counting up
 const BOARD_HOLD_MS = 3000; // how long the leaderboard holds before a recording auto-stops
@@ -55,7 +55,12 @@ function categoryScores(result: ScanResult): { label: string; score: number }[] 
 function faceFocus(result: ScanResult, imgW: number, imgH: number): { x: number; y: number } {
   const o = result.overlay;
   const x = (o.rCheek.x + o.lCheek.x) / 2 / imgW;
-  const y = (o.foreheadTop.y + o.chin.y) / 2 / imgH;
+  // the crop band after zoom-out is short relative to most photos, so centering exactly
+  // between the forehead landmark and chin — which is what a plain midpoint does — leaves
+  // no room for hair above the hairline and clips the top of the head. Bias the center
+  // upward by ~18% of face height for headroom.
+  const faceHeight = o.chin.y - o.foreheadTop.y;
+  const y = ((o.foreheadTop.y + o.chin.y) / 2 - faceHeight * 0.18) / imgH;
   return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
 }
 
@@ -78,6 +83,15 @@ function colorForScore(v: number): string {
 // ── canvas renderer for downloadable recording — mirrors the on-screen DOM/CSS reveal ──
 const REC_W = 1080;
 const REC_H = 1920;
+
+// video palette — white background, so accent text needs a dark-enough green to actually
+// read (the site's bright #6ee7b7/#3ED8C3 teal is ~1.8:1 contrast on white, well under
+// legible). This is a darker shade of the same brand hue, ~6.5:1 contrast on white.
+// The lighter brand teal is kept for purely decorative glows/washes drawn over photos or
+// as soft tints, where legibility doesn't apply.
+const VIDEO_INK = "#111";
+const VIDEO_GREEN = "#0a6b56";
+const VIDEO_GLOW_RGB = "62,216,195";
 
 function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -130,53 +144,11 @@ function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
 // a face as needed for offline rendering — plain data, no live scan/UI state attached
 type RenderFace = { id: string; name: string; result: ScanResult; contentScore: number };
 
-// subtle soccer-pitch backdrop — dark green base + faint line art, sits behind everything
-function drawPitchBackground(ctx: CanvasRenderingContext2D) {
-  const grad = ctx.createRadialGradient(REC_W / 2, REC_H * 0.42, 80, REC_W / 2, REC_H * 0.42, REC_H * 0.75);
-  grad.addColorStop(0, "#0a1f12");
-  grad.addColorStop(1, "#020806");
-  ctx.fillStyle = grad;
+// plain white backdrop, sits behind everything
+function drawBackground(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, REC_W, REC_H);
-
-  ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.07)";
-  ctx.lineWidth = 3;
-  const m = 60;
-  ctx.strokeRect(m, m, REC_W - m * 2, REC_H - m * 2);
-
-  const midY = REC_H / 2;
-  ctx.beginPath();
-  ctx.moveTo(m, midY);
-  ctx.lineTo(REC_W - m, midY);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(REC_W / 2, midY, 150, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = "rgba(255,255,255,0.09)";
-  ctx.beginPath();
-  ctx.arc(REC_W / 2, midY, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  const r = 46;
-  ctx.beginPath(); ctx.arc(m, m, r, 0, Math.PI / 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(REC_W - m, m, r, Math.PI / 2, Math.PI); ctx.stroke();
-  ctx.beginPath(); ctx.arc(m, REC_H - m, r, -Math.PI / 2, 0); ctx.stroke();
-  ctx.beginPath(); ctx.arc(REC_W - m, REC_H - m, r, Math.PI, Math.PI * 1.5); ctx.stroke();
-  ctx.restore();
 }
-
-// same pitch line-art as an SVG data URI, for the on-screen DOM preview to match
-const PITCH_SVG_BG = `url("data:image/svg+xml,${encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 1920'>` +
-    `<g stroke='rgba(255,255,255,0.07)' stroke-width='3' fill='none'>` +
-      `<rect x='60' y='60' width='960' height='1800'/>` +
-      `<line x1='60' y1='960' x2='1020' y2='960'/>` +
-      `<circle cx='540' cy='960' r='150'/>` +
-    `</g>` +
-    `<circle cx='540' cy='960' r='4' fill='rgba(255,255,255,0.09)'/>` +
-  `</svg>`
-)}"), radial-gradient(120% 70% at 50% 40%, #0a1f12 0%, #020806 70%)`;
 
 // Pure function of elapsed time — draws exactly what the reveal looks like at tMs into the
 // video. No timers, no live state: generateVideo() below calls this once per output frame,
@@ -190,7 +162,7 @@ function renderVideoFrame(
   imgCache: Map<string, HTMLImageElement>,
   thumbCache: Map<string, HTMLImageElement>,
 ) {
-  drawPitchBackground(ctx);
+  drawBackground(ctx);
   const fadeIn = (localT: number, delay = 0, dur = 450) => Math.max(0, Math.min(1, (localT - delay) / dur));
   const faceMarginX = REC_W * 0.06; // faces sit inset from the edges, not edge-to-edge
 
@@ -202,8 +174,8 @@ function renderVideoFrame(
       const flashAlpha = (1 - flashT) * 0.5;
       const flashR = REC_W * (0.25 + flashT * 0.6);
       const grad = ctx.createRadialGradient(REC_W / 2, REC_H * 0.42, 0, REC_W / 2, REC_H * 0.42, flashR);
-      grad.addColorStop(0, `rgba(110,231,183,${flashAlpha})`);
-      grad.addColorStop(1, "rgba(110,231,183,0)");
+      grad.addColorStop(0, `rgba(${VIDEO_GLOW_RGB},${flashAlpha})`);
+      grad.addColorStop(1, `rgba(${VIDEO_GLOW_RGB},0)`);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, REC_W, REC_H);
     }
@@ -213,14 +185,14 @@ function renderVideoFrame(
     // eyebrow tag — fast fade + slight upward settle
     const tagT = fadeIn(tMs, 40, 220);
     ctx.globalAlpha = tagT;
-    ctx.fillStyle = "#6ee7b7";
+    ctx.fillStyle = VIDEO_GREEN;
     ctx.font = "700 28px Menlo, Consolas, monospace";
     ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
 
     // headline — punchy scale pop (slight overshoot) instead of a plain fade
     const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
     ctx.globalAlpha = fadeIn(tMs, 120, 260);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = VIDEO_INK;
     ctx.font = "800 54px -apple-system, Helvetica, Arial, sans-serif";
     const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
     const lineH = 64;
@@ -238,7 +210,7 @@ function renderVideoFrame(
     const barT = fadeIn(tMs, 420, 260);
     const barW = 92 * barT;
     ctx.globalAlpha = barT;
-    ctx.fillStyle = "#6ee7b7";
+    ctx.fillStyle = VIDEO_GREEN;
     const lastLy = REC_H * 0.46 + (lines.length - 1) * lineH;
     ctx.fillRect(REC_W / 2 - barW / 2, lastLy + 12, barW, 4);
     ctx.globalAlpha = 1;
@@ -259,13 +231,13 @@ function renderVideoFrame(
       if (img?.complete) drawContain(ctx, img, faceMarginX, 0, REC_W - faceMarginX * 2, REC_H);
       const sy = -0.04 * REC_H + Math.min(1, localT / SCAN_HOLD_MS) * 1.08 * REC_H;
       const grad = ctx.createLinearGradient(faceMarginX, 0, REC_W - faceMarginX, 0);
-      grad.addColorStop(0, "rgba(110,231,183,0)");
-      grad.addColorStop(0.5, "rgba(110,231,183,0.95)");
-      grad.addColorStop(1, "rgba(110,231,183,0)");
+      grad.addColorStop(0, `rgba(${VIDEO_GLOW_RGB},0)`);
+      grad.addColorStop(0.5, `rgba(${VIDEO_GLOW_RGB},0.95)`);
+      grad.addColorStop(1, `rgba(${VIDEO_GLOW_RGB},0)`);
       ctx.fillStyle = grad;
       ctx.fillRect(faceMarginX, sy, REC_W - faceMarginX * 2, 5);
       ctx.textAlign = "center";
-      ctx.fillStyle = "#6ee7b7";
+      ctx.fillStyle = "#3ED8C3";
       ctx.font = "700 24px Menlo, Consolas, monospace";
       ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
     } else {
@@ -287,7 +259,7 @@ function renderVideoFrame(
       ctx.textAlign = "center";
 
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = VIDEO_INK;
       ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
       ctx.fillText(f.name, REC_W / 2, faceBottom + 80);
 
@@ -298,7 +270,7 @@ function renderVideoFrame(
       ctx.font = "900 136px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "right";
       ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 34, faceBottom + 220);
-      ctx.fillStyle = "#9aa";
+      ctx.fillStyle = "#777";
       ctx.font = "400 34px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("/ 10", REC_W / 2 + 48, faceBottom + 220);
@@ -310,7 +282,7 @@ function renderVideoFrame(
         ctx.globalAlpha = faceAlpha * fadeIn(revealT, CAT_DELAY_MS + ci * CAT_STAGGER_MS, CAT_FADE_MS);
         const cy = catTop + ci * catRowH;
         ctx.textAlign = "left";
-        ctx.fillStyle = "#cde";
+        ctx.fillStyle = "#444";
         ctx.font = "600 26px -apple-system, Helvetica, Arial, sans-serif";
         ctx.fillText(c.label, REC_W * 0.22, cy);
         ctx.textAlign = "right";
@@ -325,7 +297,7 @@ function renderVideoFrame(
 
   const boardT = afterHook - faceTotal;
   ctx.textAlign = "left";
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = VIDEO_INK;
   ctx.font = "800 41px -apple-system, Helvetica, Arial, sans-serif";
   ctx.fillText("Leaderboard", REC_W * 0.09, REC_H * 0.13);
   // no bottom CTA text anymore — rows use that freed space and run further down the screen
@@ -336,16 +308,16 @@ function renderVideoFrame(
     const y = top + i * rowH;
     const baseline = y + 72;
     ctx.globalAlpha = t;
-    ctx.fillStyle = i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)";
+    ctx.fillStyle = i === 0 ? `rgba(${VIDEO_GLOW_RGB},0.18)` : "rgba(0,0,0,0.04)";
     roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
     ctx.fill();
-    ctx.fillStyle = "#6ee7b7";
+    ctx.fillStyle = VIDEO_GREEN;
     ctx.font = "800 31px -apple-system, Helvetica, Arial, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
     if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 20, 84, 84, 14, it.focusX ?? 0.5, it.focusY ?? 0.5);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = VIDEO_INK;
     ctx.font = "600 32px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.name, REC_W * 0.26, baseline);
     // ratings sit inset from the right edge (middle-right), clear of TikTok's right-side icon column
@@ -665,14 +637,10 @@ export default function Studio() {
   // ── styles ──
   const stage: React.CSSProperties = {
     position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
-    // solid fallback color first — if the SVG data-uri background ever fails to load for any
-    // reason, the stage still gets a dark backdrop instead of the browser default (white),
-    // which was also making the white name text invisible (white-on-white)
-    backgroundColor: "#04120a",
-    backgroundImage: PITCH_SVG_BG, backgroundSize: "cover",
-    borderRadius: 22, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)",
+    backgroundColor: "#fff",
+    borderRadius: 22, overflow: "hidden", border: "1px solid rgba(0,0,0,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-    textAlign: "center", color: "#fff", fontFamily: "inherit",
+    textAlign: "center", color: "#111", fontFamily: "inherit",
   };
   const cur = done[faceIdx];
 
@@ -701,7 +669,7 @@ export default function Studio() {
           const ctx = canvas.getContext("2d")!;
           // opaque backdrop — otherwise transparent pixels in a background-removed photo would
           // let whatever's behind the canvas show through
-          ctx.fillStyle = "#04120a";
+          ctx.fillStyle = "#fff";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           // a failed/undecoded image has naturalWidth 0 — drawing that would leave the canvas
           // blank behind the opaque fill above rather than crashing, so skip it explicitly
@@ -848,25 +816,25 @@ export default function Studio() {
                 {/* quick radial flash burst on frame one — grabs attention before the text even lands */}
                 <div style={{
                   position: "absolute", inset: -60, borderRadius: "50%", pointerEvents: "none",
-                  background: "radial-gradient(circle, rgba(110,231,183,0.55) 0%, rgba(110,231,183,0) 70%)",
+                  background: `radial-gradient(circle, rgba(${VIDEO_GLOW_RGB},0.55) 0%, rgba(${VIDEO_GLOW_RGB},0) 70%)`,
                   animation: "hookFlash 320ms ease-out both",
                 }} />
                 <div style={{
-                  position: "relative", fontSize: 12, letterSpacing: 4, color: "#6ee7b7", marginBottom: 18,
+                  position: "relative", fontSize: 12, letterSpacing: 4, color: VIDEO_GREEN, marginBottom: 18,
                   fontFamily: "monospace", animation: "tagIn 220ms ease-out both", animationDelay: "0.04s",
                 }}>
                   sourcestack.app
                 </div>
                 <div style={{
-                  position: "relative", fontSize: 27, fontWeight: 800, lineHeight: 1.2, color: "#fff",
+                  position: "relative", fontSize: 27, fontWeight: 800, lineHeight: 1.2, color: VIDEO_INK,
                   width: "70%", margin: "0 auto", animation: "headPop 460ms ease-out both", animationDelay: "0.12s",
                 }}>{hook}</div>
                 <div style={{
-                  position: "relative", height: 2, background: "#6ee7b7", margin: "22px auto 0",
+                  position: "relative", height: 2, background: VIDEO_GREEN, margin: "22px auto 0",
                   animation: "barGrow 260ms ease-out both", animationDelay: "0.42s",
                 }} />
                 {!playing && done.length > 0 && (
-                  <div style={{ fontSize: 13, color: "#5c8", marginTop: 24 }}>▶ press Play to run the reveal</div>
+                  <div style={{ fontSize: 13, color: VIDEO_GREEN, marginTop: 24 }}>▶ press Play to run the reveal</div>
                 )}
                 {!playing && done.length === 0 && (
                   <div style={{ fontSize: 13, color: "#556", marginTop: 24 }}>add photos to begin</div>
@@ -888,13 +856,13 @@ export default function Studio() {
                   <>
                     <div style={{
                       position: "absolute", left: 0, right: 0, height: 2,
-                      background: "linear-gradient(90deg, transparent, rgba(110,231,183,0.95), transparent)",
-                      boxShadow: "0 0 14px 2px rgba(110,231,183,0.55)",
+                      background: `linear-gradient(90deg, transparent, rgba(${VIDEO_GLOW_RGB},0.95), transparent)`,
+                      boxShadow: `0 0 14px 2px rgba(${VIDEO_GLOW_RGB},0.55)`,
                       animation: `scanSweep ${ZOOM_MS}ms linear`,
                     }} />
                     <div style={{
                       position: "absolute", top: 22, left: 0, right: 0, textAlign: "center",
-                      fontSize: 11, letterSpacing: 3, color: "#6ee7b7", fontFamily: "monospace", textTransform: "uppercase",
+                      fontSize: 11, letterSpacing: 3, color: "#3ED8C3", fontFamily: "monospace", textTransform: "uppercase",
                     }}>
                       scanning {cur.name}
                     </div>
@@ -905,13 +873,13 @@ export default function Studio() {
                     position: "absolute", top: "55%", left: 0, right: 0, bottom: 0,
                     padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "flex-start",
                   }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", animation: "sfade .5s ease both" }}>{cur.name}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: VIDEO_INK, animation: "sfade .5s ease both" }}>{cur.name}</div>
                     <div style={{
                       display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0",
                       animation: "sfade .5s ease both", animationDelay: `${SCORE_DELAY_MS / 1000}s`,
                     }}>
                       <span style={{ fontSize: 64, fontWeight: 900, color: colorForScore(score), lineHeight: 1 }}>{score.toFixed(1)}</span>
-                      <span style={{ fontSize: 18, color: "#9aa" }}>/ 10</span>
+                      <span style={{ fontSize: 18, color: "#777" }}>/ 10</span>
                     </div>
                     {(() => {
                       const cats = categoryScores(cur.result!);
@@ -922,7 +890,7 @@ export default function Studio() {
                               display: "flex", justifyContent: "space-between", padding: "0 12%", fontSize: 13,
                               animation: "sfade .4s ease both", animationDelay: `${(CAT_DELAY_MS + ci * CAT_STAGGER_MS) / 1000}s`,
                             }}>
-                              <span style={{ color: "#cde", fontWeight: 600 }}>{c.label}</span>
+                              <span style={{ color: "#444", fontWeight: 600 }}>{c.label}</span>
                               <span style={{ color: colorForScore(c.score), fontWeight: 800 }}>{c.score.toFixed(1)}</span>
                             </div>
                           ))}
@@ -941,10 +909,10 @@ export default function Studio() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
                   {boardRanked.map((it, i) => (
                     <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 12,
-                      background: i === 0 ? "rgba(110,231,183,0.12)" : "rgba(255,255,255,0.04)",
+                      background: i === 0 ? `rgba(${VIDEO_GLOW_RGB},0.18)` : "rgba(0,0,0,0.04)",
                       borderRadius: 10, padding: "10px 12%", paddingLeft: 12,
                       animation: `sfade .4s ease both`, animationDelay: `${i * 0.14}s` }}>
-                      <span style={{ width: 22, fontWeight: 800, color: "#6ee7b7", fontSize: 15 }}>{i + 1}</span>
+                      <span style={{ width: 22, fontWeight: 800, color: VIDEO_GREEN, fontSize: 15 }}>{i + 1}</span>
                       <img src={it.thumb} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} />
                       <span style={{ flex: 1, textAlign: "left", fontSize: 16, fontWeight: 600 }}>{it.name}</span>
                       <span style={{ fontSize: 20, fontWeight: 800, color: colorForScore(it.score) }}>{it.score.toFixed(1)}</span>
