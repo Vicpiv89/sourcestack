@@ -552,6 +552,9 @@ export default function FaceScan() {
                     const color = CATEGORY_COLOR[cat];
                     const catFlagged = items.filter((m) => m.score < 7.5);
                     const cats = categoriesFor([...new Set(catFlagged.flatMap((m) => m.issueSlugs))]);
+                    const worst = catFlagged.length > 0
+                      ? catFlagged.reduce((a, b) => (b.score < a.score ? b : a))
+                      : null;
 
                     return (
                       <div key={cat}>
@@ -581,10 +584,10 @@ export default function FaceScan() {
                           ))}
                         </div>
 
-                        {cats.length > 0 && (
+                        {cats.length > 0 && worst && (
                           <div className="mt-2.5 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] flex items-center justify-between gap-3 flex-wrap">
                             <p className="text-white/40 text-xs">
-                              Addressed with <span className="text-white/70">{cats.join(" · ")}</span>
+                              Solution for <span className="text-white/70">{worst.name}</span> in plan
                             </p>
                             <a href="#your-plan" className="text-xs font-semibold shrink-0 hover:underline" style={{ color }}>
                               See your plan →

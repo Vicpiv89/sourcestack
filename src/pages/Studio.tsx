@@ -24,6 +24,15 @@ const CAT_FADE_MS = 260; // each category row's own fade-in duration
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
+// "back out" easing — overshoots past 1 then settles, for a punchy pop-in
+// rather than a flat fade (the hook has ~1s to grab attention before anyone
+// scrolls past, a plain fade doesn't do that work)
+function easeOutBack(t: number): number {
+  const c1 = 1.7, c3 = c1 + 1;
+  const x = Math.max(0, Math.min(1, t));
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+}
+
 // which scan metrics roll up into which category — drives the compact per-category rating rows
 const METRIC_CATEGORIES: { label: string; ids: string[] }[] = [
   { label: "Eyes & Brows", ids: ["canthal-tilt", "eye-spacing", "eye-aspect", "brow-tilt", "brow-density"] },
@@ -186,19 +195,52 @@ function renderVideoFrame(
   const faceMarginX = REC_W * 0.06; // faces sit inset from the edges, not edge-to-edge
 
   if (tMs < HOOK_MS) {
-    const t = fadeIn(tMs, 0, 500);
-    ctx.globalAlpha = t;
+    // quick radial flash burst on frame one — the first ~1s has to grab
+    // attention before a scroll-past, so it opens with a hit, not a fade
+    const flashT = fadeIn(tMs, 0, 320);
+    if (flashT < 1) {
+      const flashAlpha = (1 - flashT) * 0.5;
+      const flashR = REC_W * (0.25 + flashT * 0.6);
+      const grad = ctx.createRadialGradient(REC_W / 2, REC_H * 0.42, 0, REC_W / 2, REC_H * 0.42, flashR);
+      grad.addColorStop(0, `rgba(110,231,183,${flashAlpha})`);
+      grad.addColorStop(1, "rgba(110,231,183,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, REC_W, REC_H);
+    }
+
     ctx.textAlign = "center";
+
+    // eyebrow tag — fast fade + slight upward settle
+    const tagT = fadeIn(tMs, 40, 220);
+    ctx.globalAlpha = tagT;
     ctx.fillStyle = "#6ee7b7";
     ctx.font = "700 28px Menlo, Consolas, monospace";
-    ctx.fillText("SOURCESTACK · AI FACE SCAN", REC_W / 2, REC_H * 0.4);
+    ctx.fillText("SOURCESTACK · AI FACE SCAN", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
+
+    // headline — punchy scale pop (slight overshoot) instead of a plain fade
+    const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
+    ctx.globalAlpha = fadeIn(tMs, 120, 260);
     ctx.fillStyle = "#fff";
     ctx.font = "800 64px -apple-system, Helvetica, Arial, sans-serif";
     const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
-    let ly = REC_H * 0.46;
-    for (const line of lines) { ctx.fillText(line, REC_W / 2, ly); ly += 76; }
+    const lineH = 76;
+    lines.forEach((line, i) => {
+      const ly = REC_H * 0.46 + i * lineH;
+      ctx.save();
+      ctx.translate(REC_W / 2, ly - 20);
+      ctx.scale(headScale, headScale);
+      ctx.translate(-REC_W / 2, -(ly - 20));
+      ctx.fillText(line, REC_W / 2, ly);
+      ctx.restore();
+    });
+
+    // accent bar draws in after the headline lands
+    const barT = fadeIn(tMs, 420, 260);
+    const barW = 92 * barT;
+    ctx.globalAlpha = barT;
     ctx.fillStyle = "#6ee7b7";
-    ctx.fillRect(REC_W / 2 - 46, ly + 12, 92, 4);
+    const lastLy = REC_H * 0.46 + (lines.length - 1) * lineH;
+    ctx.fillRect(REC_W / 2 - barW / 2, lastLy + 12, barW, 4);
     ctx.globalAlpha = 1;
     return;
   }
@@ -802,12 +844,27 @@ export default function Studio() {
         <div style={{ position: "sticky", top: 20, display: "flex", justifyContent: "center" }}>
           <div style={stage}>
             {phase === "hook" && (
-              <div style={{ padding: 30, animation: "sfade .5s ease both" }}>
-                <div style={{ fontSize: 12, letterSpacing: 4, color: "#6ee7b7", marginBottom: 18, fontFamily: "monospace" }}>
+              <div style={{ position: "relative", padding: 30 }}>
+                {/* quick radial flash burst on frame one — grabs attention before the text even lands */}
+                <div style={{
+                  position: "absolute", inset: -60, borderRadius: "50%", pointerEvents: "none",
+                  background: "radial-gradient(circle, rgba(110,231,183,0.55) 0%, rgba(110,231,183,0) 70%)",
+                  animation: "hookFlash 320ms ease-out both",
+                }} />
+                <div style={{
+                  position: "relative", fontSize: 12, letterSpacing: 4, color: "#6ee7b7", marginBottom: 18,
+                  fontFamily: "monospace", animation: "tagIn 220ms ease-out both", animationDelay: "0.04s",
+                }}>
                   SOURCESTACK · AI FACE SCAN
                 </div>
-                <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2, color: "#fff", width: "70%", margin: "0 auto" }}>{hook}</div>
-                <div style={{ width: 46, height: 2, background: "#6ee7b7", margin: "22px auto 0" }} />
+                <div style={{
+                  position: "relative", fontSize: 32, fontWeight: 800, lineHeight: 1.2, color: "#fff",
+                  width: "70%", margin: "0 auto", animation: "headPop 460ms ease-out both", animationDelay: "0.12s",
+                }}>{hook}</div>
+                <div style={{
+                  position: "relative", height: 2, background: "#6ee7b7", margin: "22px auto 0",
+                  animation: "barGrow 260ms ease-out both", animationDelay: "0.42s",
+                }} />
                 {!playing && done.length > 0 && (
                   <div style={{ fontSize: 13, color: "#5c8", marginTop: 24 }}>▶ press Play to run the reveal</div>
                 )}
@@ -904,6 +961,10 @@ export default function Studio() {
         @keyframes sfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes faceIn{from{opacity:0}to{opacity:1}}
         @keyframes scanSweep{0%{top:-4%}100%{top:104%}}
+        @keyframes hookFlash{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.7)}}
+        @keyframes tagIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes headPop{0%{opacity:0;transform:scale(.55)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+        @keyframes barGrow{from{width:0;opacity:0}to{width:46px;opacity:1}}
       `}</style>
     </div>
   );
