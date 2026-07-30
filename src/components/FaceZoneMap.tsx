@@ -22,7 +22,7 @@ const ZONES: ZoneDef[] = [
     sublabel: 'hair loss · dandruff · density',
     issueSlugs: ['hair-loss', 'dandruff'],
     color: '#10b981',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 46, rx: 48, ry: 24 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 46, rx: 44, ry: 24 }],
   },
   {
     id: 'forehead',
@@ -90,18 +90,28 @@ const ZONES: ZoneDef[] = [
     sublabel: 'definition · hormonal acne',
     issueSlugs: ['jawline-definition', 'androgenic-acne'],
     color: '#fbbf24',
-    shapes: [{ type: 'ellipse', cx: 100, cy: 227, rx: 24, ry: 13 }],
+    shapes: [{ type: 'ellipse', cx: 100, cy: 227, rx: 20, ry: 13 }],
   },
 ];
 
-// A plain, true ellipse (center 100,128 · rx 86 · ry 110) — standard 4-bezier
-// ellipse approximation, no hand-tuned tapering.
+// Tapered to canonical "ideal" male proportions rather than a plain ellipse:
+// wide zygomatic (cheekbone) peak around eye level, then a defined gonial
+// angle tapering into a forward chin — bigonial:bizygomatic ~0.7, roughly
+// matching the fWHR / V-taper ratios cited in looksmaxxing canon.
 const HEAD_PATH =
-  'M 100 18 ' +
-  'C 147.5 18 186 67.25 186 128 ' +
-  'C 186 188.75 147.5 238 100 238 ' +
-  'C 52.5 238 14 188.75 14 128 ' +
-  'C 14 67.25 52.5 18 100 18 Z';
+  'M 100 16 ' +
+  'C 140 18 172 40 176 58 ' +
+  'C 180 80 184 105 184 130 ' +
+  'C 182 150 178 162 174 168 ' +
+  'C 168 182 162 190 158 196 ' +
+  'L 132 222 ' +
+  'Q 112 244 100 248 ' +
+  'Q 88 244 68 222 ' +
+  'L 42 196 ' +
+  'C 38 190 32 182 26 168 ' +
+  'C 22 162 18 150 16 130 ' +
+  'C 16 105 20 80 24 58 ' +
+  'C 28 40 60 18 100 16 Z';
 
 function hexToRgba(hex: string, alpha: number) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -182,7 +192,7 @@ export default function FaceZoneMap({ maxWidth = 220 }: { maxWidth?: number }) {
           />
         )}
         <div ref={tiltRef} style={{ transition: 'transform 0.4s cubic-bezier(0.22,1,0.36,1)', transformStyle: 'preserve-3d' }}>
-        <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block', transform: 'scaleX(0.85)' }}>
+        <svg viewBox="0 0 200 270" width="100%" style={{ overflow: 'visible', display: 'block' }}>
           <defs>
             <filter id="face-glow" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="5" result="blur" />
