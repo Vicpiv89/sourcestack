@@ -8,6 +8,7 @@ import SEO from "../components/SEO";
 import { supabase } from "../lib/supabase";
 import { analyzeFace, loadFaceLandmarker, type ScanResult } from "../lib/faceScan";
 import { LockIcon, WarningIcon } from "../components/icons";
+import { clarityEvent, claritySet } from "../lib/clarity";
 
 const MAX_DIM = 1100;
 
@@ -303,6 +304,7 @@ export default function FaceScan() {
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
     if (animRef.current) cancelAnimationFrame(animRef.current);
+    clarityEvent("scan_started");
     setState("analyzing");
     setScanProgress(0);
     setScanStep(0);
@@ -325,6 +327,7 @@ export default function FaceScan() {
       if (!detection.faceLandmarks.length) {
         setError("No face detected. Use a clear, front-facing photo with good lighting.");
         setState("error");
+        clarityEvent("scan_no_face_detected");
         return;
       }
 
@@ -333,7 +336,12 @@ export default function FaceScan() {
       runScanAnimation(
         ctx, img, w, h, detection.faceLandmarks[0], scan, animRef,
         (progress, step) => { setScanProgress(progress); setScanStep(step); },
-        (finalScan) => { setResult(finalScan); setState("done"); }
+        (finalScan) => {
+          setResult(finalScan);
+          setState("done");
+          clarityEvent("scan_completed");
+          claritySet("scan_tier", finalScan.tier);
+        }
       );
     } catch (e) {
       console.error(e);
