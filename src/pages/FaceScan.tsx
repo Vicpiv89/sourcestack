@@ -400,7 +400,7 @@ export default function FaceScan() {
         {(state === "idle" || state === "error") && (
           <div className="max-w-xl mx-auto">
             <p className="text-white/30 text-xs uppercase tracking-widest mb-2">SourceStack</p>
-            <h1 className="text-3xl font-bold text-white mb-1">Free Face Scan</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">Begin Your Ascent</h1>
             <p className="text-accent text-sm font-medium mb-3">Photo → protocol.</p>
             <p className="text-white/40 text-sm mb-8 leading-relaxed">
               Upload one front-facing photo and we measure 17 facial metrics — canthal tilt, fWHR,
