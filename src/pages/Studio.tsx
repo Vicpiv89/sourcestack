@@ -24,6 +24,8 @@ const CAT_FADE_MS = 260; // each category row's own fade-in duration
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
+const fadeIn = (localT: number, delay = 0, dur = 450) => Math.max(0, Math.min(1, (localT - delay) / dur));
+
 // "back out" easing — overshoots past 1 then settles, for a punchy pop-in
 // rather than a flat fade (the hook has ~1s to grab attention before anyone
 // scrolls past, a plain fade doesn't do that work)
@@ -152,9 +154,146 @@ function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(0, 0, REC_W, REC_H);
 }
 
+// intro/hook text card — "sourcestack.app" tag + headline. tMs is local to this card (0 at
+// the moment the card starts, whenever that is in the overall timeline).
+function renderIntroCard(ctx: CanvasRenderingContext2D, tMs: number, hookText: string) {
+  // quick radial flash burst on frame one — the first ~1s has to grab
+  // attention before a scroll-past, so it opens with a hit, not a fade
+  const flashT = fadeIn(tMs, 0, 320);
+  if (flashT < 1) {
+    const flashAlpha = (1 - flashT) * 0.5;
+    const flashR = REC_W * (0.25 + flashT * 0.6);
+    const grad = ctx.createRadialGradient(REC_W / 2, REC_H * 0.42, 0, REC_W / 2, REC_H * 0.42, flashR);
+    grad.addColorStop(0, `rgba(${VIDEO_GLOW_RGB},${flashAlpha})`);
+    grad.addColorStop(1, `rgba(${VIDEO_GLOW_RGB},0)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, REC_W, REC_H);
+  }
+
+  ctx.textAlign = "center";
+
+  // eyebrow tag — fast fade + slight upward settle
+  const tagT = fadeIn(tMs, 40, 220);
+  ctx.globalAlpha = tagT;
+  ctx.fillStyle = VIDEO_GREEN;
+  ctx.font = "700 21px Menlo, Consolas, monospace";
+  ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
+
+  // headline — punchy scale pop (slight overshoot) instead of a plain fade
+  const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
+  ctx.globalAlpha = fadeIn(tMs, 120, 260);
+  ctx.fillStyle = VIDEO_INK;
+  ctx.font = "800 40px -apple-system, Helvetica, Arial, sans-serif";
+  const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
+  const lineH = 48;
+  lines.forEach((line, i) => {
+    const ly = REC_H * 0.46 + i * lineH;
+    ctx.save();
+    ctx.translate(REC_W / 2, ly - 20);
+    ctx.scale(headScale, headScale);
+    ctx.translate(-REC_W / 2, -(ly - 20));
+    ctx.fillText(line, REC_W / 2, ly);
+    ctx.restore();
+  });
+
+  // accent bar draws in after the headline lands
+  const barT = fadeIn(tMs, 420, 260);
+  const barW = 78 * barT;
+  ctx.globalAlpha = barT;
+  ctx.fillStyle = VIDEO_GREEN;
+  const lastLy = REC_H * 0.46 + (lines.length - 1) * lineH;
+  ctx.fillRect(REC_W / 2 - barW / 2, lastLy + 12, barW, 4);
+  ctx.globalAlpha = 1;
+}
+
+// one face's scan -> zoom -> score/category reveal. localT is local to this face (0 at the
+// moment its slot starts, whenever that slot falls in the overall timeline) — used for both the
+// hook face (first, before the intro card) and every face in the main loop after it.
+function renderFaceReveal(
+  ctx: CanvasRenderingContext2D,
+  localT: number,
+  f: RenderFace,
+  img: HTMLImageElement | undefined,
+  faceMarginX: number,
+) {
+  const faceAlpha = Math.min(1, localT / 260);
+  ctx.globalAlpha = faceAlpha;
+
+  if (localT < SCAN_HOLD_MS) {
+    if (img?.complete) drawContain(ctx, img, faceMarginX, 0, REC_W - faceMarginX * 2, REC_H);
+    const sy = -0.04 * REC_H + Math.min(1, localT / SCAN_HOLD_MS) * 1.08 * REC_H;
+    const grad = ctx.createLinearGradient(faceMarginX, 0, REC_W - faceMarginX, 0);
+    grad.addColorStop(0, `rgba(${VIDEO_GLOW_RGB},0)`);
+    grad.addColorStop(0.5, `rgba(${VIDEO_GLOW_RGB},0.95)`);
+    grad.addColorStop(1, `rgba(${VIDEO_GLOW_RGB},0)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(faceMarginX, sy, REC_W - faceMarginX * 2, 5);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#3ED8C3";
+    ctx.font = "700 24px Menlo, Consolas, monospace";
+    ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
+  } else {
+    const revealT = localT - SCAN_HOLD_MS;
+    // face band sits near the top of the frame — shorter than before now that drawContain
+    // (below) can't crop regardless of box size, so there's no reason to make this tall; a
+    // shorter band just leaves more headroom and pulls the whole text stack up off the floor
+    const faceTop = REC_H * 0.10;
+    const faceH = REC_H * 0.36;
+    const faceBottom = faceTop + faceH;
+    if (img?.complete) {
+      // animate the box from full-height down to the final band. Uses drawContain, not
+      // drawCover — a cover-crop into this short/wide band was clipping the top of the head
+      // AND the chin, since most source photos are taller (more portrait) than the band's
+      // own aspect ratio. Contain always shows the whole face, just smaller if it doesn't fit.
+      const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
+      const by = lerp(0, faceTop, zt);
+      const bh = lerp(REC_H, faceH, zt);
+      drawContain(ctx, img, faceMarginX, by, REC_W - faceMarginX * 2, bh);
+    }
+    ctx.textAlign = "center";
+
+    ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
+    ctx.fillStyle = VIDEO_INK;
+    ctx.font = "700 34px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.fillText(f.name, REC_W / 2, faceBottom + 46);
+
+    const scoreT = Math.max(0, Math.min(1, (revealT - SCORE_DELAY_MS) / SCORE_MS));
+    const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
+    ctx.globalAlpha = faceAlpha * fadeIn(revealT, 120);
+    ctx.fillStyle = colorForScore(liveScore);
+    ctx.font = "900 92px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 24, faceBottom + 140);
+    ctx.fillStyle = "#777";
+    ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("/ 10", REC_W / 2 + 34, faceBottom + 140);
+
+    const cats = categoryScores(f.result);
+    const catTop = faceBottom + 172;
+    const catRowH = 34;
+    cats.forEach((c, ci) => {
+      ctx.globalAlpha = faceAlpha * fadeIn(revealT, CAT_DELAY_MS + ci * CAT_STAGGER_MS, CAT_FADE_MS);
+      const cy = catTop + ci * catRowH;
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#444";
+      ctx.font = "600 19px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(c.label, REC_W * 0.22, cy);
+      ctx.textAlign = "right";
+      ctx.fillStyle = colorForScore(c.score);
+      ctx.font = "800 21px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(c.score.toFixed(1), REC_W * 0.78, cy);
+    });
+  }
+  ctx.globalAlpha = 1;
+}
+
 // Pure function of elapsed time — draws exactly what the reveal looks like at tMs into the
 // video. No timers, no live state: generateVideo() below calls this once per output frame,
 // as fast as the browser can render+encode, completely decoupled from real-time playback.
+//
+// Timeline: hook face (faces[0], no card yet — the scroll-stop lands on a face, not text) ->
+// intro card -> the rest of the faces, one after another -> leaderboard.
 function renderVideoFrame(
   ctx: CanvasRenderingContext2D,
   tMs: number,
@@ -165,141 +304,31 @@ function renderVideoFrame(
   thumbCache: Map<string, HTMLImageElement>,
 ) {
   drawBackground(ctx);
-  const fadeIn = (localT: number, delay = 0, dur = 450) => Math.max(0, Math.min(1, (localT - delay) / dur));
   const faceMarginX = REC_W * 0.12; // faces sit inset from the edges, not edge-to-edge
 
-  if (tMs < HOOK_MS) {
-    // quick radial flash burst on frame one — the first ~1s has to grab
-    // attention before a scroll-past, so it opens with a hit, not a fade
-    const flashT = fadeIn(tMs, 0, 320);
-    if (flashT < 1) {
-      const flashAlpha = (1 - flashT) * 0.5;
-      const flashR = REC_W * (0.25 + flashT * 0.6);
-      const grad = ctx.createRadialGradient(REC_W / 2, REC_H * 0.42, 0, REC_W / 2, REC_H * 0.42, flashR);
-      grad.addColorStop(0, `rgba(${VIDEO_GLOW_RGB},${flashAlpha})`);
-      grad.addColorStop(1, `rgba(${VIDEO_GLOW_RGB},0)`);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, REC_W, REC_H);
-    }
+  if (faces.length > 0 && tMs < FACE_MS) {
+    renderFaceReveal(ctx, tMs, faces[0], imgCache.get(faces[0].id), faceMarginX);
+    return;
+  }
+  const afterHookFace = faces.length > 0 ? tMs - FACE_MS : tMs;
 
-    ctx.textAlign = "center";
-
-    // eyebrow tag — fast fade + slight upward settle
-    const tagT = fadeIn(tMs, 40, 220);
-    ctx.globalAlpha = tagT;
-    ctx.fillStyle = VIDEO_GREEN;
-    ctx.font = "700 21px Menlo, Consolas, monospace";
-    ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
-
-    // headline — punchy scale pop (slight overshoot) instead of a plain fade
-    const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
-    ctx.globalAlpha = fadeIn(tMs, 120, 260);
-    ctx.fillStyle = VIDEO_INK;
-    ctx.font = "800 40px -apple-system, Helvetica, Arial, sans-serif";
-    const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
-    const lineH = 48;
-    lines.forEach((line, i) => {
-      const ly = REC_H * 0.46 + i * lineH;
-      ctx.save();
-      ctx.translate(REC_W / 2, ly - 20);
-      ctx.scale(headScale, headScale);
-      ctx.translate(-REC_W / 2, -(ly - 20));
-      ctx.fillText(line, REC_W / 2, ly);
-      ctx.restore();
-    });
-
-    // accent bar draws in after the headline lands
-    const barT = fadeIn(tMs, 420, 260);
-    const barW = 78 * barT;
-    ctx.globalAlpha = barT;
-    ctx.fillStyle = VIDEO_GREEN;
-    const lastLy = REC_H * 0.46 + (lines.length - 1) * lineH;
-    ctx.fillRect(REC_W / 2 - barW / 2, lastLy + 12, barW, 4);
-    ctx.globalAlpha = 1;
+  if (afterHookFace < HOOK_MS) {
+    renderIntroCard(ctx, afterHookFace, hookText);
     return;
   }
 
-  const afterHook = tMs - HOOK_MS;
-  const faceTotal = faces.length * FACE_MS;
-  if (faces.length > 0 && afterHook < faceTotal) {
-    const idx = Math.min(faces.length - 1, Math.floor(afterHook / FACE_MS));
-    const localT = afterHook - idx * FACE_MS;
-    const f = faces[idx];
-    const img = imgCache.get(f.id);
-    const faceAlpha = Math.min(1, localT / 260);
-    ctx.globalAlpha = faceAlpha;
-
-    if (localT < SCAN_HOLD_MS) {
-      if (img?.complete) drawContain(ctx, img, faceMarginX, 0, REC_W - faceMarginX * 2, REC_H);
-      const sy = -0.04 * REC_H + Math.min(1, localT / SCAN_HOLD_MS) * 1.08 * REC_H;
-      const grad = ctx.createLinearGradient(faceMarginX, 0, REC_W - faceMarginX, 0);
-      grad.addColorStop(0, `rgba(${VIDEO_GLOW_RGB},0)`);
-      grad.addColorStop(0.5, `rgba(${VIDEO_GLOW_RGB},0.95)`);
-      grad.addColorStop(1, `rgba(${VIDEO_GLOW_RGB},0)`);
-      ctx.fillStyle = grad;
-      ctx.fillRect(faceMarginX, sy, REC_W - faceMarginX * 2, 5);
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#3ED8C3";
-      ctx.font = "700 24px Menlo, Consolas, monospace";
-      ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
-    } else {
-      const revealT = localT - SCAN_HOLD_MS;
-      // face band sits near the top of the frame — shorter than before now that drawContain
-      // (below) can't crop regardless of box size, so there's no reason to make this tall; a
-      // shorter band just leaves more headroom and pulls the whole text stack up off the floor
-      const faceTop = REC_H * 0.10;
-      const faceH = REC_H * 0.36;
-      const faceBottom = faceTop + faceH;
-      if (img?.complete) {
-        // animate the box from full-height down to the final band. Uses drawContain, not
-        // drawCover — a cover-crop into this short/wide band was clipping the top of the head
-        // AND the chin, since most source photos are taller (more portrait) than the band's
-        // own aspect ratio. Contain always shows the whole face, just smaller if it doesn't fit.
-        const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
-        const by = lerp(0, faceTop, zt);
-        const bh = lerp(REC_H, faceH, zt);
-        drawContain(ctx, img, faceMarginX, by, REC_W - faceMarginX * 2, bh);
-      }
-      ctx.textAlign = "center";
-
-      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
-      ctx.fillStyle = VIDEO_INK;
-      ctx.font = "700 34px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(f.name, REC_W / 2, faceBottom + 46);
-
-      const scoreT = Math.max(0, Math.min(1, (revealT - SCORE_DELAY_MS) / SCORE_MS));
-      const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
-      ctx.globalAlpha = faceAlpha * fadeIn(revealT, 120);
-      ctx.fillStyle = colorForScore(liveScore);
-      ctx.font = "900 92px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.textAlign = "right";
-      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 24, faceBottom + 140);
-      ctx.fillStyle = "#777";
-      ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("/ 10", REC_W / 2 + 34, faceBottom + 140);
-
-      const cats = categoryScores(f.result);
-      const catTop = faceBottom + 172;
-      const catRowH = 34;
-      cats.forEach((c, ci) => {
-        ctx.globalAlpha = faceAlpha * fadeIn(revealT, CAT_DELAY_MS + ci * CAT_STAGGER_MS, CAT_FADE_MS);
-        const cy = catTop + ci * catRowH;
-        ctx.textAlign = "left";
-        ctx.fillStyle = "#444";
-        ctx.font = "600 19px -apple-system, Helvetica, Arial, sans-serif";
-        ctx.fillText(c.label, REC_W * 0.22, cy);
-        ctx.textAlign = "right";
-        ctx.fillStyle = colorForScore(c.score);
-        ctx.font = "800 21px -apple-system, Helvetica, Arial, sans-serif";
-        ctx.fillText(c.score.toFixed(1), REC_W * 0.78, cy);
-      });
-    }
-    ctx.globalAlpha = 1;
+  const afterIntro = afterHookFace - HOOK_MS;
+  const restFaces = faces.slice(1);
+  const faceTotal = restFaces.length * FACE_MS;
+  if (restFaces.length > 0 && afterIntro < faceTotal) {
+    const idx = Math.min(restFaces.length - 1, Math.floor(afterIntro / FACE_MS));
+    const localT = afterIntro - idx * FACE_MS;
+    const f = restFaces[idx];
+    renderFaceReveal(ctx, localT, f, imgCache.get(f.id), faceMarginX);
     return;
   }
 
-  const boardT = afterHook - faceTotal;
+  const boardT = afterIntro - faceTotal;
   ctx.textAlign = "left";
   ctx.fillStyle = VIDEO_INK;
   ctx.font = "800 32px -apple-system, Helvetica, Arial, sans-serif";
@@ -457,19 +486,61 @@ function scheduleScoreSting(ctx: BaseAudioContext, master: GainNode, atSec: numb
   }
 }
 
+// distinct buzzer for the hook face — its job is to grab attention, not communicate a real
+// score, so it always gets this instead of a tier-based sting regardless of what the face
+// actually scored. Sawtooth + fast pitch wobble (LFO on frequency) for a harsh "ERRR" buzz
+// rather than a clean tone.
+function scheduleErrrSting(ctx: BaseAudioContext, master: GainNode, atSec: number) {
+  const dur = 0.45;
+  const osc = ctx.createOscillator();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(150, atSec);
+
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 28;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 18;
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, atSec);
+  g.gain.exponentialRampToValueAtTime(0.55, atSec + 0.02);
+  g.gain.setValueAtTime(0.55, atSec + dur - 0.08);
+  g.gain.exponentialRampToValueAtTime(0.0001, atSec + dur);
+
+  osc.connect(g);
+  g.connect(master);
+  osc.start(atSec);
+  lfo.start(atSec);
+  osc.stop(atSec + dur + 0.02);
+  lfo.stop(atSec + dur + 0.02);
+}
+
 // renders one AudioBuffer covering the whole video's duration with a sting placed at the moment
 // each face's score finishes counting up — a single buffer keeps every sting's timestamp exact
-// against the video timeline instead of chaining separately-timed clips
+// against the video timeline instead of chaining separately-timed clips. faces[0] is the hook
+// face (gets the ERRR buzzer, plays before the intro card); everything after it is the main
+// loop (gets the usual tier-based sting), offset by the hook face + intro card's duration.
 async function synthesizeStingerTrack(totalMs: number, faces: RenderFace[]): Promise<AudioBuffer> {
   const sampleRate = 44100;
   const ctx = new OfflineAudioContext(2, Math.ceil((totalMs / 1000) * sampleRate), sampleRate);
   const master = ctx.createGain();
   master.gain.value = 0.5;
   master.connect(ctx.destination);
-  faces.forEach((f, i) => {
-    const scoreEndMs = HOOK_MS + i * FACE_MS + SCAN_HOLD_MS + SCORE_DELAY_MS + SCORE_MS;
+
+  if (faces.length > 0) {
+    const hookScoreEndMs = SCAN_HOLD_MS + SCORE_DELAY_MS + SCORE_MS;
+    scheduleErrrSting(ctx, master, hookScoreEndMs / 1000);
+  }
+
+  const restFaces = faces.slice(1);
+  const introOffsetMs = faces.length > 0 ? FACE_MS + HOOK_MS : 0;
+  restFaces.forEach((f, i) => {
+    const scoreEndMs = introOffsetMs + i * FACE_MS + SCAN_HOLD_MS + SCORE_DELAY_MS + SCORE_MS;
     scheduleScoreSting(ctx, master, scoreEndMs / 1000, f.contentScore);
   });
+
   return ctx.startRendering();
 }
 
@@ -587,11 +658,21 @@ export default function Studio() {
     if (done.length === 0) return;
     clearTimers();
     setPlaying(true);
-    setPhase("hook");
-    setFaceIdx(0);
     setScore(0);
 
-    at(HOOK_MS, () => stepFace(0));
+    // hook face plays first, before the intro card — the scroll-stop should land on a face
+    setFaceIdx(0);
+    setRevealed(false);
+    setPhase("face");
+    faceStartRef.current = performance.now();
+    at(SCAN_HOLD_MS, () => {
+      setRevealed(true);
+      timers.current.push(window.setTimeout(() => runCount(remapForContent(done[0].result!.overall)), SCORE_DELAY_MS));
+    });
+    at(FACE_MS, () => {
+      setPhase("hook");
+      at(HOOK_MS, () => stepFace(1));
+    });
 
     function stepFace(i: number) {
       if (i >= done.length) { showBoard(); return; }
