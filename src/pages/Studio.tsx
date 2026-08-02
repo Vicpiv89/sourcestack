@@ -188,16 +188,16 @@ function renderVideoFrame(
     const tagT = fadeIn(tMs, 40, 220);
     ctx.globalAlpha = tagT;
     ctx.fillStyle = VIDEO_GREEN;
-    ctx.font = "700 24px Menlo, Consolas, monospace";
+    ctx.font = "700 21px Menlo, Consolas, monospace";
     ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
 
     // headline — punchy scale pop (slight overshoot) instead of a plain fade
     const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
     ctx.globalAlpha = fadeIn(tMs, 120, 260);
     ctx.fillStyle = VIDEO_INK;
-    ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 40px -apple-system, Helvetica, Arial, sans-serif";
     const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
-    const lineH = 56;
+    const lineH = 48;
     lines.forEach((line, i) => {
       const ly = REC_H * 0.46 + i * lineH;
       ctx.save();
@@ -244,9 +244,11 @@ function renderVideoFrame(
       ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
     } else {
       const revealT = localT - SCAN_HOLD_MS;
-      // face band sits centered-ish in the frame (starts ~13% down) rather than pinned to the top
-      const faceTop = REC_H * 0.13;
-      const faceH = REC_H * 0.46;
+      // face band sits near the top of the frame — shorter than before now that drawContain
+      // (below) can't crop regardless of box size, so there's no reason to make this tall; a
+      // shorter band just leaves more headroom and pulls the whole text stack up off the floor
+      const faceTop = REC_H * 0.10;
+      const faceH = REC_H * 0.36;
       const faceBottom = faceTop + faceH;
       if (img?.complete) {
         // animate the box from full-height down to the final band. Uses drawContain, not
@@ -262,34 +264,34 @@ function renderVideoFrame(
 
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
       ctx.fillStyle = VIDEO_INK;
-      ctx.font = "700 40px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(f.name, REC_W / 2, faceBottom + 66);
+      ctx.font = "700 34px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(f.name, REC_W / 2, faceBottom + 46);
 
       const scoreT = Math.max(0, Math.min(1, (revealT - SCORE_DELAY_MS) / SCORE_MS));
       const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 120);
       ctx.fillStyle = colorForScore(liveScore);
-      ctx.font = "900 112px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.font = "900 92px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 28, faceBottom + 180);
+      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 24, faceBottom + 140);
       ctx.fillStyle = "#777";
-      ctx.font = "400 28px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.font = "400 24px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("/ 10", REC_W / 2 + 40, faceBottom + 180);
+      ctx.fillText("/ 10", REC_W / 2 + 34, faceBottom + 140);
 
       const cats = categoryScores(f.result);
-      const catTop = faceBottom + 216;
-      const catRowH = 38;
+      const catTop = faceBottom + 172;
+      const catRowH = 34;
       cats.forEach((c, ci) => {
         ctx.globalAlpha = faceAlpha * fadeIn(revealT, CAT_DELAY_MS + ci * CAT_STAGGER_MS, CAT_FADE_MS);
         const cy = catTop + ci * catRowH;
         ctx.textAlign = "left";
         ctx.fillStyle = "#444";
-        ctx.font = "600 22px -apple-system, Helvetica, Arial, sans-serif";
+        ctx.font = "600 19px -apple-system, Helvetica, Arial, sans-serif";
         ctx.fillText(c.label, REC_W * 0.22, cy);
         ctx.textAlign = "right";
         ctx.fillStyle = colorForScore(c.score);
-        ctx.font = "800 24px -apple-system, Helvetica, Arial, sans-serif";
+        ctx.font = "800 21px -apple-system, Helvetica, Arial, sans-serif";
         ctx.fillText(c.score.toFixed(1), REC_W * 0.78, cy);
       });
     }
@@ -300,32 +302,32 @@ function renderVideoFrame(
   const boardT = afterHook - faceTotal;
   ctx.textAlign = "left";
   ctx.fillStyle = VIDEO_INK;
-  ctx.font = "800 36px -apple-system, Helvetica, Arial, sans-serif";
+  ctx.font = "800 32px -apple-system, Helvetica, Arial, sans-serif";
   ctx.fillText("Leaderboard", REC_W * 0.09, REC_H * 0.13);
   // no bottom CTA text anymore — rows use that freed space and run further down the screen
-  const rowH = 112, top = REC_H * 0.185, thumbSize = 70;
+  const rowH = 100, top = REC_H * 0.185, thumbSize = 60;
   boardRanked.forEach((it, i) => {
     const t = fadeIn(boardT, i * 220, 400);
     if (t <= 0) return;
     const y = top + i * rowH;
-    const baseline = y + 61;
+    const baseline = y + 54;
     ctx.globalAlpha = t;
     ctx.fillStyle = i === 0 ? `rgba(${VIDEO_GLOW_RGB},0.18)` : "rgba(0,0,0,0.04)";
     roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
     ctx.fill();
     ctx.fillStyle = VIDEO_GREEN;
-    ctx.font = "800 27px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 24px -apple-system, Helvetica, Arial, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
-    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 13, thumbSize, thumbSize, 12, it.focusX ?? 0.5, it.focusY ?? 0.5);
+    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 12, thumbSize, thumbSize, 10, it.focusX ?? 0.5, it.focusY ?? 0.5);
     ctx.fillStyle = VIDEO_INK;
-    ctx.font = "600 28px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "600 25px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.name, REC_W * 0.26, baseline);
     // ratings sit inset from the right edge (middle-right), clear of TikTok's right-side icon column
     ctx.textAlign = "right";
     ctx.fillStyle = colorForScore(it.score);
-    ctx.font = "800 31px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 28px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.score.toFixed(1), REC_W * 0.79, baseline);
     ctx.globalAlpha = 1;
   });
@@ -738,8 +740,8 @@ export default function Studio() {
               drawContain(ctx, img, marginX, 0, canvas.width - marginX * 2, canvas.height);
             } else {
               const revealT = localT - SCAN_HOLD_MS;
-              const faceTop = canvas.height * 0.13;
-              const faceH = canvas.height * 0.46;
+              const faceTop = canvas.height * 0.10;
+              const faceH = canvas.height * 0.36;
               const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
               const by = lerp(0, faceTop, zt);
               const bh = lerp(canvas.height, faceH, zt);
@@ -930,24 +932,24 @@ export default function Studio() {
                 )}
                 {revealed && (
                   <div style={{
-                    position: "absolute", top: "55%", left: 0, right: 0, bottom: 0,
-                    padding: "14px 18px", display: "flex", flexDirection: "column", justifyContent: "flex-start",
+                    position: "absolute", top: "46%", left: 0, right: 0, bottom: 0,
+                    padding: "10px 18px", display: "flex", flexDirection: "column", justifyContent: "flex-start",
                   }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: VIDEO_INK, animation: "sfade .5s ease both" }}>{cur.name}</div>
+                    <div style={{ fontSize: 19, fontWeight: 700, color: VIDEO_INK, animation: "sfade .5s ease both" }}>{cur.name}</div>
                     <div style={{
-                      display: "flex", alignItems: "baseline", gap: 10, justifyContent: "center", margin: "6px 0",
+                      display: "flex", alignItems: "baseline", gap: 8, justifyContent: "center", margin: "4px 0",
                       animation: "sfade .5s ease both", animationDelay: `${SCORE_DELAY_MS / 1000}s`,
                     }}>
-                      <span style={{ fontSize: 64, fontWeight: 900, color: colorForScore(score), lineHeight: 1 }}>{score.toFixed(1)}</span>
-                      <span style={{ fontSize: 18, color: "#777" }}>/ 10</span>
+                      <span style={{ fontSize: 52, fontWeight: 900, color: colorForScore(score), lineHeight: 1 }}>{score.toFixed(1)}</span>
+                      <span style={{ fontSize: 15, color: "#777" }}>/ 10</span>
                     </div>
                     {(() => {
                       const cats = categoryScores(cur.result!);
                       return (
-                        <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                        <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
                           {cats.map((c, ci) => (
                             <div key={c.label} style={{
-                              display: "flex", justifyContent: "space-between", padding: "0 12%", fontSize: 13,
+                              display: "flex", justifyContent: "space-between", padding: "0 12%", fontSize: 11,
                               animation: "sfade .4s ease both", animationDelay: `${(CAT_DELAY_MS + ci * CAT_STAGGER_MS) / 1000}s`,
                             }}>
                               <span style={{ color: "#444", fontWeight: 600 }}>{c.label}</span>
