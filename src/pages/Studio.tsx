@@ -5,7 +5,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { analyzeFace, loadFaceLandmarker, tierFor, type ScanResult } from "../lib/faceScan";
-import { Output, Mp4OutputFormat, BufferTarget, CanvasSource, QUALITY_HIGH, canEncodeVideo } from "mediabunny";
+import { Output, Mp4OutputFormat, BufferTarget, CanvasSource, AudioBufferSource, QUALITY_HIGH, canEncodeVideo, canEncodeAudio } from "mediabunny";
 
 const MAX_DIM = 1100;
 const POOL_KEY = "studio_alltime_leaderboard";
@@ -92,6 +92,8 @@ const REC_H = 1920;
 const VIDEO_INK = "#111";
 const VIDEO_GREEN = "#0a6b56";
 const VIDEO_GLOW_RGB = "62,216,195";
+// light grey rather than pure white — pure white was reading flat/blank next to the content
+const BG_COLOR = "#f2f1ee";
 
 function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
@@ -146,7 +148,7 @@ type RenderFace = { id: string; name: string; result: ScanResult; contentScore: 
 
 // plain white backdrop, sits behind everything
 function drawBackground(ctx: CanvasRenderingContext2D) {
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = BG_COLOR;
   ctx.fillRect(0, 0, REC_W, REC_H);
 }
 
@@ -164,7 +166,7 @@ function renderVideoFrame(
 ) {
   drawBackground(ctx);
   const fadeIn = (localT: number, delay = 0, dur = 450) => Math.max(0, Math.min(1, (localT - delay) / dur));
-  const faceMarginX = REC_W * 0.06; // faces sit inset from the edges, not edge-to-edge
+  const faceMarginX = REC_W * 0.12; // faces sit inset from the edges, not edge-to-edge
 
   if (tMs < HOOK_MS) {
     // quick radial flash burst on frame one — the first ~1s has to grab
@@ -186,16 +188,16 @@ function renderVideoFrame(
     const tagT = fadeIn(tMs, 40, 220);
     ctx.globalAlpha = tagT;
     ctx.fillStyle = VIDEO_GREEN;
-    ctx.font = "700 28px Menlo, Consolas, monospace";
+    ctx.font = "700 24px Menlo, Consolas, monospace";
     ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
 
     // headline — punchy scale pop (slight overshoot) instead of a plain fade
     const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
     ctx.globalAlpha = fadeIn(tMs, 120, 260);
     ctx.fillStyle = VIDEO_INK;
-    ctx.font = "800 54px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 46px -apple-system, Helvetica, Arial, sans-serif";
     const lines = wrapLines(ctx, hookText || "", REC_W * 0.7);
-    const lineH = 64;
+    const lineH = 56;
     lines.forEach((line, i) => {
       const ly = REC_H * 0.46 + i * lineH;
       ctx.save();
@@ -208,7 +210,7 @@ function renderVideoFrame(
 
     // accent bar draws in after the headline lands
     const barT = fadeIn(tMs, 420, 260);
-    const barW = 92 * barT;
+    const barW = 78 * barT;
     ctx.globalAlpha = barT;
     ctx.fillStyle = VIDEO_GREEN;
     const lastLy = REC_H * 0.46 + (lines.length - 1) * lineH;
@@ -242,52 +244,52 @@ function renderVideoFrame(
       ctx.fillText(`SCANNING ${f.name.toUpperCase()}`, REC_W / 2, 70);
     } else {
       const revealT = localT - SCAN_HOLD_MS;
-      // face band sits centered-ish in the frame (starts ~15% down) rather than pinned to the top
-      const faceTop = REC_H * 0.15;
-      const faceH = REC_H * 0.4;
+      // face band sits centered-ish in the frame (starts ~13% down) rather than pinned to the top
+      const faceTop = REC_H * 0.13;
+      const faceH = REC_H * 0.46;
       const faceBottom = faceTop + faceH;
       if (img?.complete) {
-        const focus = faceFocus(f.result, img.naturalWidth, img.naturalHeight);
-        // animate the box from full-height down to the final band; drawCover recomputes the
-        // source crop fresh every frame from whatever box it's given, always centered on the
-        // focus point — so the zoom lands on the face the whole way, never a wrong-then-snap
+        // animate the box from full-height down to the final band. Uses drawContain, not
+        // drawCover — a cover-crop into this short/wide band was clipping the top of the head
+        // AND the chin, since most source photos are taller (more portrait) than the band's
+        // own aspect ratio. Contain always shows the whole face, just smaller if it doesn't fit.
         const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
         const by = lerp(0, faceTop, zt);
         const bh = lerp(REC_H, faceH, zt);
-        drawCover(ctx, img, faceMarginX, by, REC_W - faceMarginX * 2, bh, 0, focus.x, focus.y);
+        drawContain(ctx, img, faceMarginX, by, REC_W - faceMarginX * 2, bh);
       }
       ctx.textAlign = "center";
 
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 0);
       ctx.fillStyle = VIDEO_INK;
-      ctx.font = "700 48px -apple-system, Helvetica, Arial, sans-serif";
-      ctx.fillText(f.name, REC_W / 2, faceBottom + 80);
+      ctx.font = "700 40px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.fillText(f.name, REC_W / 2, faceBottom + 66);
 
       const scoreT = Math.max(0, Math.min(1, (revealT - SCORE_DELAY_MS) / SCORE_MS));
       const liveScore = f.contentScore * (1 - Math.pow(1 - scoreT, 3));
       ctx.globalAlpha = faceAlpha * fadeIn(revealT, 120);
       ctx.fillStyle = colorForScore(liveScore);
-      ctx.font = "900 136px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.font = "900 112px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 34, faceBottom + 220);
+      ctx.fillText(liveScore.toFixed(1), REC_W / 2 + 28, faceBottom + 180);
       ctx.fillStyle = "#777";
-      ctx.font = "400 34px -apple-system, Helvetica, Arial, sans-serif";
+      ctx.font = "400 28px -apple-system, Helvetica, Arial, sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("/ 10", REC_W / 2 + 48, faceBottom + 220);
+      ctx.fillText("/ 10", REC_W / 2 + 40, faceBottom + 180);
 
       const cats = categoryScores(f.result);
-      const catTop = faceBottom + 260;
-      const catRowH = 44;
+      const catTop = faceBottom + 216;
+      const catRowH = 38;
       cats.forEach((c, ci) => {
         ctx.globalAlpha = faceAlpha * fadeIn(revealT, CAT_DELAY_MS + ci * CAT_STAGGER_MS, CAT_FADE_MS);
         const cy = catTop + ci * catRowH;
         ctx.textAlign = "left";
         ctx.fillStyle = "#444";
-        ctx.font = "600 26px -apple-system, Helvetica, Arial, sans-serif";
+        ctx.font = "600 22px -apple-system, Helvetica, Arial, sans-serif";
         ctx.fillText(c.label, REC_W * 0.22, cy);
         ctx.textAlign = "right";
         ctx.fillStyle = colorForScore(c.score);
-        ctx.font = "800 28px -apple-system, Helvetica, Arial, sans-serif";
+        ctx.font = "800 24px -apple-system, Helvetica, Arial, sans-serif";
         ctx.fillText(c.score.toFixed(1), REC_W * 0.78, cy);
       });
     }
@@ -298,32 +300,32 @@ function renderVideoFrame(
   const boardT = afterHook - faceTotal;
   ctx.textAlign = "left";
   ctx.fillStyle = VIDEO_INK;
-  ctx.font = "800 41px -apple-system, Helvetica, Arial, sans-serif";
+  ctx.font = "800 36px -apple-system, Helvetica, Arial, sans-serif";
   ctx.fillText("Leaderboard", REC_W * 0.09, REC_H * 0.13);
   // no bottom CTA text anymore — rows use that freed space and run further down the screen
-  const rowH = 132, top = REC_H * 0.185;
+  const rowH = 112, top = REC_H * 0.185, thumbSize = 70;
   boardRanked.forEach((it, i) => {
     const t = fadeIn(boardT, i * 220, 400);
     if (t <= 0) return;
     const y = top + i * rowH;
-    const baseline = y + 72;
+    const baseline = y + 61;
     ctx.globalAlpha = t;
     ctx.fillStyle = i === 0 ? `rgba(${VIDEO_GLOW_RGB},0.18)` : "rgba(0,0,0,0.04)";
     roundRectPath(ctx, REC_W * 0.06, y, REC_W * 0.88, rowH - 16, 14);
     ctx.fill();
     ctx.fillStyle = VIDEO_GREEN;
-    ctx.font = "800 31px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 27px -apple-system, Helvetica, Arial, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(String(i + 1), REC_W * 0.09, baseline);
     const timg = thumbCache.get(it.id);
-    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 20, 84, 84, 14, it.focusX ?? 0.5, it.focusY ?? 0.5);
+    if (timg?.complete) drawCover(ctx, timg, REC_W * 0.15, y + 13, thumbSize, thumbSize, 12, it.focusX ?? 0.5, it.focusY ?? 0.5);
     ctx.fillStyle = VIDEO_INK;
-    ctx.font = "600 32px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "600 28px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.name, REC_W * 0.26, baseline);
     // ratings sit inset from the right edge (middle-right), clear of TikTok's right-side icon column
     ctx.textAlign = "right";
     ctx.fillStyle = colorForScore(it.score);
-    ctx.font = "800 36px -apple-system, Helvetica, Arial, sans-serif";
+    ctx.font = "800 31px -apple-system, Helvetica, Arial, sans-serif";
     ctx.fillText(it.score.toFixed(1), REC_W * 0.79, baseline);
     ctx.globalAlpha = 1;
   });
@@ -422,6 +424,51 @@ function useCountUp() {
     requestAnimationFrame(tick);
   }, []);
   return [val, run, setVal] as const;
+}
+
+// synthesized per-face score "sting" — no sourced/sampled audio, same policy as the Diamond
+// Detail ad-factory pipeline. Tier is read off the same contentScore shown on screen: a bright
+// ascending chime on a high score, a short neutral blip in the middle, a descending "womp womp"
+// on a low one.
+function scheduleScoreSting(ctx: BaseAudioContext, master: GainNode, atSec: number, score: number) {
+  const tone = (type: OscillatorType, freq: number, start: number, dur: number, peak: number) => {
+    const osc = ctx.createOscillator();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(peak, start + Math.min(0.02, dur * 0.2));
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(Math.max(0, start));
+    osc.stop(start + dur + 0.02);
+  };
+
+  if (score >= 7.5) {
+    [659.25, 830.61, 987.77].forEach((f, i) => tone("sine", f, atSec + i * 0.07, 0.32, 0.5));
+  } else if (score >= 5.5) {
+    tone("triangle", 500, atSec, 0.16, 0.45);
+  } else {
+    tone("sawtooth", 196, atSec, 0.26, 0.4);
+    tone("sawtooth", 165, atSec + 0.24, 0.3, 0.4);
+  }
+}
+
+// renders one AudioBuffer covering the whole video's duration with a sting placed at the moment
+// each face's score finishes counting up — a single buffer keeps every sting's timestamp exact
+// against the video timeline instead of chaining separately-timed clips
+async function synthesizeStingerTrack(totalMs: number, faces: RenderFace[]): Promise<AudioBuffer> {
+  const sampleRate = 44100;
+  const ctx = new OfflineAudioContext(2, Math.ceil((totalMs / 1000) * sampleRate), sampleRate);
+  const master = ctx.createGain();
+  master.gain.value = 0.5;
+  master.connect(ctx.destination);
+  faces.forEach((f, i) => {
+    const scoreEndMs = HOOK_MS + i * FACE_MS + SCAN_HOLD_MS + SCORE_DELAY_MS + SCORE_MS;
+    scheduleScoreSting(ctx, master, scoreEndMs / 1000, f.contentScore);
+  });
+  return ctx.startRendering();
 }
 
 export default function Studio() {
@@ -596,16 +643,27 @@ export default function Studio() {
       canvas.height = REC_H;
       const ctx = canvas.getContext("2d")!;
 
-      const target = new BufferTarget();
-      const output = new Output({ format: new Mp4OutputFormat(), target });
-      const videoSource = new CanvasSource(canvas, { codec: "avc", bitrate: QUALITY_HIGH });
-      output.addVideoTrack(videoSource);
-      await output.start();
-
       const fps = 30;
       const frameDur = 1 / fps;
       const totalMs = HOOK_MS + faces.length * FACE_MS + BOARD_HOLD_MS;
       const totalFrames = Math.ceil((totalMs / 1000) * fps);
+
+      const target = new BufferTarget();
+      const output = new Output({ format: new Mp4OutputFormat(), target });
+      const videoSource = new CanvasSource(canvas, { codec: "avc", bitrate: QUALITY_HIGH });
+      output.addVideoTrack(videoSource);
+
+      // score-based sound effects — skip silently if this browser can't encode aac, video still works
+      const audioOk = await canEncodeAudio("aac", { numberOfChannels: 2, sampleRate: 44100, bitrate: QUALITY_HIGH });
+      const audioSource = audioOk ? new AudioBufferSource({ codec: "aac", bitrate: QUALITY_HIGH }) : null;
+      if (audioSource) output.addAudioTrack(audioSource);
+
+      await output.start();
+
+      if (audioSource) {
+        const stingerBuffer = await synthesizeStingerTrack(totalMs, faces);
+        await audioSource.add(stingerBuffer);
+      }
 
       for (let i = 0; i < totalFrames; i++) {
         renderVideoFrame(ctx, (i / fps) * 1000, hook, faces, boardRanked, imgCacheRef.current, thumbCacheRef.current);
@@ -637,7 +695,7 @@ export default function Studio() {
   // ── styles ──
   const stage: React.CSSProperties = {
     position: "relative", width: "min(405px, 90vw)", aspectRatio: "9 / 16",
-    backgroundColor: "#fff",
+    backgroundColor: BG_COLOR,
     borderRadius: 22, overflow: "hidden", border: "1px solid rgba(0,0,0,0.08)",
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
     textAlign: "center", color: "#111", fontFamily: "inherit",
@@ -669,23 +727,25 @@ export default function Studio() {
           const ctx = canvas.getContext("2d")!;
           // opaque backdrop — otherwise transparent pixels in a background-removed photo would
           // let whatever's behind the canvas show through
-          ctx.fillStyle = "#fff";
+          ctx.fillStyle = BG_COLOR;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           // a failed/undecoded image has naturalWidth 0 — drawing that would leave the canvas
           // blank behind the opaque fill above rather than crashing, so skip it explicitly
           if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-            const marginX = canvas.width * 0.06;
+            const marginX = canvas.width * 0.12;
             const localT = performance.now() - faceStartRef.current;
             if (localT < SCAN_HOLD_MS) {
               drawContain(ctx, img, marginX, 0, canvas.width - marginX * 2, canvas.height);
             } else {
               const revealT = localT - SCAN_HOLD_MS;
-              const faceTop = canvas.height * 0.15;
-              const faceH = canvas.height * 0.4;
+              const faceTop = canvas.height * 0.13;
+              const faceH = canvas.height * 0.46;
               const zt = 1 - Math.pow(1 - Math.min(1, revealT / ZOOM_MS), 3);
               const by = lerp(0, faceTop, zt);
               const bh = lerp(canvas.height, faceH, zt);
-              drawCover(ctx, img, marginX, by, canvas.width - marginX * 2, bh, 0, cur.focusX ?? 0.5, cur.focusY ?? 0.5);
+              // drawContain, not drawCover — keeps the whole face visible instead of cropping
+              // top/chin against a band whose aspect ratio doesn't match the source photo
+              drawContain(ctx, img, marginX, by, canvas.width - marginX * 2, bh);
             }
           } else if (!warned) {
             warned = true;
