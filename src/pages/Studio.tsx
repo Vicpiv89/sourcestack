@@ -172,12 +172,15 @@ function renderIntroCard(ctx: CanvasRenderingContext2D, tMs: number, hookText: s
 
   ctx.textAlign = "center";
 
-  // eyebrow tag — fast fade + slight upward settle
+  // eyebrow tag — fast fade + slight upward settle. Sans-serif wordmark (not the monospace
+  // "code" font) with tracked-out letter-spacing, uppercase — reads as a brand name, not a tag.
   const tagT = fadeIn(tMs, 40, 220);
   ctx.globalAlpha = tagT;
   ctx.fillStyle = VIDEO_GREEN;
-  ctx.font = "700 21px Menlo, Consolas, monospace";
-  ctx.fillText("sourcestack.app", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
+  ctx.font = "800 26px -apple-system, Helvetica, Arial, sans-serif";
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "2px";
+  ctx.fillText("SOURCESTACK.APP", REC_W / 2, REC_H * 0.4 + (1 - tagT) * 10);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
 
   // headline — punchy scale pop (slight overshoot) instead of a plain fade
   const headScale = 0.55 + 0.45 * easeOutBack(Math.max(0, Math.min(1, (tMs - 120) / 460)));
@@ -195,14 +198,6 @@ function renderIntroCard(ctx: CanvasRenderingContext2D, tMs: number, hookText: s
     ctx.fillText(line, REC_W / 2, ly);
     ctx.restore();
   });
-
-  // accent bar draws in after the headline lands
-  const barT = fadeIn(tMs, 420, 260);
-  const barW = 78 * barT;
-  ctx.globalAlpha = barT;
-  ctx.fillStyle = VIDEO_GREEN;
-  const lastLy = REC_H * 0.46 + (lines.length - 1) * lineH;
-  ctx.fillRect(REC_W / 2 - barW / 2, lastLy + 12, barW, 4);
   ctx.globalAlpha = 1;
 }
 
@@ -963,19 +958,15 @@ export default function Studio() {
                   animation: "hookFlash 320ms ease-out both",
                 }} />
                 <div style={{
-                  position: "relative", fontSize: 12, letterSpacing: 4, color: VIDEO_GREEN, marginBottom: 18,
-                  fontFamily: "monospace", animation: "tagIn 220ms ease-out both", animationDelay: "0.04s",
+                  position: "relative", fontSize: 13, fontWeight: 800, letterSpacing: 2, color: VIDEO_GREEN, marginBottom: 18,
+                  fontFamily: "-apple-system, Helvetica, Arial, sans-serif", animation: "tagIn 220ms ease-out both", animationDelay: "0.04s",
                 }}>
-                  sourcestack.app
+                  SOURCESTACK.APP
                 </div>
                 <div style={{
                   position: "relative", fontSize: 27, fontWeight: 800, lineHeight: 1.2, color: VIDEO_INK,
                   width: "70%", margin: "0 auto", animation: "headPop 460ms ease-out both", animationDelay: "0.12s",
                 }}>{hook}</div>
-                <div style={{
-                  position: "relative", height: 2, background: VIDEO_GREEN, margin: "22px auto 0",
-                  animation: "barGrow 260ms ease-out both", animationDelay: "0.42s",
-                }} />
                 {!playing && done.length > 0 && (
                   <div style={{ fontSize: 13, color: VIDEO_GREEN, marginTop: 24 }}>▶ press Play to run the reveal</div>
                 )}
@@ -1075,7 +1066,6 @@ export default function Studio() {
         @keyframes hookFlash{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.7)}}
         @keyframes tagIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
         @keyframes headPop{0%{opacity:0;transform:scale(.55)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
-        @keyframes barGrow{from{width:0;opacity:0}to{width:46px;opacity:1}}
       `}</style>
     </div>
   );
